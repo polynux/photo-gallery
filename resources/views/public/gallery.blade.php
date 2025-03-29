@@ -20,11 +20,32 @@
             opacity: 1;
             pointer-events: auto;
         }
+        .cover-image {
+            width: 100%;
+            max-height: 400px;
+            object-fit: cover;
+            border-radius: 0.5rem;
+            margin-bottom: 1.5rem;
+        }
     </style>
 </head>
 <body class="bg-base-100 min-h-screen">
     <div class="container mx-auto px-4 py-8">
         <div class="mb-8">
+            @if($photoGallery->coverPhoto)
+                <img
+                    src="{{ Storage::url($photoGallery->coverPhoto->path) }}"
+                    alt="Cover for {{ $photoGallery->name }}"
+                    class="cover-image shadow-lg"
+                >
+            @elseif($photos->count() > 0)
+                <img
+                    src="{{ Storage::url($photos->first()->path) }}"
+                    alt="Cover for {{ $photoGallery->name }}"
+                    class="cover-image shadow-lg"
+                >
+            @endif
+
             <h1 class="text-3xl font-bold">{{ $photoGallery->name }}</h1>
             @if($photoGallery->description)
                 <p class="mt-2 text-gray-600">{{ $photoGallery->description }}</p>
