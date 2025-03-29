@@ -48,7 +48,7 @@
 
             <h1 class="text-3xl font-bold">{{ $photoGallery->name }}</h1>
             @if($photoGallery->description)
-                <p class="mt-2 text-gray-600">{{ $photoGallery->description }}</p>
+                <p class="mt-2 text-gray-200">{{ $photoGallery->description }}</p>
             @endif
 
             <div class="mt-4 flex flex-wrap gap-3">
