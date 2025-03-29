@@ -8,8 +8,6 @@ use Filament\Forms\Form;
 use Filament\Resources\RelationManagers\RelationManager;
 use Filament\Tables;
 use Filament\Tables\Table;
-use Illuminate\Database\Eloquent\Builder;
-use Illuminate\Database\Eloquent\SoftDeletingScope;
 
 class PhotosRelationManager extends RelationManager
 {
@@ -43,10 +41,17 @@ class PhotosRelationManager extends RelationManager
                 //
             ])
             ->headerActions([
-                Tables\Actions\CreateAction::make(),
+                Tables\Actions\Action::make('view_gallery')
+                    ->label('View Gallery')
+                    ->icon('heroicon-o-eye')
+                    ->url(fn($livewire) => route('public.gallery', $livewire->getOwnerRecord()->access_code))
+                    ->openUrlInNewTab(),
+                Tables\Actions\CreateAction::make()
+                    ->label('Upload Photo')
+                    ->icon('heroicon-o-plus'),
                 Tables\Actions\Action::make('upload_multiple')
                     ->label('Upload Multiple')
-                    ->url(fn ($livewire) => PhotoGalleryResource::getUrl('upload-photos', ['record' => $livewire->getOwnerRecord()->id]))
+                    ->url(fn($livewire) => PhotoGalleryResource::getUrl('upload-photos', ['record' => $livewire->getOwnerRecord()->id]))
                     ->icon('heroicon-o-arrow-up-tray'),
             ])
             ->actions([
