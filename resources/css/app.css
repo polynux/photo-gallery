@@ -10,4 +10,6 @@
         'Segoe UI Symbol', 'Noto Color Emoji';
 }
 
-@plugin "daisyui";
+@plugin "daisyui" {
+    themes: business --default;
+}
