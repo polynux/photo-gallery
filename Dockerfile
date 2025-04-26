@@ -30,6 +30,22 @@ RUN composer dump-autoload --optimize --no-dev \
 # Copy .env.example to .env
 COPY .env.example .env
 
+
+# Build frontend assets
+FROM node:20-slim AS frontend
+ENV PNPM_HOME="/pnpm"
+ENV PATH="$PNPM_HOME:$PATH"
+RUN corepack enable
+COPY . /app
+WORKDIR /app
+
+RUN --mount=type=cache,id=pnpm,target=/pnpm/store pnpm install
+RUN pnpm run build
+
+FROM dev AS prod
+WORKDIR /app
+COPY --from=frontend /app/public/build /app/public/build
+
 # Set proper permissions
 RUN chown -R www-data:www-data /app \
     && chmod -R 755 /app/storage /app/bootstrap/cache
