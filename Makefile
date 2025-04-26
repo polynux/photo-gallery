@@ -1,5 +1,8 @@
 CONTAINER_NAME := php
 
+init: db cache
+	docker compose exec $(CONTAINER_NAME) bash -c "php artisan key:generate"
+
 tinker:
 	docker compose exec $(CONTAINER_NAME) bash -c "php artisan tinker"
 

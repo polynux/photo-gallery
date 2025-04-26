@@ -36,7 +36,6 @@ RUN chown -R www-data:www-data /app \
 
 # Run Laravel optimizations
 RUN php artisan key:generate \
-    && php artisan optimize:clear \
     && php artisan config:cache \
     && php artisan route:cache \
     && php artisan view:cache
