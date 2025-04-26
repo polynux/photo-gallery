@@ -4,6 +4,7 @@ namespace App\Filament\Resources;
 
 use App\Filament\Resources\PhotoGalleryResource\Pages;
 use App\Filament\Resources\PhotoGalleryResource\RelationManagers;
+use App\Filament\Resources\PhotoResource\Pages\UploadPhotos;
 use App\Models\PhotoGallery;
 use Filament\Forms;
 use Filament\Forms\Form;
@@ -102,7 +103,7 @@ class PhotoGalleryResource extends Resource
             'index' => Pages\ListPhotoGalleries::route('/'),
             'create' => Pages\CreatePhotoGallery::route('/create'),
             'edit' => Pages\EditPhotoGallery::route('/{record}/edit'),
-            'upload-photos' => Pages\UploadPhotos::route('/{record}/upload-photos'),
+            'upload-photos' => UploadPhotos::route('/{record}/upload-photos'),
         ];
     }
 }

@@ -1,6 +1,6 @@
 <?php
 
-namespace App\Filament\Resources\PhotoGalleryResource\Pages;
+namespace App\Filament\Resources\PhotoResource\Pages;
 
 use App\Filament\Resources\PhotoGalleryResource;
 use App\Models\Photo;
@@ -10,7 +10,6 @@ use Filament\Forms\Components\TextInput;
 use Filament\Forms\Form;
 use Filament\Notifications\Notification;
 use Filament\Resources\Pages\Page;
-use Illuminate\Support\Facades\Storage;
 
 class UploadPhotos extends Page
 {
