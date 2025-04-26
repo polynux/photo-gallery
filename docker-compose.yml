@@ -1,0 +1,24 @@
+services:
+  php:
+    image: laravel-ben
+    build: .
+    # uncomment the following line if you want to run this in a production environment
+    restart: always
+    ports:
+      - "8090:80" # HTTP
+      - "8443:443" # HTTPS
+      - "8443:443/udp" # HTTP/3
+    volumes:
+      - './test-docker/database.sqlite:/app/database/database.sqlite'
+      - './test-docker/public:/app/storage/app/public'
+      - caddy_data:/data
+      - caddy_config:/config
+    # comment the following line in production, it allows to have nice human-readable logs in dev
+    tty: true
+    environment:
+      APP_URL: "http://localhost:8090"
+
+# Volumes needed for Caddy certificates and configuration
+volumes:
+  caddy_data:
+  caddy_config:
