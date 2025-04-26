@@ -5,7 +5,7 @@ use App\Http\Controllers\PublicController;
 
 Route::get('/', function () {
     return view('home');
-});
+})->name('home');
 
 // Public routes
 Route::prefix('gallery')->name('public.')->group(function () {

@@ -1,6 +1,6 @@
 <x-layout>
     <!-- Hero Section -->
-    <section class="hero bg-cover bg-center h-screen"
+    <section class="hero bg-cover bg-center h-screen -mt-16"
         style="background-image: url('{{ Vite::asset('resources/images/hero-image.jpg') }}');">
         <div class="container mx-auto h-full flex items-center justify-center text-center">
             <div>

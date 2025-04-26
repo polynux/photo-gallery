@@ -15,6 +15,9 @@
     'bg-gray-100' => !str_contains($attributes->get('class') ?? '', 'bg')
 ]) }}>
 
+    <!-- Header Section -->
+    <x-header />
+
     {{ $slot }}
 
     <!-- Footer Section -->
