@@ -4,11 +4,16 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Benjamin Photos</title>
+    <title>{{ $title ?? 'Benjamin Photos' }}</title>
+    @if (isset($description))
+        <meta name="description" content="{{ $description }}">
+    @endif
     @vite(['resources/css/app.css', 'resources/js/app.js'])
 </head>
 
-<body class="bg-gray-100">
+<body {{ $attributes->class([
+    'bg-gray-100' => !str_contains($attributes->get('class') ?? '', 'bg')
+]) }}>
 
     {{ $slot }}
 

@@ -1,10 +1,7 @@
-<!DOCTYPE html>
-<html lang="en" data-theme="light">
-<head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>{{ $photoGallery->name }} - Gallery</title>
-    @vite('resources/css/app.css')
+<x-layout class="min-h-screen bg-base-100">
+    <x-slot name="title">{{ $photoGallery->name }} - Gallerie</x-slot>
+    <x-slot name="description">Explorez la galerie de photos de {{ $photoGallery->name }}. Découvrez des moments capturés par Benjamin.</x-slot>
+
     <style>
         .photo-grid {
             display: grid;
@@ -28,8 +25,6 @@
             margin-bottom: 1.5rem;
         }
     </style>
-</head>
-<body class="bg-base-100 min-h-screen">
     <div class="container mx-auto px-4 py-8">
         <div class="mb-8">
             @if($photoGallery->coverPhoto)
@@ -168,5 +163,4 @@
             if (e.key === 'ArrowLeft') prevSlide();
         });
     </script>
-</body>
-</html>
+</x-layout>
