@@ -9,6 +9,7 @@
         <meta name="description" content="{{ $description }}">
     @endif
     @vite(['resources/css/app.css', 'resources/js/app.js'])
+    <x-plausible::tracking extensions="outbound-links, file-downloads" />
 </head>
 
 <body {{ $attributes->class([
