@@ -2,7 +2,7 @@ FROM dunglas/frankenphp:latest AS base
 
 ENV SERVER_NAME=:80
 
-RUN mv "$PHP_INI_DIR/php.ini-production" "$PHP_INI_DIR/php.ini"
+COPY "./php.ini-production" "/usr/local/etc/php/php.ini"
 
 RUN install-php-extensions \
     pdo_mysql \
