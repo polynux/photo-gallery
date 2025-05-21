@@ -9,6 +9,8 @@ Route::get('/', function () {
 
 // Public routes
 Route::prefix('gallery')->name('public.')->group(function () {
+    Route::get('', [PublicController::class, 'showForm'])->name('select');
+    Route::post('', [PublicController::class, 'authenticateSelect'])->name('authenticate-select');
     Route::get('{access_code}', [PublicController::class, 'show'])->name('show');
     Route::post('{access_code}', [PublicController::class, 'authenticate'])->name('authenticate');
     Route::get('{access_code}/photos', [PublicController::class, 'gallery'])->name('gallery');

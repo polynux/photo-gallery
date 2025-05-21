@@ -24,7 +24,7 @@
     <!-- Footer Section -->
     <footer class="footer sm:footer-horizontal footer-center bg-base-300 text-base-content p-4">
         <div class="container mx-auto text-center">
-            <p>&copy; 2025 Benjamin Photos. All rights reserved.</p>
+            <p>&copy; 2025 Pinaton Photographie. Tous droits réservés.</p>
         </div>
     </footer>
 

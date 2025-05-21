@@ -14,6 +14,19 @@
         </div>
     </section>
 
+    <!-- Gallery Section -->
+    <section class="py-8" id="gallery">
+        <div class="container mx-auto text-center">
+            <h2 class="text-3xl font-bold mb-4 text-base-200">Ma Galerie</h2>
+            <p class="text-gray-700 mb-8">
+                Accédez à votre galerie photo à l'aide du code d'accès et du mot de passe fournis par votre photographe.
+            </p>
+            <button class="btn mb-4">
+                <a href="{{ route('public.select') }}">Accéder à ma galerie</a>
+            </button>
+        </div>
+    </section>
+
     <!-- Contact Section -->
     <section class="py-16" id="contact">
         <div class="container mx-auto text-center flex flex-col items-center">

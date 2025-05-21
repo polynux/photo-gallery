@@ -17,6 +17,11 @@ class PublicController extends Controller
         return view('public.login', compact('photoGallery'));
     }
 
+    public function showForm()
+    {
+        return view('public.gallery-select');
+    }
+
     public function authenticate(Request $request, $access_code)
     {
         $photoGallery = PhotoGallery::where('access_code', $access_code)->firstOrFail();
@@ -26,7 +31,26 @@ class PublicController extends Controller
             return redirect()->route('public.gallery', $access_code);
         }
 
-        return back()->withErrors(['password' => 'Incorrect password']);
+        return back()->withErrors(['password' => 'Mot de passe incorrect']);
+    }
+
+    public function authenticateSelect(Request $request)
+    {
+        $request->validate([
+            'access_code' => 'required|exists:photo_galleries,access_code',
+        ]);
+
+        $photoGallery = PhotoGallery::where('access_code', $request->access_code)->firstOrFail();
+        if (!$photoGallery) {
+            return back()->withErrors(['access_code' => 'Cette galerie n\'existe pas']);
+        }
+
+        if ($request->password === $photoGallery->password) {
+            session(['authenticated_gallery_' . $photoGallery->id => true]);
+            return redirect()->route('public.gallery', $request->access_code);
+        }
+
+        return back()->withErrors(['password' => 'Mot de passe incorrect']);
     }
 
     public function gallery($access_code)
