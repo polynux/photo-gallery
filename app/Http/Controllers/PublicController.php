@@ -14,6 +14,12 @@ class PublicController extends Controller
     public function show($access_code)
     {
         $photoGallery = PhotoGallery::where('access_code', $access_code)->firstOrFail();
+        if (!$photoGallery) {
+            return back()->withErrors(['access_code' => 'Cette galerie n\'existe pas']);
+        }
+        if (session('authenticated_gallery_' . $photoGallery->id)) {
+            return redirect()->route('public.gallery', $access_code);
+        }
         return view('public.login', compact('photoGallery'));
     }
 
