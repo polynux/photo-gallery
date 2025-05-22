@@ -1,5 +1,20 @@
 CONTAINER_NAME := php
 
+build:
+	@if [ "$(PUSH)" = "true" ]; then \
+		echo "Building and pushing the image..."; \
+	else \
+		echo "Building the image."; \
+	fi
+	@if [ -z "$(TAG)" ]; then \
+		echo "Please provide a tag for the image."; \
+		exit 1; \
+	fi
+	docker buildx build . --tag $(TAG)
+	@if [ "$(PUSH)" = "true" ]; then \
+		docker push $(TAG); \
+	fi
+
 init: db cache
 	docker compose exec $(CONTAINER_NAME) bash -c "php artisan storage:link"
 	docker compose exec $(CONTAINER_NAME) bash -c "php artisan optimize:clear"
