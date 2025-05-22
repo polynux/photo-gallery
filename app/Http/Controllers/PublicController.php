@@ -114,7 +114,7 @@ class PublicController extends Controller
 
     public function showPhoto($gallery, $photo)
     {
-        if (!session('authenticated_gallery_' . $gallery)) {
+        if (!session('authenticated_gallery_' . $gallery) && !auth()->check()) {
             Log::info('User not authenticated for gallery: ' . $gallery);
             return redirect()->route('public.select');
         }

@@ -52,7 +52,6 @@ class UploadPhotos extends Page
 
         $photos = [];
         foreach ($data['data']['photos'] as $path) {
-            Log::info('Uploading photo: ' . $path);
             $photo = Photo::create([
                 'photo_gallery_id' => $this->photoGallery->id,
                 'path' => $path,
