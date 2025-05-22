@@ -16,3 +16,6 @@ Route::prefix('gallery')->name('public.')->group(function () {
     Route::get('{access_code}/photos', [PublicController::class, 'gallery'])->name('gallery');
     Route::get('{access_code}/download', [PublicController::class, 'download'])->name('download');
 });
+
+Route::get('/photos/{gallery}/{photo}', [PublicController::class, 'showPhoto'])
+    ->name('photos.show');

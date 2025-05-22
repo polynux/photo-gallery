@@ -2,6 +2,7 @@
 
 namespace App\Http\Controllers;
 
+use App\Models\Photo;
 use App\Models\PhotoGallery;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Log;
@@ -92,7 +93,7 @@ class PublicController extends Controller
         );
 
         foreach ($photoGallery->photos as $photo) {
-            $filePath = storage_path('app/public/' . $photo->path);
+            $filePath = storage_path('app/private/photos/' . $photo->path);
 
             // Check if the file exists before adding it
             if (file_exists($filePath)) {
@@ -109,5 +110,17 @@ class PublicController extends Controller
 
         $zip->finish();
         exit;
+    }
+
+    public function showPhoto($gallery, $photo)
+    {
+        if (!session('authenticated_gallery_' . $gallery)) {
+            Log::info('User not authenticated for gallery: ' . $gallery);
+            return redirect()->route('public.select');
+        }
+        $photo = Photo::where('path', $gallery . '/' . $photo)
+            ->where('photo_gallery_id', $gallery)
+            ->firstOrFail();
+        return Storage::disk('photo')->response($photo->path);
     }
 }
