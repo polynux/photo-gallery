@@ -25,7 +25,7 @@ class RecentPhotoGalleries extends BaseWidget
                 Tables\Columns\ImageColumn::make('coverPhoto.path')
                     ->label('Cover')
                     ->defaultImageUrl(fn ($record) => $record->photos()->first() ?
-                        asset('storage/' . $record->photos()->first()->path) : null)
+                        asset('photos/' . $record->photos()->first()->path) : null)
                     ->circular(),
                 Tables\Columns\TextColumn::make('name'),
                 Tables\Columns\TextColumn::make('access_code')
