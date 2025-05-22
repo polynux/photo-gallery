@@ -1,9 +1,9 @@
 <!DOCTYPE html>
-<html lang="en" data-theme="light">
+<html lang="fr" data-theme="light">
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>{{ $photoGallery->name }} - Login</title>
+    <title>{{ $photoGallery->name }} - Authentification</title>
     @vite('resources/css/app.css')
 </head>
 <body class="bg-base-100 min-h-screen flex items-center justify-center">
@@ -17,7 +17,7 @@
         <form action="{{ route('public.authenticate', $photoGallery->access_code) }}" method="POST">
             @csrf
             <div class="mb-4">
-                <label for="password" class="block text-gray-300 font-medium mb-2">Password</label>
+                <label for="password" class="block text-gray-300 font-medium mb-2">Mot de passe</label>
                 <input
                     type="password"
                     id="password"
@@ -30,7 +30,7 @@
                 @enderror
             </div>
 
-            <button type="submit" class="btn btn-soft w-full">View Photos</button>
+            <button type="submit" class="btn btn-soft w-full">Accéder à ma galerie</button>
         </form>
     </div>
 </body>
