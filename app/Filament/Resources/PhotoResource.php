@@ -21,13 +21,17 @@ class PhotoResource extends Resource
 
     public static function form(Form $form): Form
     {
+        Log::info('PhotoResource form method called');
+        Log::info('Route parameters: ', request()->route('photo_gallery_id'));
         return $form
             ->schema([
                 Forms\Components\Select::make('photo_gallery_id')
                     ->relationship('photoGallery', 'name')
                     ->required(),
                 Forms\Components\FileUpload::make('path')
-                    ->directory('photos')
+                    ->disk('photo')
+                    ->directory(request()->route('photo_gallery_id'))
+                    ->visibility('private')
                     ->image()
                     ->imageEditor()
                     ->required(),
@@ -43,6 +47,8 @@ class PhotoResource extends Resource
         return $table
             ->columns([
                 Tables\Columns\ImageColumn::make('path')
+                    ->disk('photo')
+                    ->visibility('private')
                     ->square(),
                 Tables\Columns\TextColumn::make('alt')
                     ->searchable()

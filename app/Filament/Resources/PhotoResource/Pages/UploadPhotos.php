@@ -35,7 +35,9 @@ class UploadPhotos extends Page
                     ->multiple()
                     ->image()
                     ->maxFiles(50)
-                    ->directory("photos/{$this->photoGallery->id}")
+                    ->disk('photo')
+                    ->visibility('private')
+                    ->directory($this->photoGallery->id)
                     ->required(),
                 TextInput::make('data.default_alt')
                     ->label('Default Alt Text')
@@ -50,6 +52,7 @@ class UploadPhotos extends Page
 
         $photos = [];
         foreach ($data['data']['photos'] as $path) {
+            Log::info('Uploading photo: ' . $path);
             $photo = Photo::create([
                 'photo_gallery_id' => $this->photoGallery->id,
                 'path' => $path,

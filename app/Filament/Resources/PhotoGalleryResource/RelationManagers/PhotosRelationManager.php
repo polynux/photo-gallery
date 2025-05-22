@@ -18,6 +18,9 @@ class PhotosRelationManager extends RelationManager
         return $form
             ->schema([
                 Forms\Components\FileUpload::make('path')
+                    ->disk('photo')
+                    ->directory($this->ownerRecord->id)
+                    ->visibility('private')
                     ->required()
                     ->image()
                     ->imageEditor(),
@@ -31,7 +34,9 @@ class PhotosRelationManager extends RelationManager
         return $table
             ->recordTitleAttribute('id')
             ->columns([
-                Tables\Columns\ImageColumn::make('path'),
+                Tables\Columns\ImageColumn::make('path')
+                    ->disk('photo')
+                    ->visibility('private'),
                 Tables\Columns\TextColumn::make('alt')
                     ->limit(30),
                 Tables\Columns\TextColumn::make('created_at')

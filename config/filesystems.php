@@ -38,6 +38,24 @@ return [
             'report' => false,
         ],
 
+        'private' => [
+            'driver' => 'local',
+            'root' => storage_path('app/private'),
+            'url' => env('APP_URL').'/storage',
+            'visibility' => 'private',
+            'throw' => false,
+            'report' => false,
+        ],
+
+        'photo' => [
+            'driver' => 'local',
+            'root' => storage_path('app/private/photos'),
+            'url' => env('APP_URL').'/photos',
+            'visibility' => 'private',
+            'throw' => false,
+            'report' => false,
+        ],
+
         'public' => [
             'driver' => 'local',
             'root' => storage_path('app/public'),
@@ -75,6 +93,7 @@ return [
 
     'links' => [
         public_path('storage') => storage_path('app/public'),
+        public_path('photos') => storage_path('app/private/photos'),
     ],
 
 ];
