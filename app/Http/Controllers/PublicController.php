@@ -123,4 +123,19 @@ class PublicController extends Controller
             ->firstOrFail();
         return Storage::disk('photo')->response($photo->path);
     }
+
+    public function showThumbnail($gallery, $photo)
+    {
+        if (!session('authenticated_gallery_' . $gallery) && !auth()->check()) {
+            Log::info('User not authenticated for gallery: ' . $gallery);
+            return redirect()->route('public.select');
+        }
+        $photo = Photo::where('path', $gallery . '/' . $photo)
+            ->where('photo_gallery_id', $gallery)
+            ->firstOrFail();
+        if (Storage::disk('thumbnails')->exists($photo->path)) {
+            return Storage::disk('thumbnails')->response($photo->path);
+        }
+        return abort(404, 'Thumbnail not found');
+    }
 }

@@ -47,7 +47,7 @@ class PhotoResource extends Resource
         return $table
             ->columns([
                 Tables\Columns\ImageColumn::make('path')
-                    ->disk('photo')
+                    ->disk('thumbnails')
                     ->visibility('private')
                     ->square(),
                 Tables\Columns\TextColumn::make('alt')

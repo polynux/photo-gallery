@@ -19,3 +19,5 @@ Route::prefix('gallery')->name('public.')->group(function () {
 
 Route::get('/photos/{gallery}/{photo}', [PublicController::class, 'showPhoto'])
     ->name('photos.show');
+Route::get('/thumbnails/{gallery}/{photo}', [PublicController::class, 'showThumbnail'])
+    ->name('thumbnails.show');

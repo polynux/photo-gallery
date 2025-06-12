@@ -56,6 +56,15 @@ return [
             'report' => false,
         ],
 
+        'thumbnails' => [
+            'driver' => 'local',
+            'root' => storage_path('app/private/thumbnails'),
+            'url' => env('APP_URL').'/thumbnails',
+            'visibility' => 'private',
+            'throw' => false,
+            'report' => false,
+        ],
+
         'public' => [
             'driver' => 'local',
             'root' => storage_path('app/public'),

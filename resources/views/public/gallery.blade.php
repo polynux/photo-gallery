@@ -32,10 +32,10 @@
     <div class="container mx-auto px-4 py-8">
         <div class="mb-8">
             @if ($photoGallery->coverPhoto)
-                <img src="{{ Storage::disk('photo')->url($photoGallery->coverPhoto->path) }}"
+                <img src="{{ Storage::disk('thumbnails')->url($photoGallery->coverPhoto->path) }}"
                     alt="Cover for {{ $photoGallery->name }}" class="cover-image shadow-lg">
             @elseif($photos->count() > 0)
-                <img src="{{ Storage::disk('photo')->url($photos->first()->path) }}"
+                <img src="{{ Storage::disk('thumbnails')->url($photos->first()->path) }}"
                     alt="Cover for {{ $photoGallery->name }}" class="cover-image shadow-lg">
             @endif
 
@@ -68,7 +68,7 @@
         <div class="photo-grid">
             @foreach ($photos as $photo)
                 <div class="photo-item">
-                    <img src="{{ Storage::disk('photo')->url($photo->path) }}"
+                    <img src="{{ Storage::disk('thumbnails')->url($photo->path) }}"
                         alt="{{ $photo->alt ?? 'Photo #' . $photo->id }}"
                         class="w-full h-64 object-cover rounded-lg shadow-md cursor-pointer hover:opacity-90 transition"
                         data-index="{{ $loop->index }}" onclick="openSlideshow({{ $loop->index }})">
@@ -114,7 +114,7 @@
         const photos = @json(
             $photos->map(function ($photo) {
                 return [
-                    'src' => Storage::disk('photo')->url($photo->path),
+                    'src' => Storage::disk('thumbnails')->url($photo->path),
                     'alt' => $photo->alt ?? 'Photo #' . $photo->id,
                 ];
             }));

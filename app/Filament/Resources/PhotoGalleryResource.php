@@ -52,7 +52,7 @@ class PhotoGalleryResource extends Resource
                 Tables\Columns\ImageColumn::make('coverPhoto.path')
                     ->label('Cover')
                     ->defaultImageUrl(fn ($record) => $record->photos()->first() ?
-                        asset('photos/' . $record->photos()->first()->path) : null)
+                        asset('thumbnails/' . $record->photos()->first()->path) : null)
                     ->circular(),
                 Tables\Columns\TextColumn::make('access_code')
                     ->copyable()
