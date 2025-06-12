@@ -114,7 +114,7 @@
         const photos = @json(
             $photos->map(function ($photo) {
                 return [
-                    'src' => Storage::disk('thumbnails')->url($photo->path),
+                    'src' => Storage::disk('photo')->url($photo->path),
                     'alt' => $photo->alt ?? 'Photo #' . $photo->id,
                 ];
             }));
