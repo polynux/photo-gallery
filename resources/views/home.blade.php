@@ -14,6 +14,17 @@
         </div>
     </section>
 
+    <!-- My Universe Section -->
+    <section class="py-16 bg-gray-100" id="universe">
+        <div class="container mx-auto text-center">
+            <h2 class="text-3xl font-bold mb-4 text-base-200">Mon Univers</h2>
+            <p class="text-gray-700 mb-8">
+                Découvrez mon univers à travers mes photographies. Chaque image raconte une histoire unique.
+            </p>
+            <x-univers />
+        </div>
+    </section>
+
     <!-- Gallery Section -->
     <section class="py-8" id="gallery">
         <div class="container mx-auto text-center">

@@ -21,8 +21,6 @@ class PhotoResource extends Resource
 
     public static function form(Form $form): Form
     {
-        Log::info('PhotoResource form method called');
-        Log::info('Route parameters: ', request()->route('photo_gallery_id'));
         return $form
             ->schema([
                 Forms\Components\Select::make('photo_gallery_id')
