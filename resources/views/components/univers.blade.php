@@ -1,5 +1,5 @@
 @if (!empty($univers) && !empty($classes))
-    <div class="grid-wrapper max-w-7xl mx-2">
+    <div class="grid-wrapper max-w-7xl mx-auto p-2">
         @foreach ($univers as $item)
             @php
                 $class = $classes[$loop->index % count($classes)];
