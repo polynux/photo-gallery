@@ -17,9 +17,10 @@
     <!-- My Universe Section -->
     <section class="py-16 bg-gray-100" id="universe">
         <div class="container mx-auto text-center">
-            <h2 class="text-3xl font-bold mb-4 text-base-200">Mon Univers</h2>
+            <h2 class="text-3xl font-bold mb-4 text-base-200">Mon univers visuel</h2>
             <p class="text-gray-700 mb-8">
-                Découvrez mon univers à travers mes photographies. Chaque image raconte une histoire unique.
+                J'essaie au travers de chacun de mes clichés de transmettre une émotion singulière,
+                un moment sincère ou un instant précieux...
             </p>
             <x-univers />
         </div>
