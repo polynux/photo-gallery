@@ -24,11 +24,13 @@ class Photo extends Model
     protected static function booted()
     {
         static::creating(function ($photo) {
-            $photo->generateThumbnail();
+            if (env('GENERATE_THUMBNAILS', true)) {
+                $photo->generateThumbnail();
+            }
         });
 
         static::updating(function ($photo) {
-            if ($photo->isDirty('path')) {
+            if (env('GENERATE_THUMBNAILS', true) && $photo->isDirty('path')) {
                 $photo->generateThumbnail();
             }
         });
