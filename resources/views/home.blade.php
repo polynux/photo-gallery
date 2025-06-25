@@ -1,7 +1,7 @@
 <x-layout>
     <!-- Hero Section -->
     <section class="hero bg-cover bg-center h-screen -mt-16"
-        style="background-image: url('{{ Vite::asset('resources/images/hero-image.jpg') }}');">
+        style="background-image: url('{{ Vite::asset('resources/images/hero-image.webp') }}');">
         <div class="container mx-auto h-full flex items-center justify-center text-center">
             <div>
                 <h1 class="text-5xl font-bold text-gray-900 mb-4">Bienvenue sur PINATON Photographie</h1>
