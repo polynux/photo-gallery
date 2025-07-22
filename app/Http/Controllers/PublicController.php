@@ -87,6 +87,8 @@ class PublicController extends Controller
 
         $zipName = Str::slug($photoGallery->name) . '.zip';
 
+        set_time_limit(0);
+
         $zip = new ZipStream(
             outputName: $zipName,
             sendHttpHeaders: true,
@@ -109,6 +111,8 @@ class PublicController extends Controller
         }
 
         $zip->finish();
+
+        set_time_limit(30);
         exit;
     }
 
