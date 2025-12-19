@@ -25,13 +25,13 @@ class Photo extends Model
     {
         static::creating(function ($photo) {
             if (env('GENERATE_THUMBNAILS', true)) {
-                $photo->generateThumbnail();
+                \App\Jobs\GeneratePhotoThumbnail::dispatch($photo);
             }
         });
 
         static::updating(function ($photo) {
             if (env('GENERATE_THUMBNAILS', true) && $photo->isDirty('path')) {
-                $photo->generateThumbnail();
+                \App\Jobs\GeneratePhotoThumbnail::dispatch($photo);
             }
         });
 
@@ -44,12 +44,19 @@ class Photo extends Model
     {
         try {
             $disk = Storage::disk('private');
+            $thumbnailPath = $disk->path('thumbnails/' . $this->path);
+            
+            // Check if thumbnail already exists to prevent unnecessary processing
+            if (file_exists($thumbnailPath)) {
+                return;
+            }
+
             $manager = new ImageManager(new Driver());
             $image = $manager->read(Storage::disk('photo')->path($this->path));
             $image->scale(1920);
 
             $image->toJpeg(80);
-            $thumbnailPath = $disk->path('thumbnails/' . $this->path);
+            
             if (!file_exists(dirname($thumbnailPath))) {
                 mkdir(dirname($thumbnailPath), 0755, true);
             }

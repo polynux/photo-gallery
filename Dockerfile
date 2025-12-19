@@ -1,6 +1,7 @@
 FROM dunglas/frankenphp:latest AS base
 
 ENV SERVER_NAME=:80
+ENV CI=true
 
 COPY "./php.ini-production" "/usr/local/etc/php/php.ini"
 
@@ -37,6 +38,7 @@ ENV PNPM_HOME="/pnpm"
 ENV PATH="$PNPM_HOME:$PATH"
 RUN corepack enable
 COPY . /app
+RUN rm -rf /app/node_modules /app/public/build
 WORKDIR /app
 
 RUN --mount=type=cache,id=pnpm,target=/pnpm/store pnpm install

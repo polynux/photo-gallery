@@ -11,12 +11,24 @@ services:
     volumes:
       - './test-docker/database.sqlite:/app/database/database.sqlite'
       - './test-docker/public:/app/storage/app/public'
+      - './test-docker/private:/app/storage/app/private'
       - caddy_data:/data
       - caddy_config:/config
     # comment the following line in production, it allows to have nice human-readable logs in dev
     tty: true
     environment:
       APP_URL: "http://localhost:8090"
+
+  worker:
+    image: laravel-ben
+    restart: always
+    volumes:
+      - './test-docker/database.sqlite:/app/database/database.sqlite'
+      - './test-docker/public:/app/storage/app/public'
+      - './test-docker/private:/app/storage/app/private'
+    environment:
+      APP_URL: "http://localhost:8090"
+    command: php artisan queue:work --tries=3
 
 # Volumes needed for Caddy certificates and configuration
 volumes:
