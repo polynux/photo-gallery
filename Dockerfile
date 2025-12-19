@@ -3,6 +3,10 @@ FROM dunglas/frankenphp:latest AS base
 ENV SERVER_NAME=:80
 ENV CI=true
 
+ARG UID=1000
+ARG GID=1000
+ENV USER=appuser
+
 COPY "./php.ini-production" "/usr/local/etc/php/php.ini"
 
 RUN install-php-extensions \
@@ -11,6 +15,13 @@ RUN install-php-extensions \
     intl \
     zip \
     opcache
+
+RUN \
+	useradd ${USER}; \
+    usermod -u ${UID} ${USER}; \
+    groupmod -g ${GID} ${USER}; \
+	setcap CAP_NET_BIND_SERVICE=+eip /usr/local/bin/frankenphp; \
+	chown -R ${UID}:${GID} /config/caddy /data/caddy
 
 # Install Composer
 COPY --from=composer:latest /usr/bin/composer /usr/bin/composer
@@ -49,8 +60,10 @@ WORKDIR /app
 COPY --from=frontend /app/public/build /app/public/build
 
 # Set proper permissions
-RUN chown -R www-data:www-data /app \
+RUN chown -R ${UID}:${GID} /app \
     && chmod -R 755 /app/storage /app/bootstrap/cache
+
+USER ${USER}
 
 # Run Laravel optimizations
 RUN php artisan key:generate \

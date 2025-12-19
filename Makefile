@@ -10,7 +10,7 @@ build:
 		echo "Please provide a tag for the image."; \
 		exit 1; \
 	fi
-	docker buildx build . --tag $(TAG)
+	docker buildx build . --tag $(TAG) --build-arg UID=$(shell id -u) --build-arg GID=$(shell id -g)
 	@if [ "$(PUSH)" = "true" ]; then \
 		docker push $(TAG); \
 	fi
