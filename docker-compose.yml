@@ -12,8 +12,8 @@ services:
       - './test-docker/database.sqlite:/app/database/database.sqlite'
       - './test-docker/public:/app/storage/app/public'
       - './test-docker/private:/app/storage/app/private'
-      - caddy_data:/data
-      - caddy_config:/config
+      - './test-docker/caddy_data:/data/caddy'
+      - './test-docker/caddy_config:/config/caddy'
     # comment the following line in production, it allows to have nice human-readable logs in dev
     tty: true
     environment:
@@ -34,8 +34,3 @@ services:
       PUID: ${PUID:-1000}
       PGID: ${PGID:-1000}
     command: php artisan queue:work --tries=3
-
-# Volumes needed for Caddy certificates and configuration
-volumes:
-  caddy_data:
-  caddy_config:
