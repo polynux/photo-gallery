@@ -30,6 +30,9 @@ FROM base AS dev
 
 WORKDIR /app
 
+COPY docker/entrypoint.sh /usr/local/bin/entrypoint.sh
+RUN chmod +x /usr/local/bin/entrypoint.sh
+
 COPY . .
 
 COPY composer.json composer.lock ./
@@ -63,8 +66,6 @@ COPY --from=frontend /app/public/build /app/public/build
 RUN chown -R ${UID}:${GID} /app \
     && chmod -R 755 /app/storage /app/bootstrap/cache
 
-USER ${USER}
-
 # Run Laravel optimizations
 RUN php artisan key:generate \
     && php artisan config:cache \
@@ -73,3 +74,8 @@ RUN php artisan key:generate \
 
 RUN php artisan storage:link \
     && php artisan optimize:clear
+
+USER ${USER}
+
+ENTRYPOINT ["/usr/local/bin/entrypoint.sh"]
+CMD ["frankenphp", "run", "--config", "/etc/caddy/Caddyfile", "--adapter", "caddyfile"]
