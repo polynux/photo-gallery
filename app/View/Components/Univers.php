@@ -27,9 +27,11 @@ class Univers extends Component
      */
     public function render(): View|Closure|string
     {
+        $univers = \App\Models\Univers::orderBy('position')->get();
+
         return view('components.univers', [
-            'univers' => \App\Models\Univers::all() ?? [],
-            'classes' => $this->classes_templates[count(\App\Models\Univers::all())] ?? $this->classes_templates['default'],
+            'univers' => $univers,
+            'classes' => $this->classes_templates[$univers->count()] ?? $this->classes_templates['default'],
         ]);
     }
 }

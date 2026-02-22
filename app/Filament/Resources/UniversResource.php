@@ -41,7 +41,11 @@ class UniversResource extends Resource
     public static function table(Table $table): Table
     {
         return $table
+            ->defaultSort('position', 'asc')
             ->columns([
+                Tables\Columns\TextColumn::make('position')
+                    ->label('Position')
+                    ->sortable(),
                 Tables\Columns\TextColumn::make('id')
                     ->label('ID')
                     ->sortable()
@@ -74,7 +78,8 @@ class UniversResource extends Resource
                 Tables\Actions\BulkActionGroup::make([
                     Tables\Actions\DeleteBulkAction::make(),
                 ]),
-            ]);
+            ])
+            ->reorderable('position');
     }
 
     public static function getRelations(): array
