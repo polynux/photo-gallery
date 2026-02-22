@@ -6,10 +6,15 @@ use App\Filament\Resources\PhotoResource;
 use App\Models\Photo;
 use Filament\Actions;
 use Filament\Resources\Pages\ListRecords;
+use Illuminate\Database\Eloquent\Builder;
 
 class ListPhotos extends ListRecords
 {
     protected static string $resource = PhotoResource::class;
+
+    public ?string $photo_gallery_id = null;
+
+    public ?string $photo_section_id = null;
 
     protected function getHeaderActions(): array
     {
@@ -18,38 +23,47 @@ class ListPhotos extends ListRecords
         ];
     }
 
+    public function mount(): void
+    {
+        parent::mount();
+
+        $this->photo_gallery_id = request()->get('photo_gallery_id');
+        $this->photo_section_id = request()->get('photo_section_id');
+    }
+
+    protected function getTableQuery(): ?Builder
+    {
+        $query = Photo::query()->orderBy('position');
+
+        if ($this->photo_gallery_id) {
+            $query->where('photo_gallery_id', $this->photo_gallery_id);
+        }
+
+        if ($this->photo_section_id) {
+            $query->where('photo_section_id', $this->photo_section_id);
+        }
+
+        return $query;
+    }
+
     public function reorder(array $orderIds): void
     {
-        $sectionId = request()->get('photo_section_id');
-
-        if ($sectionId) {
-            $startingPosition = Photo::where('photo_section_id', $sectionId)
-                ->whereNotIn('id', $orderIds)
-                ->max('position') + 1 ?? 1;
-
-            $position = $startingPosition;
+        if ($this->photo_section_id) {
+            $position = 1;
             foreach ($orderIds as $id) {
                 Photo::where('id', $id)
-                    ->where('photo_section_id', $sectionId)
+                    ->where('photo_section_id', $this->photo_section_id)
+                    ->update(['position' => $position++]);
+            }
+        } elseif ($this->photo_gallery_id) {
+            $position = 1;
+            foreach ($orderIds as $id) {
+                Photo::where('id', $id)
+                    ->where('photo_gallery_id', $this->photo_gallery_id)
                     ->update(['position' => $position++]);
             }
         } else {
-            $galleryId = request()->get('photo_gallery_id');
-
-            if ($galleryId) {
-                $startingPosition = Photo::where('photo_gallery_id', $galleryId)
-                    ->whereNotIn('id', $orderIds)
-                    ->max('position') + 1 ?? 1;
-
-                $position = $startingPosition;
-                foreach ($orderIds as $id) {
-                    Photo::where('id', $id)
-                        ->where('photo_gallery_id', $galleryId)
-                        ->update(['position' => $position++]);
-                }
-            } else {
-                parent::reorder($orderIds);
-            }
+            parent::reorder($orderIds);
         }
     }
 }

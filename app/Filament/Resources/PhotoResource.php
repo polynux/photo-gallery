@@ -135,19 +135,4 @@ class PhotoResource extends Resource
             'edit' => Pages\EditPhoto::route('/{record}/edit'),
         ];
     }
-
-    public static function getEloquentQuery(): Builder
-    {
-        $query = parent::getEloquentQuery()->orderBy('position');
-
-        if (request()->has('photo_gallery_id')) {
-            $query->where('photo_gallery_id', request()->get('photo_gallery_id'));
-        }
-
-        if (request()->has('photo_section_id')) {
-            $query->where('photo_section_id', request()->get('photo_section_id'));
-        }
-
-        return $query;
-    }
 }

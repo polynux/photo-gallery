@@ -115,8 +115,8 @@ class PhotosRelationManager extends RelationManager
 
     public function reorder(array $orderIds): void
     {
-        $tableFilter = $this->getTableFilterState('photo_section_id');
-        $sectionId = $tableFilter['value'] ?? null;
+        $sectionFilter = $this->getTableFilterState('photo_section_id');
+        $sectionId = $sectionFilter['value'] ?? null;
 
         if ($sectionId) {
             $position = 1;
