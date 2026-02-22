@@ -16,12 +16,21 @@ RUN install-php-extensions \
     zip \
     opcache
 
+RUN apt update && apt install -y --no-install-recommends \
+    sqlite3 \
+    borgbackup \
+    && rm -rf /var/lib/apt/lists/*
+
 RUN \
-	useradd ${USER}; \
+    useradd ${USER}; \
     usermod -u ${UID} ${USER}; \
     groupmod -g ${GID} ${USER}; \
-	setcap CAP_NET_BIND_SERVICE=+eip /usr/local/bin/frankenphp; \
-	chown -R ${UID}:${GID} /config/caddy /data/caddy
+    setcap CAP_NET_BIND_SERVICE=+eip /usr/local/bin/frankenphp; \
+    mkdir -p /backup /config/caddy /data/caddy && \
+    chown -R ${UID}:${GID} /config /backup /data
+
+COPY docker/backup.sh /usr/local/bin/backup
+RUN chmod +x /usr/local/bin/backup
 
 # Install Composer
 COPY --from=composer:latest /usr/bin/composer /usr/bin/composer

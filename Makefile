@@ -15,7 +15,7 @@ build:
 		docker push $(TAG); \
 	fi
 
-init: db cache
+init: db cache borg
 	docker compose exec $(CONTAINER_NAME) bash -c "php artisan storage:link"
 	docker compose exec $(CONTAINER_NAME) bash -c "php artisan optimize:clear"
 
@@ -37,3 +37,9 @@ cache:
 	docker compose exec $(CONTAINER_NAME) bash -c "php artisan route:cache"
 	docker compose exec $(CONTAINER_NAME) bash -c "php artisan view:cache"
 	docker compose exec $(CONTAINER_NAME) bash -c "php artisan optimize:clear"
+
+borg:
+	docker compose exec $(CONTAINER_NAME) bash -c "borg init --encryption=repokey-blake2 /backup"
+
+backup:
+	docker compose exec $(CONTAINER_NAME) bash -c "backup"
