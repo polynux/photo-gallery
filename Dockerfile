@@ -78,4 +78,4 @@ RUN php artisan storage:link \
 USER ${USER}
 
 ENTRYPOINT ["/usr/local/bin/entrypoint.sh"]
-CMD ["frankenphp", "run", "--config", "/etc/caddy/Caddyfile", "--adapter", "caddyfile"]
+CMD ["frankenphp", "run", "-c", "/etc/caddy/Caddyfile"]
