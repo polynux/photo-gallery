@@ -16,12 +16,11 @@ class Univers extends Component
         '13' => ['big', 'wide', 'tall', '', '', 'wide', '', 'tall', '', 'big', '', 'wide', ''],
         'default' => ['big', 'wide', 'tall', '', '', 'wide', '', 'tall', '', 'wide', '', 'wide', '', 'wide'],
     ];
+
     /**
      * Create a new component instance.
      */
-    public function __construct()
-    {
-    }
+    public function __construct() {}
 
     /**
      * Get the view / contents that represent the component.

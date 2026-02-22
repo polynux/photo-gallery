@@ -3,7 +3,6 @@
 namespace App\Filament\Resources;
 
 use App\Filament\Resources\PhotoResource\Pages;
-use App\Filament\Resources\PhotoResource\RelationManagers;
 use App\Models\Photo;
 use Filament\Forms;
 use Filament\Forms\Form;
@@ -11,7 +10,6 @@ use Filament\Resources\Resource;
 use Filament\Tables;
 use Filament\Tables\Table;
 use Illuminate\Database\Eloquent\Builder;
-use Illuminate\Database\Eloquent\SoftDeletingScope;
 
 class PhotoResource extends Resource
 {
@@ -102,8 +100,6 @@ class PhotoResource extends Resource
             return $query->where('photo_gallery_id', request()->get('photo_gallery_id'));
         }
 
-        return $query->whereHas('photoGallery', function (Builder $query) {
-            $query;
-        });
+        return $query->whereHas('photoGallery', function (Builder $query) {});
     }
 }

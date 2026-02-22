@@ -7,20 +7,21 @@ use App\Models\PhotoGallery;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Log;
 use Illuminate\Support\Facades\Storage;
-use ZipStream\ZipStream;
 use Illuminate\Support\Str;
+use ZipStream\ZipStream;
 
 class PublicController extends Controller
 {
     public function show($access_code)
     {
         $photoGallery = PhotoGallery::where('access_code', $access_code)->firstOrFail();
-        if (!$photoGallery) {
+        if (! $photoGallery) {
             return back()->withErrors(['access_code' => 'Cette galerie n\'existe pas']);
         }
-        if (session('authenticated_gallery_' . $photoGallery->id)) {
+        if (session('authenticated_gallery_'.$photoGallery->id)) {
             return redirect()->route('public.gallery', $access_code);
         }
+
         return view('public.login', compact('photoGallery'));
     }
 
@@ -34,7 +35,8 @@ class PublicController extends Controller
         $photoGallery = PhotoGallery::where('access_code', $access_code)->firstOrFail();
 
         if ($request->password === $photoGallery->password) {
-            session(['authenticated_gallery_' . $photoGallery->id => true]);
+            session(['authenticated_gallery_'.$photoGallery->id => true]);
+
             return redirect()->route('public.gallery', $access_code);
         }
 
@@ -48,12 +50,13 @@ class PublicController extends Controller
         ]);
 
         $photoGallery = PhotoGallery::where('access_code', $request->access_code)->firstOrFail();
-        if (!$photoGallery) {
+        if (! $photoGallery) {
             return back()->withErrors(['access_code' => 'Cette galerie n\'existe pas']);
         }
 
         if ($request->password === $photoGallery->password) {
-            session(['authenticated_gallery_' . $photoGallery->id => true]);
+            session(['authenticated_gallery_'.$photoGallery->id => true]);
+
             return redirect()->route('public.gallery', $request->access_code);
         }
 
@@ -64,11 +67,12 @@ class PublicController extends Controller
     {
         $photoGallery = PhotoGallery::where('access_code', $access_code)->firstOrFail();
 
-        if (!session('authenticated_gallery_' . $photoGallery->id)) {
+        if (! session('authenticated_gallery_'.$photoGallery->id)) {
             return redirect()->route('public.show', $access_code);
         }
 
         $photos = $photoGallery->photos()->orderBy('order')->get();
+
         return view('public.gallery', compact('photoGallery', 'photos'));
     }
 
@@ -76,16 +80,16 @@ class PublicController extends Controller
     {
         $photoGallery = PhotoGallery::where('access_code', $access_code)->firstOrFail();
 
-        if (!session('authenticated_gallery_' . $photoGallery->id)) {
+        if (! session('authenticated_gallery_'.$photoGallery->id)) {
             return redirect()->route('public.show', $access_code);
         }
 
         // Create the temp directory if it doesn't exist
-        if (!Storage::exists('temp')) {
+        if (! Storage::exists('temp')) {
             Storage::makeDirectory('temp');
         }
 
-        $zipName = Str::slug($photoGallery->name) . '.zip';
+        $zipName = Str::slug($photoGallery->name).'.zip';
 
         set_time_limit(0);
 
@@ -95,14 +99,14 @@ class PublicController extends Controller
         );
 
         foreach ($photoGallery->photos as $photo) {
-            $filePath = storage_path('app/private/photos/' . $photo->path);
+            $filePath = storage_path('app/private/photos/'.$photo->path);
 
             // Check if the file exists before adding it
             if (file_exists($filePath)) {
                 // Use a clean filename based on the alt text or a default name
                 $filename = $photo->alt
-                    ? Str::slug($photo->alt) . '.jpg'
-                    : 'photo_' . $photo->id . '.jpg';
+                    ? Str::slug($photo->alt).'.jpg'
+                    : 'photo_'.$photo->id.'.jpg';
 
                 $zip->addFileFromPath($filename, $filePath);
             } else {
@@ -118,28 +122,32 @@ class PublicController extends Controller
 
     public function showPhoto($gallery, $photo)
     {
-        if (!session('authenticated_gallery_' . $gallery) && !auth()->check()) {
-            Log::info('User not authenticated for gallery: ' . $gallery);
+        if (! session('authenticated_gallery_'.$gallery) && ! auth()->check()) {
+            Log::info('User not authenticated for gallery: '.$gallery);
+
             return redirect()->route('public.select');
         }
-        $photo = Photo::where('path', $gallery . '/' . $photo)
+        $photo = Photo::where('path', $gallery.'/'.$photo)
             ->where('photo_gallery_id', $gallery)
             ->firstOrFail();
+
         return Storage::disk('photo')->response($photo->path);
     }
 
     public function showThumbnail($gallery, $photo)
     {
-        if (!session('authenticated_gallery_' . $gallery) && !auth()->check()) {
-            Log::info('User not authenticated for gallery: ' . $gallery);
+        if (! session('authenticated_gallery_'.$gallery) && ! auth()->check()) {
+            Log::info('User not authenticated for gallery: '.$gallery);
+
             return redirect()->route('public.select');
         }
-        $photo = Photo::where('path', $gallery . '/' . $photo)
+        $photo = Photo::where('path', $gallery.'/'.$photo)
             ->where('photo_gallery_id', $gallery)
             ->firstOrFail();
         if (Storage::disk('thumbnails')->exists($photo->path)) {
             return Storage::disk('thumbnails')->response($photo->path);
         }
+
         return abort(404, 'Thumbnail not found');
     }
 }

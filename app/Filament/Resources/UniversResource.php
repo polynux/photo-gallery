@@ -3,15 +3,12 @@
 namespace App\Filament\Resources;
 
 use App\Filament\Resources\UniversResource\Pages;
-use App\Filament\Resources\UniversResource\RelationManagers;
 use App\Models\Univers;
 use Filament\Forms;
 use Filament\Forms\Form;
 use Filament\Resources\Resource;
 use Filament\Tables;
 use Filament\Tables\Table;
-use Illuminate\Database\Eloquent\Builder;
-use Illuminate\Database\Eloquent\SoftDeletingScope;
 
 class UniversResource extends Resource
 {
@@ -53,7 +50,7 @@ class UniversResource extends Resource
                     ->label('Fichier')
                     ->disk('public')
                     ->circular()
-                    ->defaultImageUrl(fn ($record) => $record->path ? asset('storage/univers/' . $record->path) : null)
+                    ->defaultImageUrl(fn ($record) => $record->path ? asset('storage/univers/'.$record->path) : null)
                     ->searchable(),
                 Tables\Columns\TextColumn::make('title')
                     ->label('Titre')

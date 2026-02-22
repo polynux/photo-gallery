@@ -1,5 +1,7 @@
 <?php
+
 // app/Filament/Widgets/RecentPhotoGalleries.php
+
 namespace App\Filament\Widgets;
 
 use App\Filament\Resources\PhotoGalleryResource;
@@ -11,7 +13,8 @@ use Filament\Widgets\TableWidget as BaseWidget;
 class RecentPhotoGalleries extends BaseWidget
 {
     protected static ?int $sort = 1;
-    protected int | string | array $columnSpan = 'full';
+
+    protected int|string|array $columnSpan = 'full';
 
     public function table(Table $table): Table
     {
@@ -25,7 +28,7 @@ class RecentPhotoGalleries extends BaseWidget
                 Tables\Columns\ImageColumn::make('coverPhoto.path')
                     ->label('Cover')
                     ->defaultImageUrl(fn ($record) => $record->photos()->first() ?
-                        asset('photos/' . $record->photos()->first()->path) : null)
+                        asset('photos/'.$record->photos()->first()->path) : null)
                     ->circular(),
                 Tables\Columns\TextColumn::make('name'),
                 Tables\Columns\TextColumn::make('access_code')

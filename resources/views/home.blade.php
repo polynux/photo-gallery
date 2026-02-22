@@ -1,77 +1,184 @@
 <x-layout>
-    <!-- Hero Section -->
-    <section class="hero bg-cover bg-center h-screen -mt-16"
-        style="background-image: url('{{ Vite::asset('resources/images/hero-image.webp') }}');">
-        <div class="container mx-auto h-full flex items-center justify-center text-center">
-            <div>
-                <h1 class="text-5xl font-bold text-gray-900 mb-4">Bienvenue sur PINATON Photographie</h1>
-                <p class="text-xl text-gray-800 mb-8">Capturez vos moments précieux avec un photographe professionnel.
+    <!-- Hero Section - Full Screen with Background Image -->
+    <section id="hero" class="relative h-screen flex items-center justify-center overflow-hidden">
+        <!-- Background Image -->
+        <div class="absolute inset-0 bg-cover bg-center bg-no-repeat"
+            style="background-image: url('{{ Vite::asset('resources/images/hero-image.webp') }}');">
+        </div>
+        
+        <!-- Overlay -->
+        <div class="absolute inset-0 bg-gradient-to-b from-black/40 via-black/30 to-black/60"></div>
+        
+        <!-- Content -->
+        <div class="relative z-10 container mx-auto px-6 text-center">
+            <p class="text-sm font-medium tracking-[0.2em] uppercase mb-6 text-white/80 animate-fade-in-up">
+                Photographie Professionnelle
+            </p>
+            
+            <h1 class="text-5xl md:text-7xl lg:text-8xl font-display font-bold mb-8 text-white animate-fade-in-up delay-100">
+                Capturez l'Instant
+            </h1>
+            
+            <p class="text-xl md:text-2xl mb-12 text-white/90 max-w-2xl mx-auto animate-fade-in-up delay-200">
+                Vos moments précieux méritent un regard professionnel
+            </p>
+            
+            <div class="flex flex-col sm:flex-row gap-4 justify-center animate-fade-in-up delay-300">
+                <a href="#contact" 
+                   class="px-8 py-4 bg-white text-gray-900 rounded-full font-medium transition-all hover:shadow-lg hover:scale-105">
+                    Me contacter
+                </a>
+                <a href="#universe" 
+                   class="px-8 py-4 border-2 border-white text-white rounded-full font-medium transition-all hover:bg-white/10">
+                    Découvrir
+                </a>
+            </div>
+        </div>
+        
+        <!-- Scroll Indicator -->
+        <div class="absolute bottom-8 left-1/2 transform -translate-x-1/2 animate-bounce">
+            <svg class="w-6 h-6 text-white/60" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 14l-7 7m0 0l-7-7m7 7V3"></path>
+            </svg>
+        </div>
+    </section>
+
+    <!-- Universe Section -->
+    <section id="universe" class="py-24 bg-gray-50">
+        <div class="container mx-auto px-6">
+            <div class="text-center mb-16">
+                <p class="text-sm font-medium tracking-[0.2em] uppercase mb-4 text-gray-500">Portfolio</p>
+                <h2 class="text-4xl md:text-5xl font-display font-bold text-gray-900 mb-6">Mon Univers Visuel</h2>
+                <p class="text-lg text-gray-600 max-w-2xl mx-auto">
+                    J'essaie au travers de chacun de mes clichés de transmettre une émotion singulière,
+                    un moment sincère ou un instant précieux...
                 </p>
-                <a href="#contact" class="btn">
-                    Contactez-moi
+            </div>
+            
+            <!-- Universe Grid Component -->
+            <x-univers />
+        </div>
+    </section>
+
+    <!-- Gallery CTA Section -->
+    <section id="gallery" class="py-24 bg-white">
+        <div class="container mx-auto px-6">
+            <div class="max-w-4xl mx-auto text-center">
+                <div class="inline-flex items-center justify-center w-20 h-20 rounded-full bg-gray-100 mb-8">
+                    <svg class="w-10 h-10 text-gray-700" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5" d="M3 16.5v2.25A2.25 2.25 0 0 0 5.25 21h13.5A2.25 2.25 0 0 0 21 18.75V16.5M16.5 12 12 16.5m0 0L7.5 12m4.5 4.5V3"></path>
+                    </svg>
+                </div>
+                
+                <p class="text-sm font-medium tracking-[0.2em] uppercase mb-4 text-gray-500">Espace Client</p>
+                
+                <h2 class="text-4xl md:text-5xl font-display font-bold text-gray-900 mb-6">Ma Galerie</h2>
+                
+                <p class="text-lg text-gray-600 mb-8 max-w-2xl mx-auto">
+                    Accédez à votre galerie photo à l'aide du code d'accès et du mot de passe 
+                    fournis par votre photographe. Téléchargez vos photos en haute qualité.
+                </p>
+                
+                <a href="{{ route('public.select') }}" 
+                   class="inline-flex items-center px-8 py-4 bg-gray-900 text-white rounded-full font-medium transition-all hover:shadow-lg hover:scale-105">
+                    <svg class="w-5 h-5 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 7a2 2 0 012 2m4 0a6 6 0 01-7.743 5.743L11 17H9v2H7v2H4a1 1 0 01-1-1v-2.586a1 1 0 01.293-.707l5.964-5.964A6 6 0 1121 9z"></path>
+                    </svg>
+                    Accéder à ma galerie
                 </a>
             </div>
         </div>
     </section>
 
-    <!-- My Universe Section -->
-    <section class="py-16 bg-gray-100" id="universe">
-        <div class="container mx-auto text-center">
-            <h2 class="text-3xl font-bold mb-4 text-base-200">Mon univers visuel</h2>
-            <p class="text-gray-700 mb-8">
-                J'essaie au travers de chacun de mes clichés de transmettre une émotion singulière,
-                un moment sincère ou un instant précieux...
-            </p>
-            <x-univers />
-        </div>
-    </section>
-
-    <!-- Gallery Section -->
-    <section class="py-8" id="gallery">
-        <div class="container mx-auto text-center">
-            <h2 class="text-3xl font-bold mb-4 text-base-200">Ma Galerie</h2>
-            <p class="text-gray-700 mb-8">
-                Accédez à votre galerie photo à l'aide du code d'accès et du mot de passe fournis par votre photographe.
-            </p>
-            <button class="btn mb-4">
-                <a href="{{ route('public.select') }}">Accéder à ma galerie</a>
-            </button>
-        </div>
-    </section>
-
     <!-- Contact Section -->
-    <section class="py-16" id="contact">
-        <div class="container mx-auto text-center flex flex-col items-center">
-            <h2 class="text-3xl font-bold mb-4 text-base-200">Contactez-moi</h2>
-            <p class="text-gray-700 mb-8">
-                Pour toute demande de renseignements ou de réservation, n'hésitez pas à me contacter.
-            </p>
-            <ul class="list text-base-200 text-lg flex flex-col gap-4">
-                <li class="flex items-center gap-2"><svg xmlns="http://www.w3.org/2000/svg" fill="none" view-box="0 0 24 24"
-                        stroke-width={1.5} stroke="currentColor" class="size-6">
-                        <path stroke-linecap="round" stroke-linejoin="round"
-                            d="M21.75 6.75v10.5a2.25 2.25 0 0 1-2.25 2.25h-15a2.25 2.25 0 0 1-2.25-2.25V6.75m19.5 0A2.25 2.25 0 0 0 19.5 4.5h-15a2.25 2.25 0 0 0-2.25 2.25m19.5 0v.243a2.25 2.25 0 0 1-1.07 1.916l-7.5 4.615a2.25 2.25 0 0 1-2.36 0L3.32 8.91a2.25 2.25 0 0 1-1.07-1.916V6.75" />
-                    </svg><a href="mailto:contact@pinatonphotos.fr">contact@pinatonphotos.fr</a></li>
-                <li class="flex items-center gap-2">
-                    <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.5"
-                        stroke="currentColor" class="size-6">
-                        <path stroke-linecap="round" stroke-linejoin="round"
-                            d="M2.25 6.75c0 8.284 6.716 15 15 15h2.25a2.25 2.25 0 0 0 2.25-2.25v-1.372c0-.516-.351-.966-.852-1.091l-4.423-1.106c-.44-.11-.902.055-1.173.417l-.97 1.293c-.282.376-.769.542-1.21.38a12.035 12.035 0 0 1-7.143-7.143c-.162-.441.004-.928.38-1.21l1.293-.97c.363-.271.527-.734.417-1.173L6.963 3.102a1.125 1.125 0 0 0-1.091-.852H4.5A2.25 2.25 0 0 0 2.25 4.5v2.25Z" />
-                    </svg>
-
-                    <a href="tel:+33644751975">+33 6 44 75 19 75</a>
-                </li>
-                <li class="flex items-center gap-2">
-                    <svg width="800px" height="800px" viewBox="0 0 24 24" fill="none"
-                        xmlns="http://www.w3.org/2000/svg" class="size-6">
-                        <path fill-rule="evenodd" clip-rule="evenodd"
-                            d="M20 1C21.6569 1 23 2.34315 23 4V20C23 21.6569 21.6569 23 20 23H4C2.34315 23 1 21.6569 1 20V4C1 2.34315 2.34315 1 4 1H20ZM20 3C20.5523 3 21 3.44772 21 4V20C21 20.5523 20.5523 21 20 21H15V13.9999H17.0762C17.5066 13.9999 17.8887 13.7245 18.0249 13.3161L18.4679 11.9871C18.6298 11.5014 18.2683 10.9999 17.7564 10.9999H15V8.99992C15 8.49992 15.5 7.99992 16 7.99992H18C18.5523 7.99992 19 7.5522 19 6.99992V6.31393C19 5.99091 18.7937 5.7013 18.4813 5.61887C17.1705 5.27295 16 5.27295 16 5.27295C13.5 5.27295 12 6.99992 12 8.49992V10.9999H10C9.44772 10.9999 9 11.4476 9 11.9999V12.9999C9 13.5522 9.44771 13.9999 10 13.9999H12V21H4C3.44772 21 3 20.5523 3 20V4C3 3.44772 3.44772 3 4 3H20Z"
-                            fill="#0F0F0F" />
-                    </svg><a href="https://www.facebook.com/people/Pinaton-Photographie/61575871906908/">Pinaton
-                        Photographie</a>
-                </li>
-
-            </ul>
+    <section id="contact" class="py-24 bg-gray-50">
+        <div class="container mx-auto px-6">
+            <div class="max-w-6xl mx-auto">
+                <div class="text-center mb-16">
+                    <p class="text-sm font-medium tracking-[0.2em] uppercase mb-4 text-gray-500">Contact</p>
+                    
+                    <h2 class="text-4xl md:text-5xl font-display font-bold text-gray-900 mb-6">Contactez-moi</h2>
+                    
+                    <p class="text-lg text-gray-600 max-w-2xl mx-auto">
+                        Pour toute demande de renseignements ou de réservation, n'hésitez pas à me contacter.
+                    </p>
+                </div>
+                
+                <div class="grid md:grid-cols-2 gap-12">
+                    <!-- Contact Info -->
+                    <div class="space-y-8">
+                        <div class="flex items-start gap-4">
+                            <div class="w-12 h-12 rounded-full bg-gray-900 flex items-center justify-center flex-shrink-0">
+                                <svg class="w-5 h-5 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3 8l7.89 5.26a2 2 0 002.22 0L21 8M5 19h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v10a2 2 0 002 2z"></path>
+                                </svg>
+                            </div>
+                            <div>
+                                <h3 class="font-semibold text-gray-900 mb-1">Email</h3>
+                                <a href="mailto:contact@pinatonphotos.fr" class="text-gray-600 hover:text-gray-900 transition-colors">contact@pinatonphotos.fr</a>
+                            </div>
+                        </div>
+                        
+                        <div class="flex items-start gap-4">
+                            <div class="w-12 h-12 rounded-full bg-gray-900 flex items-center justify-center flex-shrink-0">
+                                <svg class="w-5 h-5 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3 5a2 2 0 012-2h3.28a1 1 0 01.948.684l1.498 4.493a1 1 0 01-.502 1.21l-2.257 1.13a11.042 11.042 0 005.516 5.516l1.13-2.257a1 1 0 011.21-.502l4.493 1.498a1 1 0 01.684.949V19a2 2 0 01-2 2h-1C9.716 21 3 14.284 3 6V5z"></path>
+                                </svg>
+                            </div>
+                            <div>
+                                <h3 class="font-semibold text-gray-900 mb-1">Téléphone</h3>
+                                <a href="tel:+33644751975" class="text-gray-600 hover:text-gray-900 transition-colors">+33 6 44 75 19 75</a>
+                            </div>
+                        </div>
+                        
+                        <div class="flex items-start gap-4">
+                            <div class="w-12 h-12 rounded-full bg-gray-900 flex items-center justify-center flex-shrink-0">
+                                <svg class="w-5 h-5 text-white" fill="currentColor" viewBox="0 0 24 24">
+                                    <path d="M24 12.073c0-6.627-5.373-12-12-12s-12 5.373-12 12c0 5.99 4.388 10.954 10.125 11.854v-8.385H7.078v-3.47h3.047V9.43c0-3.007 1.792-4.669 4.533-4.669 1.312 0 2.686.235 2.686.235v2.953H15.83c-1.491 0-1.956.925-1.956 1.874v2.25h3.328l-.532 3.47h-2.796v8.385C19.612 23.027 24 18.062 24 12.073z"></path>
+                                </svg>
+                            </div>
+                            <div>
+                                <h3 class="font-semibold text-gray-900 mb-1">Facebook</h3>
+                                <a href="https://www.facebook.com/people/Pinaton-Photographie/61575871906908/" target="_blank" class="text-gray-600 hover:text-gray-900 transition-colors">Pinaton Photographie</a>
+                            </div>
+                        </div>
+                    </div>
+                    
+                    <!-- Contact Form -->
+                    <div class="bg-white p-8 rounded-2xl shadow-lg border border-gray-100">
+                        <h3 class="font-display text-2xl font-semibold text-gray-900 mb-6">Envoyez un message</h3>
+                        
+                        <form action="#" method="POST" class="space-y-5">
+                            @csrf
+                            <div>
+                                <label for="name" class="block text-sm font-medium text-gray-700 mb-2">Nom</label>
+                                <input type="text" id="name" name="name" required
+                                    class="w-full px-4 py-3 rounded-lg border-2 border-gray-200 focus:border-gray-900 focus:outline-none transition-colors"
+                                    placeholder="Votre nom">
+                            </div>
+                            
+                            <div>
+                                <label for="email" class="block text-sm font-medium text-gray-700 mb-2">Email</label>
+                                <input type="email" id="email" name="email" required
+                                    class="w-full px-4 py-3 rounded-lg border-2 border-gray-200 focus:border-gray-900 focus:outline-none transition-colors"
+                                    placeholder="votre@email.com">
+                            </div>
+                            
+                            <div>
+                                <label for="message" class="block text-sm font-medium text-gray-700 mb-2">Message</label>
+                                <textarea id="message" name="message" rows="4" required
+                                    class="w-full px-4 py-3 rounded-lg border-2 border-gray-200 focus:border-gray-900 focus:outline-none transition-colors resize-none"
+                                    placeholder="Décrivez votre projet..."></textarea>
+                            </div>
+                            
+                            <button type="submit" 
+                                class="w-full py-4 bg-gray-900 text-white rounded-lg font-medium transition-all hover:bg-gray-800 hover:shadow-lg">
+                                Envoyer le message
+                            </button>
+                        </form>
+                    </div>
+                </div>
+            </div>
         </div>
     </section>
 

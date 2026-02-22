@@ -6,5 +6,5 @@ use Illuminate\Database\Eloquent\Model;
 
 class Univers extends Model
 {
-    protected $fillable = [ 'path', 'title', 'description' ];
+    protected $fillable = ['path', 'title', 'description'];
 }

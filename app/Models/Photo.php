@@ -44,20 +44,20 @@ class Photo extends Model
     {
         try {
             $disk = Storage::disk('private');
-            $thumbnailPath = $disk->path('thumbnails/' . $this->path);
-            
+            $thumbnailPath = $disk->path('thumbnails/'.$this->path);
+
             // Check if thumbnail already exists to prevent unnecessary processing
             if (file_exists($thumbnailPath)) {
                 return;
             }
 
-            $manager = new ImageManager(new Driver());
+            $manager = new ImageManager(new Driver);
             $image = $manager->read(Storage::disk('photo')->path($this->path));
             $image->scale(1920);
 
             $image->toJpeg(80);
-            
-            if (!file_exists(dirname($thumbnailPath))) {
+
+            if (! file_exists(dirname($thumbnailPath))) {
                 mkdir(dirname($thumbnailPath), 0755, true);
             }
             $image->save($thumbnailPath);
@@ -68,8 +68,8 @@ class Photo extends Model
 
     public function deleteThumbnail()
     {
-        if ($this->path && Storage::disk('private')->exists('thumbnails/' . $this->path)) {
-            Storage::disk('private')->delete('thumbnails/' . $this->path);
+        if ($this->path && Storage::disk('private')->exists('thumbnails/'.$this->path)) {
+            Storage::disk('private')->delete('thumbnails/'.$this->path);
         }
     }
 }

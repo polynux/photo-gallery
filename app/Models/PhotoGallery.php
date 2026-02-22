@@ -9,7 +9,6 @@ use Illuminate\Support\Str;
 
 class PhotoGallery extends Model
 {
-
     protected $fillable = ['name', 'description', 'password', 'access_code', 'cover_photo_id'];
 
     protected $hidden = ['password'];
@@ -21,6 +20,7 @@ class PhotoGallery extends Model
     {
         return $this->hasMany(Photo::class);
     }
+
     /**
      * @return BelongsTo<Photo,PhotoGallery>
      */

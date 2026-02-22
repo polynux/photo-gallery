@@ -35,8 +35,8 @@ class GenerateThumbnails extends Command
 
         $galleryId = 0;
         foreach ($photos as $photo) {
-            $thumbnailPath = Storage::disk('private')->path('thumbnails/' . $photo->path);
-            if (!file_exists($thumbnailPath)) {
+            $thumbnailPath = Storage::disk('private')->path('thumbnails/'.$photo->path);
+            if (! file_exists($thumbnailPath)) {
                 if ($photo->photo_gallery_id !== $galleryId) {
                     $galleryId = $photo->photo_gallery_id;
                     $this->info("Processing gallery ID: {$galleryId}");
@@ -56,7 +56,7 @@ class GenerateThumbnails extends Command
             foreach ($fibers as $index => $fiber) {
                 if ($fiber->isTerminated()) {
                     unset($fibers[$index]);
-                } elseif (!$fiber->isStarted() || $fiber->isSuspended()) {
+                } elseif (! $fiber->isStarted() || $fiber->isSuspended()) {
                     $fiber->resume();
                 }
             }

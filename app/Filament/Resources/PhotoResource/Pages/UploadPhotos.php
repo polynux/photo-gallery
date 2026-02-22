@@ -14,10 +14,13 @@ use Filament\Resources\Pages\Page;
 class UploadPhotos extends Page
 {
     protected static string $resource = PhotoGalleryResource::class;
+
     protected static string $view = 'filament.resources.photo-resource.pages.upload-photos';
 
     public ?array $data = [];
+
     public $defaultAlt = '';
+
     public PhotoGallery $photoGallery;
 
     public function mount(PhotoGallery $record): void
@@ -62,7 +65,7 @@ class UploadPhotos extends Page
         }
 
         // If this is the first upload and no cover photo is set, use the first uploaded photo
-        if (!$this->photoGallery->cover_photo_id && count($photos) > 0) {
+        if (! $this->photoGallery->cover_photo_id && count($photos) > 0) {
             $this->photoGallery->update(['cover_photo_id' => $photos[0]->id]);
         }
 

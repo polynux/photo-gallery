@@ -49,14 +49,14 @@ class PhotosRelationManager extends RelationManager
                 Tables\Actions\Action::make('view_gallery')
                     ->label('View Gallery')
                     ->icon('heroicon-o-eye')
-                    ->url(fn($livewire) => route('public.gallery', $livewire->getOwnerRecord()->access_code))
+                    ->url(fn ($livewire) => route('public.gallery', $livewire->getOwnerRecord()->access_code))
                     ->openUrlInNewTab(),
                 Tables\Actions\CreateAction::make()
                     ->label('Upload Photo')
                     ->icon('heroicon-o-plus'),
                 Tables\Actions\Action::make('upload_multiple')
                     ->label('Upload Multiple')
-                    ->url(fn($livewire) => PhotoGalleryResource::getUrl('upload-photos', ['record' => $livewire->getOwnerRecord()->id]))
+                    ->url(fn ($livewire) => PhotoGalleryResource::getUrl('upload-photos', ['record' => $livewire->getOwnerRecord()->id]))
                     ->icon('heroicon-o-arrow-up-tray'),
             ])
             ->actions([
