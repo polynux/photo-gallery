@@ -148,21 +148,28 @@
     <!-- Photo Grid -->
     <section class="pb-12 bg-white">
         <div class="container mx-auto px-6">
-            <div class="masonry-grid">
-                @foreach ($photos as $photo)
-                    <div class="masonry-item group relative overflow-hidden rounded-lg shadow-md cursor-pointer hover-lift"
-                         onclick="openSlideshow({{ $loop->index }})">
-                        <img src="{{ Storage::disk('thumbnails')->url($photo->path) }}"
-                            alt="{{ $photo->alt ?? 'Photo #' . $photo->id }}"
-                            class="w-full h-auto object-cover">
-                        <div class="absolute inset-0 bg-gradient-to-t from-black/60 to-transparent opacity-0 group-hover:opacity-100 transition-opacity duration-300 flex items-end">
-                            <div class="p-4 transform translate-y-full group-hover:translate-y-0 transition-transform duration-300">
-                                <p class="text-white font-medium">{{ $photo->alt ?? 'Photo #' . $photo->id }}</p>
+            @foreach ($photoGallery->sections as $section)
+                <div class="mb-12">
+                    @if ($photoGallery->sections->count() > 1)
+                        <h2 class="text-2xl font-display font-bold text-gray-900 mb-6">{{ $section->name }}</h2>
+                    @endif
+                    <div class="masonry-grid">
+                        @foreach ($section->photos as $photo)
+                            <div class="masonry-item group relative overflow-hidden rounded-lg shadow-md cursor-pointer hover-lift"
+                                 onclick="openSlideshow({{ $section->id }}, {{ $loop->index }})">
+                                <img src="{{ Storage::disk('thumbnails')->url($photo->path) }}"
+                                    alt="{{ $photo->alt ?? 'Photo #' . $photo->id }}"
+                                    class="w-full h-auto object-cover">
+                                <div class="absolute inset-0 bg-gradient-to-t from-black/60 to-transparent opacity-0 group-hover:opacity-100 transition-opacity duration-300 flex items-end">
+                                    <div class="p-4 transform translate-y-full group-hover:translate-y-0 transition-transform duration-300">
+                                        <p class="text-white font-medium">{{ $photo->alt ?? 'Photo #' . $photo->id }}</p>
+                                    </div>
+                                </div>
                             </div>
-                        </div>
+                        @endforeach
                     </div>
-                @endforeach
-            </div>
+                </div>
+            @endforeach
         </div>
     </section>
 
@@ -202,14 +209,33 @@
     </section>
 
     <script>
-        // Slideshow functionality
-        const photos = @json(
-            $photos->map(function ($photo) {
+        // Slideshow functionality with sections
+        const sections = @json(
+            $photoGallery->sections->map(function ($section) {
                 return [
-                    'src' => Storage::disk('photo')->url($photo->path),
-                    'alt' => $photo->alt ?? 'Photo #' . $photo->id,
+                    'id' => $section->id,
+                    'name' => $section->name,
+                    'photos' => $section->photos->map(function ($photo) {
+                        return [
+                            'src' => Storage::disk('photo')->url($photo->path),
+                            'alt' => $photo->alt ?? 'Photo #' . $photo->id,
+                        ];
+                    })->values()->toArray(),
                 ];
-            }));
+            })->keyBy('id')->toArray());
+
+        // Flatten all photos for global navigation
+        const allPhotos = [];
+        const photoIndexMap = {};
+        let globalIndex = 0;
+        
+        Object.values(sections).forEach(section => {
+            section.photos.forEach(photo => {
+                photoIndexMap[globalIndex] = { sectionId: section.id, localIndex: allPhotos.length };
+                allPhotos.push(photo);
+                globalIndex++;
+            });
+        });
 
         let currentIndex = 0;
         let isAnimating = false;
@@ -217,14 +243,41 @@
         const currentSlide = document.getElementById('current-slide');
         const slideCounter = document.getElementById('slide-counter');
         const slideAlt = document.getElementById('slide-alt');
-        const totalPhotos = photos.length;
+        const totalPhotos = allPhotos.length;
 
-        function openSlideshow(index) {
-            currentIndex = index;
-            currentSlide.src = photos[currentIndex].src;
-            currentSlide.alt = photos[currentIndex].alt;
+        function openSlideshow(sectionId, localIndex) {
+            // Find the global index for this section+localIndex
+            let startingIndex = 0;
+            let found = false;
+            
+            for (let i = 0; i < Object.keys(photoIndexMap).length; i++) {
+                if (photoIndexMap[i].sectionId === sectionId) {
+                    const section = sections[sectionId];
+                    const sectionStartIndex = startingIndex;
+                    if (photoIndexMap[i].sectionId === sectionId && (i - sectionStartIndex) === localIndex) {
+                        currentIndex = i;
+                        found = true;
+                        break;
+                    }
+                }
+            }
+            
+            // Fallback: calculate from section's position
+            if (!found) {
+                let offset = 0;
+                for (const [id, section] of Object.entries(sections)) {
+                    if (parseInt(id) === sectionId) {
+                        currentIndex = offset + localIndex;
+                        break;
+                    }
+                    offset += section.photos.length;
+                }
+            }
+            
+            currentSlide.src = allPhotos[currentIndex].src;
+            currentSlide.alt = allPhotos[currentIndex].alt;
             slideCounter.textContent = `${currentIndex + 1} / ${totalPhotos}`;
-            slideAlt.textContent = photos[currentIndex].alt;
+            slideAlt.textContent = allPhotos[currentIndex].alt;
             currentSlide.className = 'slide-image current';
             modal.classList.add('active');
         }
@@ -280,10 +333,10 @@
         }
 
         function updateSlide() {
-            currentSlide.src = photos[currentIndex].src;
-            currentSlide.alt = photos[currentIndex].alt;
+            currentSlide.src = allPhotos[currentIndex].src;
+            currentSlide.alt = allPhotos[currentIndex].alt;
             slideCounter.textContent = `${currentIndex + 1} / ${totalPhotos}`;
-            slideAlt.textContent = photos[currentIndex].alt;
+            slideAlt.textContent = allPhotos[currentIndex].alt;
         }
 
         // Event listeners

@@ -65,15 +65,19 @@ class PublicController extends Controller
 
     public function gallery($access_code)
     {
-        $photoGallery = PhotoGallery::where('access_code', $access_code)->firstOrFail();
+        $photoGallery = PhotoGallery::where('access_code', $access_code)
+            ->with(['sections' => function ($query) {
+                $query->orderBy('position')->with(['photos' => function ($q) {
+                    $q->orderBy('position');
+                }]);
+            }])
+            ->firstOrFail();
 
         if (! session('authenticated_gallery_'.$photoGallery->id)) {
             return redirect()->route('public.show', $access_code);
         }
 
-        $photos = $photoGallery->photos()->orderBy('order')->get();
-
-        return view('public.gallery', compact('photoGallery', 'photos'));
+        return view('public.gallery', compact('photoGallery'));
     }
 
     public function download($access_code)

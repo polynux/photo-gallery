@@ -3,6 +3,7 @@
 namespace App\Filament\Resources\PhotoGalleryResource\RelationManagers;
 
 use App\Filament\Resources\PhotoGalleryResource;
+use App\Models\PhotoSection;
 use Filament\Forms;
 use Filament\Forms\Form;
 use Filament\Resources\RelationManagers\RelationManager;
@@ -17,6 +18,11 @@ class PhotosRelationManager extends RelationManager
     {
         return $form
             ->schema([
+                Forms\Components\Select::make('photo_section_id')
+                    ->label('Section')
+                    ->options(fn () => PhotoSection::where('photo_gallery_id', $this->ownerRecord->id)->pluck('name', 'id'))
+                    ->required()
+                    ->default(fn () => PhotoSection::where('photo_gallery_id', $this->ownerRecord->id)->where('is_default', true)->first()?->id),
                 Forms\Components\FileUpload::make('path')
                     ->disk('photo')
                     ->directory($this->ownerRecord->id)
@@ -33,23 +39,36 @@ class PhotosRelationManager extends RelationManager
     {
         return $table
             ->recordTitleAttribute('id')
+            ->defaultSort('position', 'asc')
             ->columns([
+                Tables\Columns\TextColumn::make('position')
+                    ->label('#')
+                    ->sortable(),
                 Tables\Columns\ImageColumn::make('path')
                     ->disk('thumbnails')
                     ->visibility('private'),
+                Tables\Columns\TextColumn::make('photoSection.name')
+                    ->label('Section')
+                    ->badge()
+                    ->sortable(),
                 Tables\Columns\TextColumn::make('alt')
                     ->limit(30),
-                Tables\Columns\TextColumn::make('created_at')
-                    ->dateTime(),
             ])
+            ->reorderable('position')
             ->filters([
-                //
+                Tables\Filters\SelectFilter::make('photo_section_id')
+                    ->label('Section')
+                    ->options(fn () => PhotoSection::where('photo_gallery_id', $this->ownerRecord->id)->pluck('name', 'id')),
             ])
             ->headerActions([
+                Tables\Actions\Action::make('manage_sections')
+                    ->label('Manage Sections')
+                    ->icon('heroicon-o-folder')
+                    ->url(fn ($livewire) => PhotoGalleryResource::getUrl('sections', ['record' => $livewire->getOwnerRecord()->id])),
                 Tables\Actions\Action::make('view_gallery')
                     ->label('View Gallery')
                     ->icon('heroicon-o-eye')
-                    ->url(fn ($livewire) => route('public.gallery', $livewire->getOwnerRecord()->access_code))
+                    ->url(fn ($livewire) => route('public.show', $livewire->getOwnerRecord()->access_code))
                     ->openUrlInNewTab(),
                 Tables\Actions\CreateAction::make()
                     ->label('Upload Photo')
@@ -72,6 +91,23 @@ class PhotosRelationManager extends RelationManager
             ->bulkActions([
                 Tables\Actions\BulkActionGroup::make([
                     Tables\Actions\DeleteBulkAction::make(),
+                    Tables\Actions\BulkAction::make('move_to_section')
+                        ->label('Move to Section')
+                        ->icon('heroicon-o-folder')
+                        ->form([
+                            Forms\Components\Select::make('photo_section_id')
+                                ->label('Section')
+                                ->required()
+                                ->options(fn ($livewire) => PhotoSection::where('photo_gallery_id', $livewire->getOwnerRecord()->id)->pluck('name', 'id')),
+                        ])
+                        ->action(function (array $data, $records) {
+                            foreach ($records as $record) {
+                                $record->update([
+                                    'photo_section_id' => $data['photo_section_id'],
+                                    'position' => \App\Models\Photo::where('photo_section_id', $data['photo_section_id'])->max('position') + 1 ?? 1,
+                                ]);
+                            }
+                        }),
                 ]),
             ]);
     }

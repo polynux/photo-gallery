@@ -69,6 +69,10 @@ class PhotoGalleryResource extends Resource
             ])
             ->actions([
                 Tables\Actions\EditAction::make(),
+                Tables\Actions\Action::make('sections')
+                    ->label('Manage Sections')
+                    ->icon('heroicon-o-folder')
+                    ->url(fn (PhotoGallery $record) => static::getUrl('sections', ['record' => $record->id])),
                 Tables\Actions\Action::make('photos')
                     ->label('Manage Photos')
                     ->icon('heroicon-o-photo')
@@ -103,6 +107,7 @@ class PhotoGalleryResource extends Resource
             'index' => Pages\ListPhotoGalleries::route('/'),
             'create' => Pages\CreatePhotoGallery::route('/create'),
             'edit' => Pages\EditPhotoGallery::route('/{record}/edit'),
+            'sections' => Pages\ManageSections::route('/{record}/sections'),
             'upload-photos' => UploadPhotos::route('/{record}/upload-photos'),
         ];
     }

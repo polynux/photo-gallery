@@ -22,6 +22,14 @@ class PhotoGallery extends Model
     }
 
     /**
+     * @return HasMany<PhotoSection,PhotoGallery>
+     */
+    public function sections(): HasMany
+    {
+        return $this->hasMany(PhotoSection::class)->orderBy('position');
+    }
+
+    /**
      * @return BelongsTo<Photo,PhotoGallery>
      */
     public function coverPhoto(): BelongsTo
@@ -31,8 +39,17 @@ class PhotoGallery extends Model
 
     protected static function booted(): void
     {
-        static::creating(function ($photoGallery) {
+        static::creating(function (PhotoGallery $photoGallery) {
             $photoGallery->access_code = Str::random(8);
+        });
+
+        static::created(function (PhotoGallery $photoGallery) {
+            PhotoSection::create([
+                'photo_gallery_id' => $photoGallery->id,
+                'name' => $photoGallery->name,
+                'position' => 1,
+                'is_default' => true,
+            ]);
         });
     }
 }
