@@ -3,6 +3,7 @@
 namespace App\Filament\Resources\PhotoGalleryResource\RelationManagers;
 
 use App\Filament\Resources\PhotoGalleryResource;
+use App\Models\Photo;
 use App\Models\PhotoSection;
 use Filament\Forms;
 use Filament\Forms\Form;
@@ -104,11 +105,35 @@ class PhotosRelationManager extends RelationManager
                             foreach ($records as $record) {
                                 $record->update([
                                     'photo_section_id' => $data['photo_section_id'],
-                                    'position' => \App\Models\Photo::where('photo_section_id', $data['photo_section_id'])->max('position') + 1 ?? 1,
+                                    'position' => Photo::where('photo_section_id', $data['photo_section_id'])->max('position') + 1 ?? 1,
                                 ]);
                             }
                         }),
                 ]),
             ]);
+    }
+
+    public function reorder(array $orderIds): void
+    {
+        $tableFilter = $this->getTableFilterState('photo_section_id');
+        $sectionId = $tableFilter['value'] ?? null;
+
+        if ($sectionId) {
+            $position = 1;
+            foreach ($orderIds as $id) {
+                Photo::where('id', $id)
+                    ->where('photo_section_id', $sectionId)
+                    ->update(['position' => $position++]);
+            }
+        } else {
+            $galleryId = $this->ownerRecord->id;
+
+            $position = 1;
+            foreach ($orderIds as $id) {
+                Photo::where('id', $id)
+                    ->where('photo_gallery_id', $galleryId)
+                    ->update(['position' => $position++]);
+            }
+        }
     }
 }
