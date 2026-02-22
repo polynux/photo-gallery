@@ -210,28 +210,27 @@
 
     <script>
         // Slideshow functionality with sections
-        const sections = @json(
-            $photoGallery->sections->map(function ($section) {
-                return [
-                    'id' => $section->id,
-                    'name' => $section->name,
-                    'photos' => $section->photos->map(function ($photo) {
-                        return [
-                            'src' => Storage::disk('photo')->url($photo->path),
-                            'alt' => $photo->alt ?? 'Photo #' . $photo->id,
-                        ];
-                    })->values()->toArray(),
-                ];
-            })->keyBy('id')->toArray());
+        const sections = @json($photoGallery->sections->map(function ($section) {
+            return [
+                'id' => $section->id,
+                'name' => $section->name,
+                'photos' => $section->photos->map(function ($photo) {
+                    return [
+                        'src' => Storage::disk('photo')->url($photo->path),
+                        'alt' => $photo->alt ?? 'Photo #' . $photo->id,
+                    ];
+                })->values()->toArray(),
+            ];
+        })->values()->toArray());
 
         // Flatten all photos for global navigation
         const allPhotos = [];
-        const photoIndexMap = {};
+        const sectionsById = {};
         let globalIndex = 0;
         
-        Object.values(sections).forEach(section => {
+        sections.forEach(section => {
+            sectionsById[section.id] = section;
             section.photos.forEach(photo => {
-                photoIndexMap[globalIndex] = { sectionId: section.id, localIndex: allPhotos.length };
                 allPhotos.push(photo);
                 globalIndex++;
             });
@@ -246,32 +245,14 @@
         const totalPhotos = allPhotos.length;
 
         function openSlideshow(sectionId, localIndex) {
-            // Find the global index for this section+localIndex
-            let startingIndex = 0;
-            let found = false;
-            
-            for (let i = 0; i < Object.keys(photoIndexMap).length; i++) {
-                if (photoIndexMap[i].sectionId === sectionId) {
-                    const section = sections[sectionId];
-                    const sectionStartIndex = startingIndex;
-                    if (photoIndexMap[i].sectionId === sectionId && (i - sectionStartIndex) === localIndex) {
-                        currentIndex = i;
-                        found = true;
-                        break;
-                    }
+            // Calculate the global index for this section+localIndex
+            let offset = 0;
+            for (const section of sections) {
+                if (section.id === sectionId) {
+                    currentIndex = offset + localIndex;
+                    break;
                 }
-            }
-            
-            // Fallback: calculate from section's position
-            if (!found) {
-                let offset = 0;
-                for (const [id, section] of Object.entries(sections)) {
-                    if (parseInt(id) === sectionId) {
-                        currentIndex = offset + localIndex;
-                        break;
-                    }
-                    offset += section.photos.length;
-                }
+                offset += section.photos.length;
             }
             
             currentSlide.src = allPhotos[currentIndex].src;

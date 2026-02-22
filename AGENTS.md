@@ -34,6 +34,9 @@ pnpm run dev                 # Vite dev server
 ## Linting & Formatting
 
 ```bash
+# Run all linting (Pint + Blade syntax check)
+composer lint
+
 # Run Laravel Pint (code fixer)
 ./vendor/bin/pint
 
@@ -42,6 +45,9 @@ pnpm run dev                 # Vite dev server
 
 # Format specific file
 ./vendor/bin/pint app/Models/Photo.php
+
+# Check blade syntax (caches views, fails on syntax errors)
+php artisan view:cache
 ```
 
 ## Testing
