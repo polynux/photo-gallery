@@ -103,10 +103,7 @@ class PhotosRelationManager extends RelationManager
                         ])
                         ->action(function (array $data, $records) {
                             foreach ($records as $record) {
-                                $record->update([
-                                    'photo_section_id' => $data['photo_section_id'],
-                                    'position' => Photo::where('photo_section_id', $data['photo_section_id'])->max('position') + 1 ?? 1,
-                                ]);
+                                $record->update(['photo_section_id' => $data['photo_section_id']]);
                             }
                         }),
                 ]),
