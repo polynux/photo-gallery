@@ -47,8 +47,8 @@
                 </div>
                 <div class="flex gap-6">
                     <a href="https://www.instagram.com/pinatonphotographie/" target="_blank" rel="noopener noreferrer" class="text-gray-400 hover:text-white transition-colors">Instagram</a>
-                    <a href="#" class="text-gray-400 hover:text-white transition-colors">Facebook</a>
-                    <a href="#" class="text-gray-400 hover:text-white transition-colors">Contact</a>
+                    <a href="https://www.facebook.com/people/Pinaton-Photographie/61575871906908/" target="_blank" rel="noopener noreferrer" class="text-gray-400 hover:text-white transition-colors">Facebook</a>
+                    <a href="mailto:contact@pinatonphotos.fr" class="text-gray-400 hover:text-white transition-colors">Contact</a>
                 </div>
             </div>
             <div class="mt-8 pt-8 border-t border-gray-800 text-center">
