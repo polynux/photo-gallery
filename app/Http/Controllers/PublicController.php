@@ -77,7 +77,20 @@ class PublicController extends Controller
             return redirect()->route('public.show', $access_code);
         }
 
-        return view('public.gallery', compact('photoGallery'));
+        $slideshowData = $photoGallery->sections->map(function ($section) {
+            return [
+                'id' => $section->id,
+                'name' => $section->name,
+                'photos' => $section->photos->map(function ($photo) {
+                    return [
+                        'src' => Storage::disk('photo')->url($photo->path),
+                        'alt' => $photo->alt ?? 'Photo #'.$photo->id,
+                    ];
+                })->values()->toArray(),
+            ];
+        })->values()->toArray();
+
+        return view('public.gallery', compact('photoGallery', 'slideshowData'));
     }
 
     public function download($access_code)

@@ -210,18 +210,7 @@
 
     <script>
         // Slideshow functionality with sections
-        const sections = @json($photoGallery->sections->map(function ($section) {
-            return [
-                'id' => $section->id,
-                'name' => $section->name,
-                'photos' => $section->photos->map(function ($photo) {
-                    return [
-                        'src' => Storage::disk('photo')->url($photo->path),
-                        'alt' => $photo->alt ?? 'Photo #' . $photo->id,
-                    ];
-                })->values()->toArray(),
-            ];
-        })->values()->toArray());
+        const sections = @json($slideshowData);
 
         // Flatten all photos for global navigation
         const allPhotos = [];
