@@ -3,50 +3,65 @@
 namespace App\Console\Commands;
 
 use App\Models\Photo;
+use App\Models\PhotoGallery;
 use Fiber;
 use Illuminate\Console\Command;
 use Illuminate\Support\Facades\Storage;
 
 class GenerateThumbnails extends Command
 {
-    /**
-     * The name and signature of the console command.
-     *
-     * @var string
-     */
-    protected $signature = 'app:generate-thumbnails';
+    protected $signature = 'app:generate-thumbnails {--gallery= : The ID of a specific gallery to generate thumbnails for}';
 
-    /**
-     * The console command description.
-     *
-     * @var string
-     */
-    protected $description = 'Command description';
+    protected $description = 'Generate thumbnails for photos that are missing them';
 
-    /**
-     * Execute the console command.
-     */
     public function handle(): void
     {
+        $galleryId = $this->option('gallery');
+
+        if ($galleryId) {
+            $gallery = PhotoGallery::find($galleryId);
+            if (! $gallery) {
+                $this->error("Gallery with ID {$galleryId} not found.");
+
+                return;
+            }
+            $this->info("Generating thumbnails for gallery: {$gallery->name} (ID: {$galleryId})");
+            $photos = Photo::where('photo_gallery_id', $galleryId)->get();
+        } else {
+            $this->info('Generating thumbnails for all photos...');
+            $photos = Photo::all();
+        }
+
         $fibers = [];
-        $photos = Photo::all();
+        $processedCount = 0;
+        $skippedCount = 0;
+        $currentGalleryId = null;
 
-        $this->info('Generating thumbnails for all photos...');
-
-        $galleryId = 0;
         foreach ($photos as $photo) {
-            $thumbnailPath = Storage::disk('private')->path('thumbnails/'.$photo->path);
+            $thumbnailPath = Storage::disk('private')->path('thumbnails/' . $photo->path);
+
             if (! file_exists($thumbnailPath)) {
-                if ($photo->photo_gallery_id !== $galleryId) {
-                    $galleryId = $photo->photo_gallery_id;
-                    $this->info("Processing gallery ID: {$galleryId}");
+                if ($photo->photo_gallery_id !== $currentGalleryId) {
+                    $currentGalleryId = $photo->photo_gallery_id;
+                    $this->info("Processing gallery ID: {$currentGalleryId}");
                 }
                 $fibers[] = new Fiber(function () use ($photo) {
                     $photo->generateThumbnail();
                     $photo->save();
                 });
+                $processedCount++;
+            } else {
+                $skippedCount++;
             }
         }
+
+        if ($processedCount === 0) {
+            $this->info('All thumbnails already exist. Nothing to generate.');
+
+            return;
+        }
+
+        $this->info("Generating {$processedCount} thumbnails...");
 
         foreach ($fibers as $fiber) {
             $fiber->start();
@@ -62,6 +77,6 @@ class GenerateThumbnails extends Command
             }
         }
 
-        $this->info('Thumbnails generated successfully!');
+        $this->info("Thumbnails generated successfully! ({$processedCount} generated, {$skippedCount} skipped)");
     }
 }

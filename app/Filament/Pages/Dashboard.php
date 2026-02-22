@@ -7,6 +7,7 @@ use App\Models\Photo;
 use Filament\Actions\Action;
 use Filament\Notifications\Notification;
 use Filament\Pages\Dashboard as BaseDashboard;
+use Illuminate\Support\Facades\Storage;
 
 class Dashboard extends BaseDashboard
 {
@@ -20,20 +21,25 @@ class Dashboard extends BaseDashboard
                     $count = 0;
                     Photo::chunk(100, function ($photos) use (&$count) {
                         foreach ($photos as $photo) {
-                            GeneratePhotoThumbnail::dispatch($photo);
-                            $count++;
+                            $thumbnailPath = Storage::disk('private')->path('thumbnails/'.$photo->path);
+                            if (! file_exists($thumbnailPath)) {
+                                GeneratePhotoThumbnail::dispatch($photo);
+                                $count++;
+                            }
                         }
                     });
 
                     Notification::make()
                         ->title('Miniatures en file d\'attente')
-                        ->body("{$count} miniatures de photos ont été mises en file d'attente pour la génération.")
+                        ->body($count > 0
+                            ? "{$count} miniatures ont été mises en file d'attente pour la génération."
+                            : 'Toutes les miniatures existent déjà.')
                         ->success()
                         ->send();
                 })
                 ->requiresConfirmation()
                 ->modalHeading('Générer les miniatures manquantes')
-                ->modalDescription('Êtes-vous sûr de vouloir lancer la génération des miniatures manquantes ? Cette opération se fera en arrière-plan.')
+                ->modalDescription('Lancer la génération des miniatures manquantes pour toutes les galeries ? Cette opération se fera en arrière-plan.')
                 ->modalSubmitActionLabel('Lancer la génération'),
         ];
     }

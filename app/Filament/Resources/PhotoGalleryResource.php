@@ -5,12 +5,15 @@ namespace App\Filament\Resources;
 use App\Filament\Resources\PhotoGalleryResource\Pages;
 use App\Filament\Resources\PhotoGalleryResource\RelationManagers;
 use App\Filament\Resources\PhotoResource\Pages\UploadPhotos;
+use App\Jobs\GeneratePhotoThumbnail;
 use App\Models\PhotoGallery;
 use Filament\Forms;
 use Filament\Forms\Form;
+use Filament\Notifications\Notification;
 use Filament\Resources\Resource;
 use Filament\Tables;
 use Filament\Tables\Table;
+use Illuminate\Support\Facades\Storage;
 
 class PhotoGalleryResource extends Resource
 {
@@ -52,7 +55,7 @@ class PhotoGalleryResource extends Resource
                 Tables\Columns\ImageColumn::make('coverPhoto.path')
                     ->label('Cover')
                     ->defaultImageUrl(fn ($record) => $record->photos()->first() ?
-                        asset('thumbnails/'.$record->photos()->first()->path) : null)
+                        asset('thumbnails/' . $record->photos()->first()->path) : null)
                     ->circular(),
                 Tables\Columns\TextColumn::make('access_code')
                     ->copyable()
@@ -81,6 +84,33 @@ class PhotoGalleryResource extends Resource
                     ->label('Upload Photos')
                     ->icon('heroicon-o-arrow-up-tray')
                     ->url(fn (PhotoGallery $record) => static::getUrl('upload-photos', ['record' => $record->id])),
+                Tables\Actions\Action::make('generate_thumbnails')
+                    ->label('Generate Thumbnails')
+                    ->icon('heroicon-o-photo')
+                    ->color('warning')
+                    ->action(function (PhotoGallery $record) {
+                        $count = 0;
+                        foreach ($record->sections as $section) {
+                            foreach ($section->photos as $photo) {
+                                $thumbnailPath = Storage::disk('private')->path('thumbnails/' . $photo->path);
+                                if (! file_exists($thumbnailPath)) {
+                                    GeneratePhotoThumbnail::dispatch($photo);
+                                    $count++;
+                                }
+                            }
+                        }
+
+                        Notification::make()
+                            ->title('Miniatures en file d\'attente')
+                            ->body($count > 0
+                                ? "{$count} miniatures ont été mises en file d'attente pour la génération."
+                                : 'Toutes les miniatures existent déjà pour cette galerie.')
+                            ->success()
+                            ->send();
+                    })
+                    ->requiresConfirmation()
+                    ->modalHeading('Générer les miniatures')
+                    ->modalDescription(fn (PhotoGallery $record) => "Générer les miniatures manquantes pour la galerie \"{$record->name}\" ?"),
                 Tables\Actions\Action::make('view_gallery')
                     ->label('View Gallery')
                     ->icon('heroicon-o-eye')
@@ -90,6 +120,34 @@ class PhotoGalleryResource extends Resource
             ->bulkActions([
                 Tables\Actions\BulkActionGroup::make([
                     Tables\Actions\DeleteBulkAction::make(),
+                    Tables\Actions\BulkAction::make('generate_thumbnails_bulk')
+                        ->label('Generate Thumbnails')
+                        ->icon('heroicon-o-photo')
+                        ->action(function ($records) {
+                            $count = 0;
+                            foreach ($records as $gallery) {
+                                foreach ($gallery->sections as $section) {
+                                    foreach ($section->photos as $photo) {
+                                        $thumbnailPath = Storage::disk('private')->path('thumbnails/' . $photo->path);
+                                        if (! file_exists($thumbnailPath)) {
+                                            GeneratePhotoThumbnail::dispatch($photo);
+                                            $count++;
+                                        }
+                                    }
+                                }
+                            }
+
+                            Notification::make()
+                                ->title('Miniatures en file d\'attente')
+                                ->body($count > 0
+                                    ? "{$count} miniatures ont été mises en file d'attente pour la génération."
+                                    : 'Toutes les miniatures existent déjà pour les galeries sélectionnées.')
+                                ->success()
+                                ->send();
+                        })
+                        ->requiresConfirmation()
+                        ->modalHeading('Générer les miniatures')
+                        ->modalDescription('Générer les miniatures manquantes pour les galeries sélectionnées ?'),
                 ]),
             ]);
     }
