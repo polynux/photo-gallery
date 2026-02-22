@@ -13,10 +13,14 @@ use Filament\Tables\Actions\DeleteAction;
 use Filament\Tables\Actions\EditAction;
 use Filament\Tables\Columns\IconColumn;
 use Filament\Tables\Columns\TextColumn;
+use Filament\Tables\Concerns\InteractsWithTable;
+use Filament\Tables\Contracts\HasTable;
 use Filament\Tables\Table;
 
-class ManageSections extends Page
+class ManageSections extends Page implements HasTable
 {
+    use InteractsWithTable;
+
     protected static string $resource = PhotoGalleryResource::class;
 
     protected static string $view = 'filament.resources.photo-gallery-resource.pages.manage-sections';
@@ -77,7 +81,6 @@ class ManageSections extends Page
                 DeleteAction::make()
                     ->visible(fn (PhotoSection $record): bool => ! $record->is_default)
                     ->before(function (PhotoSection $record) {
-                        // Move photos in this section to the default section
                         $defaultSection = PhotoSection::where('photo_gallery_id', $record->photo_gallery_id)
                             ->where('is_default', true)
                             ->first();
