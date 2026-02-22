@@ -210,7 +210,7 @@
 
     <script>
         // Slideshow functionality with sections
-        const sections = @json($slideshowData);
+        const sections = {!! json_encode($slideshowData) !!};
 
         // Flatten all photos for global navigation
         const allPhotos = [];
