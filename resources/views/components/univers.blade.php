@@ -1,19 +1,19 @@
-@if (!empty($univers) && !empty($classes))
+@if ($univers->isNotEmpty())
     <div class="grid-wrapper max-w-7xl mx-auto p-2">
         @foreach ($univers as $item)
             @php
                 $class = $classes[$loop->index % count($classes)];
             @endphp
-            <div class="bg-white shadow-lg rounded-lg overflow-hidden {{ $class }}">
-                <img src="{{ Storage::disk('public')->url($item->path) }}" alt="{{ $item->title }}" class="w-full h-48 object-cover">
-                @if (isset($item->title) || isset($item->description))
-                    <div class="p-4 hidden">
-                    @if (isset($item->title))
-                        <h3 class="text-xl font-semibold text-base-200">{{ $item->title }}</h3>
-                    @endif
-                    @if (isset($item->description))
-                        <p class="text-gray-600 mt-2">{{ $item->description }}</p>
-                    @endif
+            <div class="group relative bg-white shadow-lg rounded-lg overflow-hidden {{ $class }}">
+                <img src="{{ Storage::disk('public')->url($item->path) }}" alt="{{ $item->title }}" class="w-full h-48 object-cover transition-transform duration-300 group-hover:scale-105">
+                @if ($item->title || $item->description)
+                    <div class="absolute inset-x-0 bottom-0 bg-gradient-to-t from-black/80 via-black/50 to-transparent p-4 text-white">
+                        @if ($item->title)
+                            <h3 class="text-xl font-semibold">{{ $item->title }}</h3>
+                        @endif
+                        @if ($item->description)
+                            <p class="mt-2 text-sm text-white/80">{{ $item->description }}</p>
+                        @endif
                     </div>
                 @endif
             </div>

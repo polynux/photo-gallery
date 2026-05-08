@@ -4,15 +4,17 @@ namespace App\Models;
 
 // use Illuminate\Contracts\Auth\MustVerifyEmail;
 
+use Database\Factories\UserFactory;
 use Filament\Models\Contracts\FilamentUser;
 use Filament\Panel;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Foundation\Auth\User as Authenticatable;
 use Illuminate\Notifications\Notifiable;
+use Illuminate\Support\Str;
 
 class User extends Authenticatable implements FilamentUser
 {
-    /** @use HasFactory<\Database\Factories\UserFactory> */
+    /** @use HasFactory<UserFactory> */
     use HasFactory, Notifiable;
 
     /**
@@ -36,6 +38,17 @@ class User extends Authenticatable implements FilamentUser
         'remember_token',
     ];
 
+    public function canAccessPanel(Panel $panel): bool
+    {
+        $allowedEmails = (array) config('admin.emails', []);
+
+        if ((app()->isLocal() || app()->environment('testing')) && $allowedEmails === []) {
+            return true;
+        }
+
+        return in_array(Str::lower($this->email), $allowedEmails, true);
+    }
+
     /**
      * Get the attributes that should be cast.
      *
@@ -47,11 +60,5 @@ class User extends Authenticatable implements FilamentUser
             'email_verified_at' => 'datetime',
             'password' => 'hashed',
         ];
-    }
-
-    public function canAccessPanel(Panel $panel): bool
-    {
-        // Implement your logic to determine if the user can access Filament
-        return true; // For example, you might check a role or permission here
     }
 }

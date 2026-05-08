@@ -41,7 +41,7 @@ return [
         'private' => [
             'driver' => 'local',
             'root' => storage_path('app/private'),
-            'url' => env('APP_URL').'/storage',
+            'url' => env('APP_URL') . '/storage',
             'visibility' => 'private',
             'throw' => false,
             'report' => false,
@@ -50,7 +50,7 @@ return [
         'photo' => [
             'driver' => 'local',
             'root' => storage_path('app/private/photos'),
-            'url' => env('APP_URL').'/photos',
+            'url' => env('APP_URL') . '/photos',
             'visibility' => 'private',
             'throw' => false,
             'report' => false,
@@ -59,7 +59,7 @@ return [
         'thumbnails' => [
             'driver' => 'local',
             'root' => storage_path('app/private/thumbnails'),
-            'url' => env('APP_URL').'/thumbnails',
+            'url' => env('APP_URL') . '/thumbnails',
             'visibility' => 'private',
             'throw' => false,
             'report' => false,
@@ -68,7 +68,7 @@ return [
         'public' => [
             'driver' => 'local',
             'root' => storage_path('app/public'),
-            'url' => env('APP_URL').'/storage',
+            'url' => env('APP_URL') . '/storage',
             'visibility' => 'public',
             'throw' => false,
             'report' => false,

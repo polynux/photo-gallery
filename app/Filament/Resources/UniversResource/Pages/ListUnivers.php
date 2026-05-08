@@ -3,7 +3,7 @@
 namespace App\Filament\Resources\UniversResource\Pages;
 
 use App\Filament\Resources\UniversResource;
-use Filament\Actions;
+use Filament\Actions\CreateAction;
 use Filament\Resources\Pages\ListRecords;
 
 class ListUnivers extends ListRecords
@@ -13,7 +13,7 @@ class ListUnivers extends ListRecords
     protected function getHeaderActions(): array
     {
         return [
-            Actions\CreateAction::make(),
+            CreateAction::make(),
         ];
     }
 }

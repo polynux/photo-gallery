@@ -21,7 +21,7 @@ class Dashboard extends BaseDashboard
                     $count = 0;
                     Photo::chunk(100, function ($photos) use (&$count) {
                         foreach ($photos as $photo) {
-                            $thumbnailPath = Storage::disk('private')->path('thumbnails/'.$photo->path);
+                            $thumbnailPath = Storage::disk('private')->path('thumbnails/' . $photo->path);
                             if (! file_exists($thumbnailPath)) {
                                 GeneratePhotoThumbnail::dispatch($photo);
                                 $count++;

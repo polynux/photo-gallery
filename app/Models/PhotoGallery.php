@@ -2,6 +2,7 @@
 
 namespace App\Models;
 
+use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
 use Illuminate\Database\Eloquent\Relations\HasMany;
@@ -9,9 +10,36 @@ use Illuminate\Support\Str;
 
 class PhotoGallery extends Model
 {
+    use HasFactory;
+
     protected $fillable = ['name', 'description', 'password', 'access_code', 'cover_photo_id'];
 
     protected $hidden = ['password'];
+
+    protected static function booted(): void
+    {
+        static::creating(function (PhotoGallery $photoGallery) {
+            $photoGallery->access_code ??= static::generateAccessCode();
+        });
+
+        static::created(function (PhotoGallery $photoGallery) {
+            PhotoSection::create([
+                'photo_gallery_id' => $photoGallery->id,
+                'name' => $photoGallery->name,
+                'position' => 1,
+                'is_default' => true,
+            ]);
+        });
+    }
+
+    protected static function generateAccessCode(): string
+    {
+        do {
+            $accessCode = Str::random(8);
+        } while (static::query()->where('access_code', $accessCode)->exists());
+
+        return $accessCode;
+    }
 
     /**
      * @return HasMany<Photo,PhotoGallery>
@@ -37,19 +65,13 @@ class PhotoGallery extends Model
         return $this->belongsTo(Photo::class, 'cover_photo_id');
     }
 
-    protected static function booted(): void
+    /**
+     * @return array<string, string>
+     */
+    protected function casts(): array
     {
-        static::creating(function (PhotoGallery $photoGallery) {
-            $photoGallery->access_code = Str::random(8);
-        });
-
-        static::created(function (PhotoGallery $photoGallery) {
-            PhotoSection::create([
-                'photo_gallery_id' => $photoGallery->id,
-                'name' => $photoGallery->name,
-                'position' => 1,
-                'is_default' => true,
-            ]);
-        });
+        return [
+            'password' => 'hashed',
+        ];
     }
 }

@@ -2,15 +2,26 @@
 
 namespace App\Filament\Resources;
 
-use App\Filament\Resources\PhotoGalleryResource\Pages;
+use App\Filament\Resources\PhotoGalleryResource\Pages\CreatePhotoGallery;
+use App\Filament\Resources\PhotoGalleryResource\Pages\EditPhotoGallery;
+use App\Filament\Resources\PhotoGalleryResource\Pages\ListPhotoGalleries;
+use App\Filament\Resources\PhotoGalleryResource\Pages\ManageSections;
 use App\Filament\Resources\PhotoGalleryResource\RelationManagers;
 use App\Filament\Resources\PhotoResource\Pages\UploadPhotos;
 use App\Models\PhotoGallery;
-use Filament\Forms;
+use Filament\Forms\Components\Select;
+use Filament\Forms\Components\Textarea;
+use Filament\Forms\Components\TextInput;
 use Filament\Forms\Form;
 use Filament\Resources\Resource;
-use Filament\Tables;
+use Filament\Tables\Actions\Action;
+use Filament\Tables\Actions\BulkActionGroup;
+use Filament\Tables\Actions\DeleteBulkAction;
+use Filament\Tables\Actions\EditAction;
+use Filament\Tables\Columns\ImageColumn;
+use Filament\Tables\Columns\TextColumn;
 use Filament\Tables\Table;
+use Illuminate\Support\Facades\Hash;
 
 class PhotoGalleryResource extends Resource
 {
@@ -22,21 +33,27 @@ class PhotoGalleryResource extends Resource
     {
         return $form
             ->schema([
-                Forms\Components\TextInput::make('name')
+                TextInput::make('name')
                     ->required()
                     ->maxLength(255),
-                Forms\Components\Textarea::make('description')
+                Textarea::make('description')
                     ->maxLength(65535)
                     ->columnSpanFull(),
-                Forms\Components\TextInput::make('password')
-                    ->required()
+                TextInput::make('password')
+                    ->required(fn (string $operation): bool => $operation === 'create')
                     ->password()
                     ->maxLength(255)
-                    ->dehydrateStateUsing(fn ($state) => $state ? $state : null),
-                Forms\Components\Select::make('cover_photo_id')
+                    ->dehydrated(fn (?string $state): bool => filled($state))
+                    ->dehydrateStateUsing(fn (string $state): string => Hash::make($state)),
+                Select::make('cover_photo_id')
                     ->label('Cover Photo')
-                    ->relationship('coverPhoto', 'id')
-                    ->getOptionLabelFromRecordUsing(fn ($record) => "Photo #{$record->id}")
+                    ->options(fn (?PhotoGallery $record): array => $record
+                        ? $record->photos()
+                            ->orderBy('position')
+                            ->pluck('id', 'id')
+                            ->mapWithKeys(fn (int|string $id): array => [$id => "Photo #{$id}"])
+                            ->all()
+                        : [])
                     ->searchable()
                     ->preload()
                     ->nullable(),
@@ -47,20 +64,21 @@ class PhotoGalleryResource extends Resource
     {
         return $table
             ->columns([
-                Tables\Columns\TextColumn::make('name')
+                TextColumn::make('name')
                     ->searchable(),
-                Tables\Columns\ImageColumn::make('coverPhoto.path')
+                ImageColumn::make('coverPhoto.path')
                     ->label('Cover')
-                    ->defaultImageUrl(fn ($record) => $record->photos()->first() ?
-                        asset('thumbnails/' . $record->photos()->first()->path) : null)
+                    ->defaultImageUrl(fn (PhotoGallery $record): ?string => $record->coverPhoto
+                        ? asset('thumbnails/' . $record->coverPhoto->path)
+                        : null)
                     ->circular(),
-                Tables\Columns\TextColumn::make('access_code')
+                TextColumn::make('access_code')
                     ->copyable()
                     ->searchable(),
-                Tables\Columns\TextColumn::make('photos_count')
+                TextColumn::make('photos_count')
                     ->counts('photos')
                     ->label('Photos'),
-                Tables\Columns\TextColumn::make('created_at')
+                TextColumn::make('created_at')
                     ->dateTime()
                     ->sortable(),
             ])
@@ -68,15 +86,15 @@ class PhotoGalleryResource extends Resource
                 //
             ])
             ->actions([
-                Tables\Actions\EditAction::make(),
-                Tables\Actions\Action::make('upload_photos')
+                EditAction::make(),
+                Action::make('upload_photos')
                     ->label('Upload Photos')
                     ->icon('heroicon-o-arrow-up-tray')
                     ->url(fn (PhotoGallery $record) => static::getUrl('upload-photos', ['record' => $record->id])),
             ])
             ->bulkActions([
-                Tables\Actions\BulkActionGroup::make([
-                    Tables\Actions\DeleteBulkAction::make(),
+                BulkActionGroup::make([
+                    DeleteBulkAction::make(),
                 ]),
             ]);
     }
@@ -91,10 +109,10 @@ class PhotoGalleryResource extends Resource
     public static function getPages(): array
     {
         return [
-            'index' => Pages\ListPhotoGalleries::route('/'),
-            'create' => Pages\CreatePhotoGallery::route('/create'),
-            'edit' => Pages\EditPhotoGallery::route('/{record}/edit'),
-            'sections' => Pages\ManageSections::route('/{record}/sections'),
+            'index' => ListPhotoGalleries::route('/'),
+            'create' => CreatePhotoGallery::route('/create'),
+            'edit' => EditPhotoGallery::route('/{record}/edit'),
+            'sections' => ManageSections::route('/{record}/sections'),
             'upload-photos' => UploadPhotos::route('/{record}/upload-photos'),
         ];
     }

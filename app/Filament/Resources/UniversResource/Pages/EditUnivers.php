@@ -3,7 +3,7 @@
 namespace App\Filament\Resources\UniversResource\Pages;
 
 use App\Filament\Resources\UniversResource;
-use Filament\Actions;
+use Filament\Actions\DeleteAction;
 use Filament\Resources\Pages\EditRecord;
 
 class EditUnivers extends EditRecord
@@ -13,7 +13,7 @@ class EditUnivers extends EditRecord
     protected function getHeaderActions(): array
     {
         return [
-            Actions\DeleteAction::make(),
+            DeleteAction::make(),
         ];
     }
 }

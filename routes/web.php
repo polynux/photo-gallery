@@ -10,14 +10,18 @@ Route::get('/', function () {
 // Public routes
 Route::prefix('gallery')->name('public.')->group(function () {
     Route::get('', [PublicController::class, 'showForm'])->name('select');
-    Route::post('', [PublicController::class, 'authenticateSelect'])->name('authenticate-select');
+    Route::post('', [PublicController::class, 'authenticateSelect'])
+        ->middleware('throttle:gallery-auth')
+        ->name('authenticate-select');
     Route::get('{access_code}', [PublicController::class, 'show'])->name('show');
-    Route::post('{access_code}', [PublicController::class, 'authenticate'])->name('authenticate');
+    Route::post('{access_code}', [PublicController::class, 'authenticate'])
+        ->middleware('throttle:gallery-auth')
+        ->name('authenticate');
     Route::get('{access_code}/photos', [PublicController::class, 'gallery'])->name('gallery');
     Route::get('{access_code}/download', [PublicController::class, 'download'])->name('download');
 });
 
-Route::get('/photos/{gallery}/{photo}', [PublicController::class, 'showPhoto'])
+Route::get('photos/{gallery}/{photo}', [PublicController::class, 'showPhoto'])
     ->name('photos.show');
-Route::get('/thumbnails/{gallery}/{photo}', [PublicController::class, 'showThumbnail'])
+Route::get('thumbnails/{gallery}/{photo}', [PublicController::class, 'showThumbnail'])
     ->name('thumbnails.show');

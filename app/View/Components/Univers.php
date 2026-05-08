@@ -2,6 +2,7 @@
 
 namespace App\View\Components;
 
+use App\Models\Univers as UniversModel;
 use Closure;
 use Illuminate\Contracts\View\View;
 use Illuminate\View\Component;
@@ -27,7 +28,7 @@ class Univers extends Component
      */
     public function render(): View|Closure|string
     {
-        $univers = \App\Models\Univers::orderBy('position')->get();
+        $univers = UniversModel::orderBy('position')->get();
 
         return view('components.univers', [
             'univers' => $univers,

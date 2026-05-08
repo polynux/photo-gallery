@@ -2,7 +2,9 @@
 
 namespace App\Models;
 
+use App\Jobs\GeneratePhotoThumbnail;
 use Exception;
+use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
 use Illuminate\Support\Facades\Storage;
@@ -11,6 +13,8 @@ use Intervention\Image\ImageManager;
 
 class Photo extends Model
 {
+    use HasFactory;
+
     protected $fillable = ['photo_gallery_id', 'photo_section_id', 'path', 'alt', 'position'];
 
     protected ?int $previousSectionId = null;
@@ -19,12 +23,8 @@ class Photo extends Model
     {
         static::creating(function (Photo $photo) {
             if ($photo->position === null && $photo->photo_section_id) {
-                $photo->position = Photo::where('photo_section_id', $photo->photo_section_id)
-                    ->max('position') + 1 ?? 1;
-            }
-
-            if (env('GENERATE_THUMBNAILS', true)) {
-                \App\Jobs\GeneratePhotoThumbnail::dispatch($photo);
+                $photo->position = (Photo::where('photo_section_id', $photo->photo_section_id)
+                    ->max('position') ?? 0) + 1;
             }
         });
 
@@ -32,18 +32,24 @@ class Photo extends Model
             if ($photo->isDirty('photo_section_id')) {
                 $photo->previousSectionId = $photo->getOriginal('photo_section_id');
 
-                $photo->position = Photo::where('photo_section_id', $photo->photo_section_id)
-                    ->max('position') + 1 ?? 1;
+                $photo->position = (Photo::where('photo_section_id', $photo->photo_section_id)
+                    ->max('position') ?? 0) + 1;
             }
+        });
 
-            if (env('GENERATE_THUMBNAILS', true) && $photo->isDirty('path')) {
-                \App\Jobs\GeneratePhotoThumbnail::dispatch($photo);
+        static::created(function (Photo $photo) {
+            if ($photo->shouldGenerateThumbnail()) {
+                GeneratePhotoThumbnail::dispatch($photo)->afterCommit();
             }
         });
 
         static::updated(function (Photo $photo) {
             if ($photo->previousSectionId) {
                 $photo->reindexSectionPositions($photo->previousSectionId);
+            }
+
+            if ($photo->wasChanged('path') && $photo->shouldGenerateThumbnail()) {
+                GeneratePhotoThumbnail::dispatch($photo)->afterCommit();
             }
         });
 
@@ -73,14 +79,6 @@ class Photo extends Model
     public function photoSection(): BelongsTo
     {
         return $this->belongsTo(PhotoSection::class);
-    }
-
-    /**
-     * @return HasMany<PhotoGallery,Photo>
-     */
-    public function galleries()
-    {
-        return $this->hasMany(PhotoGallery::class, 'cover_photo_id');
     }
 
     public function generateThumbnail(): void
@@ -126,5 +124,10 @@ class Photo extends Model
                 $photo->update(['position' => $index + 1]);
             }
         }
+    }
+
+    protected function shouldGenerateThumbnail(): bool
+    {
+        return config('gallery.generate_thumbnails');
     }
 }

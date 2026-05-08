@@ -144,38 +144,30 @@
                         </div>
                     </div>
                     
-                    <!-- Contact Form -->
+                    <!-- Contact CTA -->
                     <div class="bg-white p-8 rounded-2xl shadow-lg border border-gray-100">
-                        <h3 class="font-display text-2xl font-semibold text-gray-900 mb-6">Envoyez un message</h3>
-                        
-                        <form action="#" method="POST" class="space-y-5">
-                            @csrf
-                            <div>
-                                <label for="name" class="block text-sm font-medium text-gray-700 mb-2">Nom</label>
-                                <input type="text" id="name" name="name" required
-                                    class="w-full px-4 py-3 rounded-lg border-2 border-gray-200 focus:border-gray-900 focus:outline-none transition-colors"
-                                    placeholder="Votre nom">
-                            </div>
-                            
-                            <div>
-                                <label for="email" class="block text-sm font-medium text-gray-700 mb-2">Email</label>
-                                <input type="email" id="email" name="email" required
-                                    class="w-full px-4 py-3 rounded-lg border-2 border-gray-200 focus:border-gray-900 focus:outline-none transition-colors"
-                                    placeholder="votre@email.com">
-                            </div>
-                            
-                            <div>
-                                <label for="message" class="block text-sm font-medium text-gray-700 mb-2">Message</label>
-                                <textarea id="message" name="message" rows="4" required
-                                    class="w-full px-4 py-3 rounded-lg border-2 border-gray-200 focus:border-gray-900 focus:outline-none transition-colors resize-none"
-                                    placeholder="Décrivez votre projet..."></textarea>
-                            </div>
-                            
-                            <button type="submit" 
-                                class="w-full py-4 bg-gray-900 text-white rounded-lg font-medium transition-all hover:bg-gray-800 hover:shadow-lg">
-                                Envoyer le message
-                            </button>
-                        </form>
+                        <h3 class="font-display text-2xl font-semibold text-gray-900 mb-4">Parlons de votre projet</h3>
+                        <p class="text-gray-600 mb-6">
+                            Pour une séance photo, un reportage ou une demande de disponibilité, contactez-moi
+                            directement. Je réponds par email, téléphone ou via les réseaux sociaux.
+                        </p>
+
+                        <div class="space-y-4">
+                            <a href="mailto:contact@pinatonphotos.fr"
+                               class="flex items-center justify-center w-full py-4 bg-gray-900 text-white rounded-lg font-medium transition-all hover:bg-gray-800 hover:shadow-lg">
+                                Envoyer un email
+                            </a>
+                            <a href="tel:+33644751975"
+                               class="flex items-center justify-center w-full py-4 border-2 border-gray-200 text-gray-900 rounded-lg font-medium transition-all hover:border-gray-900">
+                                Appeler maintenant
+                            </a>
+                            <a href="https://www.facebook.com/people/Pinaton-Photographie/61575871906908/"
+                               target="_blank"
+                               rel="noopener noreferrer"
+                               class="flex items-center justify-center w-full py-4 border-2 border-gray-200 text-gray-900 rounded-lg font-medium transition-all hover:border-gray-900">
+                                Écrire sur Facebook
+                            </a>
+                        </div>
                     </div>
                 </div>
             </div>

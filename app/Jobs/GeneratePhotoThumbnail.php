@@ -13,6 +13,8 @@ class GeneratePhotoThumbnail implements ShouldQueue
 {
     use Dispatchable, InteractsWithQueue, Queueable, SerializesModels;
 
+    public bool $deleteWhenMissingModels = true;
+
     /**
      * Create a new job instance.
      */

@@ -2,12 +2,20 @@
 
 namespace App\Filament\Resources;
 
-use App\Filament\Resources\UniversResource\Pages;
+use App\Filament\Resources\UniversResource\Pages\CreateUnivers;
+use App\Filament\Resources\UniversResource\Pages\EditUnivers;
+use App\Filament\Resources\UniversResource\Pages\ListUnivers;
 use App\Models\Univers;
-use Filament\Forms;
+use Filament\Forms\Components\FileUpload;
+use Filament\Forms\Components\Textarea;
+use Filament\Forms\Components\TextInput;
 use Filament\Forms\Form;
 use Filament\Resources\Resource;
-use Filament\Tables;
+use Filament\Tables\Actions\BulkActionGroup;
+use Filament\Tables\Actions\DeleteBulkAction;
+use Filament\Tables\Actions\EditAction;
+use Filament\Tables\Columns\ImageColumn;
+use Filament\Tables\Columns\TextColumn;
 use Filament\Tables\Table;
 
 class UniversResource extends Resource
@@ -21,18 +29,19 @@ class UniversResource extends Resource
         return $form
             ->schema([
                 //
-                Forms\Components\FileUpload::make('path')
+                FileUpload::make('path')
                     ->label('Fichier')
                     ->required()
                     ->disk('public')
                     ->directory('univers')
-                    ->acceptedFileTypes(['image/*', 'video/*'])
+                    ->acceptedFileTypes(['image/*'])
+                    ->image()
                     ->maxSize(2048)
                     ->columnSpanFull(),
-                Forms\Components\TextInput::make('title')
+                TextInput::make('title')
                     ->maxLength(255)
                     ->label('Titre'),
-                Forms\Components\Textarea::make('description')
+                Textarea::make('description')
                     ->maxLength(65535)
                     ->label('Description'),
             ]);
@@ -43,27 +52,26 @@ class UniversResource extends Resource
         return $table
             ->defaultSort('position', 'asc')
             ->columns([
-                Tables\Columns\TextColumn::make('position')
+                TextColumn::make('position')
                     ->label('Position')
                     ->sortable(),
-                Tables\Columns\TextColumn::make('id')
+                TextColumn::make('id')
                     ->label('ID')
                     ->sortable()
                     ->searchable(),
-                Tables\Columns\ImageColumn::make('path')
+                ImageColumn::make('path')
                     ->label('Fichier')
                     ->disk('public')
                     ->circular()
-                    ->defaultImageUrl(fn ($record) => $record->path ? asset('storage/univers/'.$record->path) : null)
                     ->searchable(),
-                Tables\Columns\TextColumn::make('title')
+                TextColumn::make('title')
                     ->label('Titre')
                     ->searchable(),
-                Tables\Columns\TextColumn::make('description')
+                TextColumn::make('description')
                     ->label('Description')
                     ->limit(50)
                     ->searchable(),
-                Tables\Columns\TextColumn::make('created_at')
+                TextColumn::make('created_at')
                     ->label('Créé le')
                     ->dateTime()
                     ->sortable(),
@@ -72,11 +80,11 @@ class UniversResource extends Resource
                 //
             ])
             ->actions([
-                Tables\Actions\EditAction::make(),
+                EditAction::make(),
             ])
             ->bulkActions([
-                Tables\Actions\BulkActionGroup::make([
-                    Tables\Actions\DeleteBulkAction::make(),
+                BulkActionGroup::make([
+                    DeleteBulkAction::make(),
                 ]),
             ])
             ->reorderable('position');
@@ -92,9 +100,9 @@ class UniversResource extends Resource
     public static function getPages(): array
     {
         return [
-            'index' => Pages\ListUnivers::route('/'),
-            'create' => Pages\CreateUnivers::route('/create'),
-            'edit' => Pages\EditUnivers::route('/{record}/edit'),
+            'index' => ListUnivers::route('/'),
+            'create' => CreateUnivers::route('/create'),
+            'edit' => EditUnivers::route('/{record}/edit'),
         ];
     }
 }

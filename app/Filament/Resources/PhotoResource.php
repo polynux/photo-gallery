@@ -2,12 +2,26 @@
 
 namespace App\Filament\Resources;
 
-use App\Filament\Resources\PhotoResource\Pages;
+use App\Filament\Resources\PhotoResource\Pages\CreatePhoto;
+use App\Filament\Resources\PhotoResource\Pages\EditPhoto;
+use App\Filament\Resources\PhotoResource\Pages\ListPhotos;
 use App\Models\Photo;
+use App\Models\PhotoSection;
 use Filament\Forms;
+use Filament\Forms\Components\FileUpload;
+use Filament\Forms\Components\Select;
+use Filament\Forms\Components\TextInput;
 use Filament\Forms\Form;
 use Filament\Resources\Resource;
-use Filament\Tables;
+use Filament\Tables\Actions\Action;
+use Filament\Tables\Actions\BulkAction;
+use Filament\Tables\Actions\BulkActionGroup;
+use Filament\Tables\Actions\DeleteAction;
+use Filament\Tables\Actions\DeleteBulkAction;
+use Filament\Tables\Actions\EditAction;
+use Filament\Tables\Columns\ImageColumn;
+use Filament\Tables\Columns\TextColumn;
+use Filament\Tables\Filters\SelectFilter;
 use Filament\Tables\Table;
 use Illuminate\Database\Eloquent\Builder;
 
@@ -21,23 +35,23 @@ class PhotoResource extends Resource
     {
         return $form
             ->schema([
-                Forms\Components\Select::make('photo_gallery_id')
+                Select::make('photo_gallery_id')
                     ->relationship('photoGallery', 'name')
                     ->required()
                     ->live()
                     ->afterStateUpdated(fn (Forms\Set $set) => $set('photo_section_id', null)),
-                Forms\Components\Select::make('photo_section_id')
+                Select::make('photo_section_id')
                     ->relationship('photoSection', 'name', fn (Builder $query, Forms\Get $get) => $query->where('photo_gallery_id', $get('photo_gallery_id')))
                     ->required()
                     ->label('Section'),
-                Forms\Components\FileUpload::make('path')
+                FileUpload::make('path')
                     ->disk('photo')
-                    ->directory(request()->route('photo_gallery_id'))
+                    ->directory(fn (Forms\Get $get): ?string => $get('photo_gallery_id'))
                     ->visibility('private')
                     ->image()
                     ->imageEditor()
                     ->required(),
-                Forms\Components\TextInput::make('alt')
+                TextInput::make('alt')
                     ->label('Alt Text')
                     ->helperText('Description of the image for accessibility')
                     ->maxLength(255),
@@ -49,39 +63,39 @@ class PhotoResource extends Resource
         return $table
             ->defaultSort('position', 'asc')
             ->columns([
-                Tables\Columns\ImageColumn::make('path')
+                ImageColumn::make('path')
                     ->disk('thumbnails')
                     ->visibility('private')
                     ->square(),
-                Tables\Columns\TextColumn::make('photoSection.name')
+                TextColumn::make('photoSection.name')
                     ->label('Section')
                     ->sortable(),
-                Tables\Columns\TextColumn::make('position')
+                TextColumn::make('position')
                     ->label('Position')
                     ->sortable(),
-                Tables\Columns\TextColumn::make('alt')
+                TextColumn::make('alt')
                     ->searchable()
                     ->limit(30),
-                Tables\Columns\TextColumn::make('created_at')
+                TextColumn::make('created_at')
                     ->dateTime()
                     ->sortable()
                     ->toggleable(isToggledHiddenByDefault: true),
             ])
             ->reorderable('position')
             ->filters([
-                Tables\Filters\SelectFilter::make('photo_gallery_id')
+                SelectFilter::make('photo_gallery_id')
                     ->relationship('photoGallery', 'name')
                     ->label('Photo Gallery')
                     ->preload(),
-                Tables\Filters\SelectFilter::make('photo_section_id')
+                SelectFilter::make('photo_section_id')
                     ->relationship('photoSection', 'name')
                     ->label('Section')
                     ->preload(),
             ])
             ->actions([
-                Tables\Actions\EditAction::make(),
-                Tables\Actions\DeleteAction::make(),
-                Tables\Actions\Action::make('set_as_cover')
+                EditAction::make(),
+                DeleteAction::make(),
+                Action::make('set_as_cover')
                     ->label('Set as Cover')
                     ->icon('heroicon-o-star')
                     ->action(function (Photo $record) {
@@ -89,13 +103,13 @@ class PhotoResource extends Resource
                     }),
             ])
             ->bulkActions([
-                Tables\Actions\BulkActionGroup::make([
-                    Tables\Actions\DeleteBulkAction::make(),
-                    Tables\Actions\BulkAction::make('move_to_section')
+                BulkActionGroup::make([
+                    DeleteBulkAction::make(),
+                    BulkAction::make('move_to_section')
                         ->label('Move to Section')
                         ->icon('heroicon-o-folder')
                         ->form([
-                            Forms\Components\Select::make('photo_section_id')
+                            Select::make('photo_section_id')
                                 ->label('Section')
                                 ->required()
                                 ->options(function () {
@@ -104,12 +118,18 @@ class PhotoResource extends Resource
                                         return [];
                                     }
 
-                                    return \App\Models\PhotoSection::where('photo_gallery_id', $galleryId)
+                                    return PhotoSection::where('photo_gallery_id', $galleryId)
                                         ->pluck('name', 'id');
                                 }),
                         ])
                         ->action(function (array $data, $records) {
+                            $targetSection = PhotoSection::query()->findOrFail($data['photo_section_id']);
+
                             foreach ($records as $record) {
+                                if ($record->photo_gallery_id !== $targetSection->photo_gallery_id) {
+                                    continue;
+                                }
+
                                 $record->update(['photo_section_id' => $data['photo_section_id']]);
                             }
                         }),
@@ -127,9 +147,9 @@ class PhotoResource extends Resource
     public static function getPages(): array
     {
         return [
-            'index' => Pages\ListPhotos::route('/'),
-            'create' => Pages\CreatePhoto::route('/create'),
-            'edit' => Pages\EditPhoto::route('/{record}/edit'),
+            'index' => ListPhotos::route('/'),
+            'create' => CreatePhoto::route('/create'),
+            'edit' => EditPhoto::route('/{record}/edit'),
         ];
     }
 }

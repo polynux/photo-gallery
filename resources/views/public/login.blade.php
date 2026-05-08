@@ -31,7 +31,7 @@
                 
                 <h1 class="font-display text-2xl font-bold text-gray-900 mb-2">{{ $photoGallery->name }}</h1>
                 
-                @if($photoGallery->description)
+                @if ($photoGallery->description)
                     <p class="text-gray-600">{{ $photoGallery->description }}</p>
                 @endif
             </div>

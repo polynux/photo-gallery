@@ -2,20 +2,23 @@
 
 namespace App\Models;
 
+use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
 use Illuminate\Database\Eloquent\Relations\HasMany;
 
 class PhotoSection extends Model
 {
+    use HasFactory;
+
     protected $fillable = ['photo_gallery_id', 'name', 'position', 'is_default'];
 
     protected static function booted(): void
     {
         static::creating(function (PhotoSection $section) {
             if ($section->position === null) {
-                $section->position = PhotoSection::where('photo_gallery_id', $section->photo_gallery_id)
-                    ->max('position') + 1 ?? 1;
+                $section->position = (PhotoSection::where('photo_gallery_id', $section->photo_gallery_id)
+                    ->max('position') ?? 0) + 1;
             }
         });
 

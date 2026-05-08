@@ -5,7 +5,8 @@ namespace App\Filament\Resources\PhotoGalleryResource\Pages;
 use App\Filament\Resources\PhotoGalleryResource;
 use App\Filament\Resources\PhotoResource;
 use App\Jobs\GeneratePhotoThumbnail;
-use Filament\Actions;
+use Filament\Actions\Action;
+use Filament\Actions\DeleteAction;
 use Filament\Notifications\Notification;
 use Filament\Resources\Pages\EditRecord;
 use Illuminate\Support\Facades\Storage;
@@ -17,20 +18,20 @@ class EditPhotoGallery extends EditRecord
     protected function getHeaderActions(): array
     {
         return [
-            Actions\Action::make('view_gallery')
+            Action::make('view_gallery')
                 ->label('View Gallery')
                 ->icon('heroicon-o-eye')
                 ->url(fn () => route('public.show', $this->record->access_code))
                 ->openUrlInNewTab(),
-            Actions\Action::make('manage_sections')
+            Action::make('manage_sections')
                 ->label('Manage Sections')
                 ->icon('heroicon-o-folder')
                 ->url(fn () => PhotoGalleryResource::getUrl('sections', ['record' => $this->record->id])),
-            Actions\Action::make('manage_photos')
+            Action::make('manage_photos')
                 ->label('Manage Photos')
                 ->icon('heroicon-o-photo')
                 ->url(fn () => PhotoResource::getUrl('index', ['photo_gallery_id' => $this->record->id])),
-            Actions\Action::make('generate_thumbnails')
+            Action::make('generate_thumbnails')
                 ->label('Generate Thumbnails')
                 ->icon('heroicon-o-photo')
                 ->color('warning')
@@ -57,7 +58,7 @@ class EditPhotoGallery extends EditRecord
                 ->requiresConfirmation()
                 ->modalHeading('Générer les miniatures')
                 ->modalDescription(fn () => "Générer les miniatures manquantes pour la galerie \"{$this->record->name}\" ?"),
-            Actions\DeleteAction::make(),
+            DeleteAction::make(),
         ];
     }
 }

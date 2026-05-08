@@ -3,7 +3,10 @@
 namespace App\Filament\Resources\PhotoGalleryResource\Pages;
 
 use App\Filament\Resources\PhotoGalleryResource;
+use App\Filament\Resources\PhotoResource;
+use App\Models\PhotoGallery;
 use App\Models\PhotoSection;
+use Filament\Actions\Action as HeaderAction;
 use Filament\Forms\Components\TextInput;
 use Filament\Notifications\Notification;
 use Filament\Resources\Pages\Page;
@@ -64,7 +67,7 @@ class ManageSections extends Page implements HasTable
                 Action::make('manage_photos')
                     ->label('Manage Photos')
                     ->icon('heroicon-o-photo')
-                    ->url(fn (PhotoSection $record): string => \App\Filament\Resources\PhotoResource::getUrl('index', [
+                    ->url(fn (PhotoSection $record): string => PhotoResource::getUrl('index', [
                         'photo_gallery_id' => $this->record,
                         'photo_section_id' => $record->id,
                     ])),
@@ -103,8 +106,8 @@ class ManageSections extends Page implements HasTable
                     ])
                     ->mutateFormDataUsing(function (array $data): array {
                         $data['photo_gallery_id'] = $this->record;
-                        $data['position'] = PhotoSection::where('photo_gallery_id', $this->record)
-                            ->max('position') + 1 ?? 1;
+                        $data['position'] = (PhotoSection::where('photo_gallery_id', $this->record)
+                            ->max('position') ?? 0) + 1;
 
                         return $data;
                     })
@@ -122,7 +125,7 @@ class ManageSections extends Page implements HasTable
 
     public function getTitle(): string
     {
-        $gallery = \App\Models\PhotoGallery::find($this->record);
+        $gallery = PhotoGallery::find($this->record);
 
         return "Manage Sections - {$gallery?->name}";
     }
@@ -130,7 +133,7 @@ class ManageSections extends Page implements HasTable
     protected function getHeaderActions(): array
     {
         return [
-            \Filament\Actions\Action::make('back_to_gallery')
+            HeaderAction::make('back_to_gallery')
                 ->label('Back to Gallery')
                 ->icon('heroicon-o-arrow-left')
                 ->url(fn (): string => PhotoGalleryResource::getUrl('edit', ['record' => $this->record])),

@@ -34,7 +34,7 @@
     </div>
 </header>
 
-@if($transparent ?? false)
+@if ($transparent ?? false)
 <script>
     // Header scroll effect - only for transparent header on homepage
     document.addEventListener('DOMContentLoaded', function() {
