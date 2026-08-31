@@ -20,7 +20,7 @@ class PublicController extends Controller
     {
         $photoGallery = PhotoGallery::query()->where('access_code', Str::upper($accessCode))->firstOrFail();
 
-        if (session($this->gallerySessionKey($photoGallery))) {
+        if ($this->canViewGallery($photoGallery)) {
             return redirect()->route('public.gallery', $photoGallery->access_code);
         }
 
@@ -75,7 +75,7 @@ class PublicController extends Controller
             }])
             ->firstOrFail();
 
-        if (! session($this->gallerySessionKey($photoGallery))) {
+        if (! $this->canViewGallery($photoGallery)) {
             return redirect()->route('public.show', $photoGallery->access_code);
         }
 
@@ -86,7 +86,7 @@ class PublicController extends Controller
                 'photos' => $section->photos->map(function ($photo) {
                     return [
                         'src' => Storage::disk('photo')->url($photo->path),
-                        'alt' => $photo->alt ?? 'Photo #' . $photo->id,
+                        'alt' => $photo->alt ?? 'Photo #'.$photo->id,
                     ];
                 })->values()->toArray(),
             ];
@@ -102,7 +102,7 @@ class PublicController extends Controller
     {
         $photoGallery = PhotoGallery::query()->where('access_code', Str::upper($accessCode))->firstOrFail();
 
-        if (! session($this->gallerySessionKey($photoGallery))) {
+        if (! $this->canViewGallery($photoGallery)) {
             return redirect()->route('public.show', $photoGallery->access_code);
         }
 
@@ -118,14 +118,15 @@ class PublicController extends Controller
 
     public function showPhoto(string $gallery, string $photo)
     {
-        if (! session('authenticated_gallery_' . $gallery) && ! auth()->check()) {
-            Log::info('User not authenticated for gallery: ' . $gallery);
+        $photo = Photo::where('path', $gallery.'/'.$photo)
+            ->where('photo_gallery_id', $gallery)
+            ->firstOrFail();
+
+        if (! $this->canViewGallery($photo->photoGallery)) {
+            Log::info('User not authenticated for gallery: '.$gallery);
 
             return redirect()->route('public.select');
         }
-        $photo = Photo::where('path', $gallery . '/' . $photo)
-            ->where('photo_gallery_id', $gallery)
-            ->firstOrFail();
 
         return Storage::disk('photo')->response($photo->path, headers: [
             'Cache-Control' => 'private, max-age=86400',
@@ -134,14 +135,15 @@ class PublicController extends Controller
 
     public function showThumbnail(string $gallery, string $photo)
     {
-        if (! session('authenticated_gallery_' . $gallery) && ! auth()->check()) {
-            Log::info('User not authenticated for gallery: ' . $gallery);
+        $photo = Photo::where('path', $gallery.'/'.$photo)
+            ->where('photo_gallery_id', $gallery)
+            ->firstOrFail();
+
+        if (! $this->canViewGallery($photo->photoGallery)) {
+            Log::info('User not authenticated for gallery: '.$gallery);
 
             return redirect()->route('public.select');
         }
-        $photo = Photo::where('path', $gallery . '/' . $photo)
-            ->where('photo_gallery_id', $gallery)
-            ->firstOrFail();
 
         if (Storage::disk('thumbnails')->exists($photo->path)) {
             return Storage::disk('thumbnails')->response($photo->path, headers: [
@@ -179,8 +181,19 @@ class PublicController extends Controller
         return redirect()->route('public.gallery', $photoGallery->access_code);
     }
 
+    /**
+     * Whether the current visitor may view the gallery: either a
+     * password-authenticated customer session, or any authenticated
+     * admin (intentional bypass so the photographer can preview any
+     * gallery from the admin panel without knowing client passwords).
+     */
+    private function canViewGallery(PhotoGallery $photoGallery): bool
+    {
+        return session($this->gallerySessionKey($photoGallery)) || auth()->check();
+    }
+
     private function gallerySessionKey(PhotoGallery $photoGallery): string
     {
-        return 'authenticated_gallery_' . $photoGallery->id;
+        return 'authenticated_gallery_'.$photoGallery->id;
     }
 }

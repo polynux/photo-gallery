@@ -78,9 +78,11 @@ test('unauthenticated visitors are redirected away from photo and thumbnail endp
     $section = $gallery->sections()->where('is_default', true)->firstOrFail();
     $photo = addPhotoWithJpgBytes($gallery, $section, 1, $gallery->id . '/secret.jpg');
 
-    $this->get(route('photos.show', [$gallery->access_code, 'secret.jpg']))
+    // Storage disk URLs are /photos/{galleryId}/{file}, so the URL
+    // parameter is the gallery ID, not the access code
+    $this->get(route('photos.show', [$gallery->id, 'secret.jpg']))
         ->assertRedirect(route('public.select'));
 
-    $this->get(route('thumbnails.show', [$gallery->access_code, 'secret.jpg']))
+    $this->get(route('thumbnails.show', [$gallery->id, 'secret.jpg']))
         ->assertRedirect(route('public.select'));
 });
