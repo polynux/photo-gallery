@@ -67,11 +67,7 @@ class PhotoGalleryResource extends Resource
                 TextColumn::make('name')
                     ->searchable(),
                 ImageColumn::make('coverPhoto.path')
-                    ->label('Cover')
-                    ->defaultImageUrl(fn (PhotoGallery $record): ?string => $record->coverPhoto
-                        ? asset('thumbnails/'.$record->coverPhoto->path)
-                        : null)
-                    ->circular(),
+                    ->label('Cover'),
                 TextColumn::make('access_code')
                     ->copyable()
                     ->searchable(),

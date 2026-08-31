@@ -45,7 +45,7 @@ class PhotoGallery extends Model
     protected static function generateAccessCode(): string
     {
         do {
-            $accessCode = Str::random(8);
+            $accessCode = Str::upper(Str::random(8));
         } while (static::query()->where('access_code', $accessCode)->exists());
 
         return $accessCode;

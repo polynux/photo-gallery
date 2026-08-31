@@ -9,7 +9,7 @@
     <meta name="keywords" content="{{ $keywords ?? 'photographie, photographe, portrait, mariage, événementiel' }}">
     <meta name="author" content="Pinaton Photographie">
     <meta name="theme-color" content="#1f2937">
-    <meta name="robots" content="index, follow">
+    <meta name="robots" content="{{ $robots ?? 'index, follow' }}">
     <link rel="icon" href="{{ asset('favicon.ico') }}" type="image/x-icon">
     <meta property="og:title" content="{{ $title ?? 'Pinaton Photographie' }}">
     <meta property="og:description" content="{{ $description ?? 'Pinaton Photographie - Capturez vos moments précieux avec un photographe professionnel.' }}">

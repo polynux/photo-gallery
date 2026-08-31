@@ -19,6 +19,7 @@ Route::prefix('gallery')->name('public.')->group(function () {
         ->name('authenticate');
     Route::get('{access_code}/photos', [PublicController::class, 'gallery'])->name('gallery');
     Route::get('{access_code}/download', [PublicController::class, 'download'])->name('download');
+    Route::post('{access_code}/lock', [PublicController::class, 'lock'])->name('lock');
 });
 
 Route::get('photos/{gallery}/{photo}', [PublicController::class, 'showPhoto'])

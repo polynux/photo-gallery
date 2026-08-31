@@ -10,6 +10,7 @@ use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Hash;
 use Illuminate\Support\Facades\Log;
 use Illuminate\Support\Facades\Storage;
+use Illuminate\Support\Str;
 use Illuminate\View\View;
 use Symfony\Component\HttpFoundation\StreamedResponse;
 
@@ -17,10 +18,10 @@ class PublicController extends Controller
 {
     public function show(string $accessCode): RedirectResponse|View
     {
-        $photoGallery = PhotoGallery::query()->where('access_code', $accessCode)->firstOrFail();
+        $photoGallery = PhotoGallery::query()->where('access_code', Str::upper($accessCode))->firstOrFail();
 
         if (session($this->gallerySessionKey($photoGallery))) {
-            return redirect()->route('public.gallery', $accessCode);
+            return redirect()->route('public.gallery', $photoGallery->access_code);
         }
 
         return view('public.login', ['photoGallery' => $photoGallery]);
@@ -35,9 +36,11 @@ class PublicController extends Controller
     {
         $validated = $request->validate([
             'password' => ['required', 'string', 'max:255'],
+        ], [
+            'password.required' => 'Le mot de passe est obligatoire',
         ]);
 
-        $photoGallery = PhotoGallery::query()->where('access_code', $accessCode)->firstOrFail();
+        $photoGallery = PhotoGallery::query()->where('access_code', Str::upper($accessCode))->firstOrFail();
 
         return $this->attemptGalleryAuthentication($request, $photoGallery, $validated['password'], $accessCode);
     }
@@ -47,6 +50,10 @@ class PublicController extends Controller
         $validated = $request->validate([
             'access_code' => ['required', 'string', 'exists:photo_galleries,access_code'],
             'password' => ['required', 'string', 'max:255'],
+        ], [
+            'access_code.required' => 'Le code d\'accès est obligatoire',
+            'access_code.exists' => 'Code d\'accès inconnu',
+            'password.required' => 'Le mot de passe est obligatoire',
         ]);
 
         $photoGallery = PhotoGallery::query()->where('access_code', $validated['access_code'])->firstOrFail();
@@ -56,7 +63,7 @@ class PublicController extends Controller
 
     public function gallery(string $accessCode): RedirectResponse|View
     {
-        $photoGallery = PhotoGallery::query()->where('access_code', $accessCode)
+        $photoGallery = PhotoGallery::query()->where('access_code', Str::upper($accessCode))
             ->with(['sections' => function ($query) {
                 $query->orderBy('position')->with(['photos' => function ($q) {
                     $q->orderBy('position');
@@ -65,7 +72,7 @@ class PublicController extends Controller
             ->firstOrFail();
 
         if (! session($this->gallerySessionKey($photoGallery))) {
-            return redirect()->route('public.show', $accessCode);
+            return redirect()->route('public.show', $photoGallery->access_code);
         }
 
         $slideshowData = $photoGallery->sections->map(function ($section) {
@@ -89,10 +96,10 @@ class PublicController extends Controller
 
     public function download(string $accessCode): RedirectResponse|StreamedResponse
     {
-        $photoGallery = PhotoGallery::query()->where('access_code', $accessCode)->firstOrFail();
+        $photoGallery = PhotoGallery::query()->where('access_code', Str::upper($accessCode))->firstOrFail();
 
         if (! session($this->gallerySessionKey($photoGallery))) {
-            return redirect()->route('public.show', $accessCode);
+            return redirect()->route('public.show', $photoGallery->access_code);
         }
 
         $zipStream = app(GalleryZipStream::class);
@@ -141,6 +148,15 @@ class PublicController extends Controller
         return abort(404, 'Thumbnail not found');
     }
 
+    public function lock(Request $request, string $accessCode): RedirectResponse
+    {
+        $photoGallery = PhotoGallery::query()->where('access_code', Str::upper($accessCode))->firstOrFail();
+
+        $request->session()->forget($this->gallerySessionKey($photoGallery));
+
+        return redirect()->route('public.show', $photoGallery->access_code);
+    }
+
     private function attemptGalleryAuthentication(
         Request $request,
         PhotoGallery $photoGallery,
@@ -156,7 +172,7 @@ class PublicController extends Controller
         $request->session()->regenerate();
         $request->session()->put($this->gallerySessionKey($photoGallery), true);
 
-        return redirect()->route('public.gallery', $accessCode);
+        return redirect()->route('public.gallery', $photoGallery->access_code);
     }
 
     private function gallerySessionKey(PhotoGallery $photoGallery): string
