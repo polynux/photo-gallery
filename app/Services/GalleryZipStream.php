@@ -33,7 +33,7 @@ class GalleryZipStream
             $sectionIsGalleryRoot = $sectionSlug === $galleryFolder;
             $sectionFolder = ! $hasMultipleSections || $sectionIsGalleryRoot
                 ? $galleryFolder
-                : $galleryFolder.'/'.$sectionSlug;
+                : $galleryFolder . '/' . $sectionSlug;
 
             $maxPosition = $section->photos->count();
             $paddingLength = max(2, strlen((string) $maxPosition));
@@ -59,6 +59,6 @@ class GalleryZipStream
 
     public function slugArchiveName(PhotoGallery $photoGallery): string
     {
-        return (Str::slug($photoGallery->name) ?: 'gallery').'.zip';
+        return (Str::slug($photoGallery->name) ?: 'gallery') . '.zip';
     }
 }

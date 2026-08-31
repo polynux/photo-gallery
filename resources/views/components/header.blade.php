@@ -5,7 +5,7 @@
             <a href="{{ route('home') }}" class="font-display text-xl font-semibold transition-colors duration-300 header-logo {{ $transparent ?? false ? 'text-white' : 'text-gray-900' }}">
                 Pinaton Photographie
             </a>
-            
+
             <!-- Navigation -->
             <nav class="hidden md:flex items-center gap-8">
                 <a href="{{ route('home') }}" class="text-sm font-medium transition-colors duration-300 header-link {{ $transparent ?? false ? 'text-white/80 hover:text-white' : 'text-gray-600 hover:text-gray-900' }}">Accueil</a>
@@ -13,7 +13,7 @@
                 <a href="{{ route('home') }}#gallery" class="text-sm font-medium transition-colors duration-300 header-link {{ $transparent ?? false ? 'text-white/80 hover:text-white' : 'text-gray-600 hover:text-gray-900' }}">Galerie</a>
                 <a href="{{ route('home') }}#contact" class="text-sm font-medium transition-colors duration-300 header-link {{ $transparent ?? false ? 'text-white/80 hover:text-white' : 'text-gray-600 hover:text-gray-900' }}">Contact</a>
             </nav>
-            
+
             <!-- Mobile Menu Button -->
             <button id="mobile-menu-btn" class="md:hidden p-2" aria-label="Menu">
                 <svg class="w-6 h-6 header-icon {{ $transparent ?? false ? 'text-white' : 'text-gray-900' }}" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -22,7 +22,7 @@
             </button>
         </div>
     </div>
-    
+
     <!-- Mobile Menu -->
     <div id="mobile-menu" class="hidden md:hidden bg-white border-t border-gray-100">
         <div class="container mx-auto px-6 py-4 space-y-4">
@@ -42,21 +42,21 @@
         const logo = document.querySelector('.header-logo');
         const links = document.querySelectorAll('.header-link');
         const icon = document.querySelector('.header-icon');
-        
+
         function updateHeader() {
             if (window.scrollY > 50) {
                 // Scrolled state
                 header.classList.add('bg-white/95', 'backdrop-blur-md', 'shadow-sm');
                 header.classList.remove('header-transparent');
-                
+
                 logo.classList.remove('text-white');
                 logo.classList.add('text-gray-900');
-                
+
                 links.forEach(link => {
                     link.classList.remove('text-white/80');
                     link.classList.add('text-gray-600');
                 });
-                
+
                 if (icon) {
                     icon.classList.remove('text-white');
                     icon.classList.add('text-gray-900');
@@ -65,25 +65,25 @@
                 // Top state (transparent)
                 header.classList.remove('bg-white/95', 'backdrop-blur-md', 'shadow-sm');
                 header.classList.add('header-transparent');
-                
+
                 logo.classList.add('text-white');
                 logo.classList.remove('text-gray-900');
-                
+
                 links.forEach(link => {
                     link.classList.add('text-white/80');
                     link.classList.remove('text-gray-600');
                 });
-                
+
                 if (icon) {
                     icon.classList.add('text-white');
                     icon.classList.remove('text-gray-900');
                 }
             }
         }
-        
+
         // Initial check
         updateHeader();
-        
+
         // Scroll listener
         window.addEventListener('scroll', updateHeader, { passive: true });
     });
@@ -95,7 +95,7 @@
     document.addEventListener('DOMContentLoaded', function() {
         const mobileMenuBtn = document.getElementById('mobile-menu-btn');
         const mobileMenu = document.getElementById('mobile-menu');
-        
+
         if (mobileMenuBtn && mobileMenu) {
             mobileMenuBtn.addEventListener('click', function() {
                 mobileMenu.classList.toggle('hidden');

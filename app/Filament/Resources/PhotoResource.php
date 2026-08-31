@@ -8,6 +8,7 @@ use App\Filament\Resources\PhotoResource\Pages\ListPhotos;
 use App\Models\Photo;
 use App\Models\PhotoSection;
 use App\Services\PhotoPositionService;
+use BackedEnum;
 use Filament\Actions\Action;
 use Filament\Actions\BulkAction;
 use Filament\Actions\BulkActionGroup;
@@ -31,7 +32,7 @@ class PhotoResource extends Resource
 {
     protected static ?string $model = Photo::class;
 
-    protected static string|\BackedEnum|null $navigationIcon = 'heroicon-o-photo';
+    protected static string|BackedEnum|null $navigationIcon = 'heroicon-o-photo';
 
     public static function form(Schema $schema): Schema
     {

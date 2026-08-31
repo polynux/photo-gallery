@@ -5,36 +5,36 @@
         <div class="absolute inset-0 bg-cover bg-center bg-no-repeat"
             style="background-image: url('{{ Vite::asset('resources/images/hero-image.webp') }}');">
         </div>
-        
+
         <!-- Overlay -->
         <div class="absolute inset-0 bg-gradient-to-b from-black/40 via-black/30 to-black/60"></div>
-        
+
         <!-- Content -->
         <div class="relative z-10 container mx-auto px-6 text-center">
             <p class="text-sm font-medium tracking-[0.2em] uppercase mb-6 text-white/80 animate-fade-in-up">
                 Photographie Professionnelle
             </p>
-            
+
             <h1 class="text-5xl md:text-7xl lg:text-8xl font-display font-bold mb-8 text-white animate-fade-in-up delay-100">
                 Capturez l'Instant
             </h1>
-            
+
             <p class="text-xl md:text-2xl mb-12 text-white/90 max-w-2xl mx-auto animate-fade-in-up delay-200">
                 Vos moments précieux méritent un regard professionnel
             </p>
-            
+
             <div class="flex flex-col sm:flex-row gap-4 justify-center animate-fade-in-up delay-300">
-                <a href="#contact" 
+                <a href="#contact"
                    class="px-8 py-4 bg-white text-gray-900 rounded-full font-medium transition-all hover:shadow-lg hover:scale-105">
                     Me contacter
                 </a>
-                <a href="#universe" 
+                <a href="#universe"
                    class="px-8 py-4 border-2 border-white text-white rounded-full font-medium transition-all hover:bg-white/10">
                     Découvrir
                 </a>
             </div>
         </div>
-        
+
         <!-- Scroll Indicator -->
         <div class="absolute bottom-8 left-1/2 transform -translate-x-1/2 animate-bounce">
             <svg class="w-6 h-6 text-white/60" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -54,7 +54,7 @@
                     un moment sincère ou un instant précieux...
                 </p>
             </div>
-            
+
             <!-- Universe Grid Component -->
             <x-univers />
         </div>
@@ -69,17 +69,17 @@
                         <path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5" d="M3 16.5v2.25A2.25 2.25 0 0 0 5.25 21h13.5A2.25 2.25 0 0 0 21 18.75V16.5M16.5 12 12 16.5m0 0L7.5 12m4.5 4.5V3"></path>
                     </svg>
                 </div>
-                
+
                 <p class="text-sm font-medium tracking-[0.2em] uppercase mb-4 text-gray-500">Espace Client</p>
-                
+
                 <h2 class="text-4xl md:text-5xl font-display font-bold text-gray-900 mb-6">Ma Galerie</h2>
-                
+
                 <p class="text-lg text-gray-600 mb-8 max-w-2xl mx-auto">
-                    Accédez à votre galerie photo à l'aide du code d'accès et du mot de passe 
+                    Accédez à votre galerie photo à l'aide du code d'accès et du mot de passe
                     fournis par votre photographe. Téléchargez vos photos en haute qualité.
                 </p>
-                
-                <a href="{{ route('public.select') }}" 
+
+                <a href="{{ route('public.select') }}"
                    class="inline-flex items-center px-8 py-4 bg-gray-900 text-white rounded-full font-medium transition-all hover:shadow-lg hover:scale-105">
                     <svg class="w-5 h-5 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                         <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 7a2 2 0 012 2m4 0a6 6 0 01-7.743 5.743L11 17H9v2H7v2H4a1 1 0 01-1-1v-2.586a1 1 0 01.293-.707l5.964-5.964A6 6 0 1121 9z"></path>
@@ -96,14 +96,14 @@
             <div class="max-w-6xl mx-auto">
                 <div class="text-center mb-16">
                     <p class="text-sm font-medium tracking-[0.2em] uppercase mb-4 text-gray-500">Contact</p>
-                    
+
                     <h2 class="text-4xl md:text-5xl font-display font-bold text-gray-900 mb-6">Contactez-moi</h2>
-                    
+
                     <p class="text-lg text-gray-600 max-w-2xl mx-auto">
                         Pour toute demande de renseignements ou de réservation, n'hésitez pas à me contacter.
                     </p>
                 </div>
-                
+
                 <div class="grid md:grid-cols-2 gap-12">
                     <!-- Contact Info -->
                     <div class="space-y-8">
@@ -118,7 +118,7 @@
                                 <a href="mailto:contact@pinatonphotos.fr" class="text-gray-600 hover:text-gray-900 transition-colors">contact@pinatonphotos.fr</a>
                             </div>
                         </div>
-                        
+
                         <div class="flex items-start gap-4">
                             <div class="w-12 h-12 rounded-full bg-gray-900 flex items-center justify-center flex-shrink-0">
                                 <svg class="w-5 h-5 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -130,7 +130,7 @@
                                 <a href="tel:+33644751975" class="text-gray-600 hover:text-gray-900 transition-colors">+33 6 44 75 19 75</a>
                             </div>
                         </div>
-                        
+
                         <div class="flex items-start gap-4">
                             <div class="w-12 h-12 rounded-full bg-gray-900 flex items-center justify-center flex-shrink-0">
                                 <svg class="w-5 h-5 text-white" fill="currentColor" viewBox="0 0 24 24">
@@ -143,7 +143,7 @@
                             </div>
                         </div>
                     </div>
-                    
+
                     <!-- Contact CTA -->
                     <div class="bg-white p-8 rounded-2xl shadow-lg border border-gray-100">
                         <h3 class="font-display text-2xl font-semibold text-gray-900 mb-4">Parlons de votre projet</h3>

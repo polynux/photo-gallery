@@ -8,7 +8,7 @@ test('thumbnail command generates missing thumbnails for a gallery', function ()
     config()->set('gallery.generate_thumbnails', false);
 
     $gallery = PhotoGallery::factory()->create();
-    $path = $gallery->id.'/command-test.png';
+    $path = $gallery->id . '/command-test.png';
     $image = imagecreatetruecolor(20, 20);
     $background = imagecolorallocate($image, 255, 255, 255);
     imagefill($image, 0, 0, $background);

@@ -28,9 +28,9 @@
                         <path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5" d="M15 7a2 2 0 012 2m4 0a6 6 0 01-7.743 5.743L11 17H9v2H7v2H4a1 1 0 01-1-1v-2.586a1 1 0 01.293-.707l5.964-5.964A6 6 0 1121 9z"></path>
                     </svg>
                 </div>
-                
+
                 <h1 class="font-display text-2xl font-bold text-gray-900 mb-2">{{ $photoGallery->name }}</h1>
-                
+
                 @if ($photoGallery->description)
                     <p class="text-gray-600">{{ $photoGallery->description }}</p>
                 @endif
@@ -39,7 +39,7 @@
             <!-- Form -->
             <form action="{{ route('public.authenticate', $photoGallery->access_code) }}" method="POST" class="space-y-6">
                 @csrf
-                
+
                 <div>
                     <label for="password" class="block text-sm font-medium text-gray-700 mb-2">Mot de passe</label>
                     <input
@@ -55,8 +55,8 @@
                     @enderror
                 </div>
 
-                <button 
-                    type="submit" 
+                <button
+                    type="submit"
                     class="w-full py-4 bg-gray-900 text-white rounded-lg font-medium transition-all hover:bg-gray-800 hover:shadow-lg"
                 >
                     Accéder à la galerie
@@ -70,7 +70,7 @@
                 </a>
             </div>
         </div>
-        
+
         <!-- Brand -->
         <div class="text-center mt-8">
             <span class="font-display text-lg text-gray-400">Pinaton Photographie</span>

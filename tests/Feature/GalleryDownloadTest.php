@@ -44,11 +44,11 @@ test('gallery download streams a zip with slugged entry paths', function () {
         'position' => 2,
     ]);
 
-    addPhotoWithJpgBytes($gallery, $defaultSection, 1, $gallery->id.'/one.jpg');
-    addPhotoWithJpgBytes($gallery, $extraSection, 1, $gallery->id.'/two.jpg');
+    addPhotoWithJpgBytes($gallery, $defaultSection, 1, $gallery->id . '/one.jpg');
+    addPhotoWithJpgBytes($gallery, $extraSection, 1, $gallery->id . '/two.jpg');
 
     $response = $this->withSession([
-        'authenticated_gallery_'.$gallery->id => true,
+        'authenticated_gallery_' . $gallery->id => true,
     ])->get(route('public.download', $gallery->access_code));
 
     $response->assertSuccessful();
@@ -76,7 +76,7 @@ test('unauthenticated visitors are redirected away from photo and thumbnail endp
         'access_code' => 'NOPHOTO1',
     ]);
     $section = $gallery->sections()->where('is_default', true)->firstOrFail();
-    $photo = addPhotoWithJpgBytes($gallery, $section, 1, $gallery->id.'/secret.jpg');
+    $photo = addPhotoWithJpgBytes($gallery, $section, 1, $gallery->id . '/secret.jpg');
 
     $this->get(route('photos.show', [$gallery->access_code, 'secret.jpg']))
         ->assertRedirect(route('public.select'));

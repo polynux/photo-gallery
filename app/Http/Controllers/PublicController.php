@@ -82,7 +82,7 @@ class PublicController extends Controller
                 'photos' => $section->photos->map(function ($photo) {
                     return [
                         'src' => Storage::disk('photo')->url($photo->path),
-                        'alt' => $photo->alt ?? 'Photo #'.$photo->id,
+                        'alt' => $photo->alt ?? 'Photo #' . $photo->id,
                     ];
                 })->values()->toArray(),
             ];
@@ -114,12 +114,12 @@ class PublicController extends Controller
 
     public function showPhoto(string $gallery, string $photo)
     {
-        if (! session('authenticated_gallery_'.$gallery) && ! auth()->check()) {
-            Log::info('User not authenticated for gallery: '.$gallery);
+        if (! session('authenticated_gallery_' . $gallery) && ! auth()->check()) {
+            Log::info('User not authenticated for gallery: ' . $gallery);
 
             return redirect()->route('public.select');
         }
-        $photo = Photo::where('path', $gallery.'/'.$photo)
+        $photo = Photo::where('path', $gallery . '/' . $photo)
             ->where('photo_gallery_id', $gallery)
             ->firstOrFail();
 
@@ -130,12 +130,12 @@ class PublicController extends Controller
 
     public function showThumbnail(string $gallery, string $photo)
     {
-        if (! session('authenticated_gallery_'.$gallery) && ! auth()->check()) {
-            Log::info('User not authenticated for gallery: '.$gallery);
+        if (! session('authenticated_gallery_' . $gallery) && ! auth()->check()) {
+            Log::info('User not authenticated for gallery: ' . $gallery);
 
             return redirect()->route('public.select');
         }
-        $photo = Photo::where('path', $gallery.'/'.$photo)
+        $photo = Photo::where('path', $gallery . '/' . $photo)
             ->where('photo_gallery_id', $gallery)
             ->firstOrFail();
 
@@ -177,6 +177,6 @@ class PublicController extends Controller
 
     private function gallerySessionKey(PhotoGallery $photoGallery): string
     {
-        return 'authenticated_gallery_'.$photoGallery->id;
+        return 'authenticated_gallery_' . $photoGallery->id;
     }
 }

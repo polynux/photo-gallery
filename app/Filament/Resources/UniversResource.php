@@ -6,6 +6,7 @@ use App\Filament\Resources\UniversResource\Pages\CreateUnivers;
 use App\Filament\Resources\UniversResource\Pages\EditUnivers;
 use App\Filament\Resources\UniversResource\Pages\ListUnivers;
 use App\Models\Univers;
+use BackedEnum;
 use Filament\Actions\BulkActionGroup;
 use Filament\Actions\DeleteBulkAction;
 use Filament\Actions\EditAction;
@@ -22,7 +23,7 @@ class UniversResource extends Resource
 {
     protected static ?string $model = Univers::class;
 
-    protected static string|\BackedEnum|null $navigationIcon = 'heroicon-o-table-cells';
+    protected static string|BackedEnum|null $navigationIcon = 'heroicon-o-table-cells';
 
     public static function form(Schema $schema): Schema
     {

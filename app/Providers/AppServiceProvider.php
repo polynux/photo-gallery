@@ -31,7 +31,7 @@ class AppServiceProvider extends ServiceProvider
             $accessCode = (string) ($request->route('access_code') ?? $request->input('access_code', ''));
 
             return Limit::perMinute(config('gallery.login_rate_limit'))
-                ->by(Str::lower($accessCode).'|'.$request->ip());
+                ->by(Str::lower($accessCode) . '|' . $request->ip());
         });
     }
 }

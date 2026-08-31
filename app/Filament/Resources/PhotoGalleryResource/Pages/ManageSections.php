@@ -25,9 +25,9 @@ class ManageSections extends Page implements HasTable
 
     protected static string $resource = PhotoGalleryResource::class;
 
-    protected string $view = 'filament.resources.photo-gallery-resource.pages.manage-sections';
-
     public $record;
+
+    protected string $view = 'filament.resources.photo-gallery-resource.pages.manage-sections';
 
     public function mount($record): void
     {

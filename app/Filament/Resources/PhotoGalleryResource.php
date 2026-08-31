@@ -9,6 +9,7 @@ use App\Filament\Resources\PhotoGalleryResource\Pages\ManageSections;
 use App\Filament\Resources\PhotoGalleryResource\RelationManagers\PhotosRelationManager;
 use App\Filament\Resources\PhotoResource\Pages\UploadPhotos;
 use App\Models\PhotoGallery;
+use BackedEnum;
 use Filament\Actions\Action;
 use Filament\Actions\BulkActionGroup;
 use Filament\Actions\DeleteBulkAction;
@@ -27,7 +28,7 @@ class PhotoGalleryResource extends Resource
 {
     protected static ?string $model = PhotoGallery::class;
 
-    protected static string|\BackedEnum|null $navigationIcon = 'heroicon-o-camera';
+    protected static string|BackedEnum|null $navigationIcon = 'heroicon-o-camera';
 
     public static function form(Schema $schema): Schema
     {

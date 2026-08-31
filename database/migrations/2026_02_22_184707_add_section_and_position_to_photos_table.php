@@ -31,8 +31,8 @@ return new class extends Migration
                 ->update([
                     'photo_section_id' => $sectionId,
                     'position' => DB::raw('(
-                        SELECT COUNT(*) + 1 FROM photos AS p2 
-                        WHERE p2.photo_gallery_id = photos.photo_gallery_id 
+                        SELECT COUNT(*) + 1 FROM photos AS p2
+                        WHERE p2.photo_gallery_id = photos.photo_gallery_id
                         AND p2.id < photos.id
                     )'),
                 ]);

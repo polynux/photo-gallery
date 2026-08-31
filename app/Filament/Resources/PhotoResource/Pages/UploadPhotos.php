@@ -18,11 +18,11 @@ class UploadPhotos extends Page
 {
     protected static string $resource = PhotoGalleryResource::class;
 
-    protected string $view = 'filament.resources.photo-resource.pages.upload-photos';
-
     public ?array $data = [];
 
     public PhotoGallery $photoGallery;
+
+    protected string $view = 'filament.resources.photo-resource.pages.upload-photos';
 
     public function mount(PhotoGallery $record): void
     {

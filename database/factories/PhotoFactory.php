@@ -26,7 +26,7 @@ class PhotoFactory extends Factory
                 ?->sections()
                 ->where('is_default', true)
                 ->value('id'),
-            'path' => fn (array $attributes): string => $attributes['photo_gallery_id'].'/'.Str::lower(fake()->bothify('photo-####??')).'.png',
+            'path' => fn (array $attributes): string => $attributes['photo_gallery_id'] . '/' . Str::lower(fake()->bothify('photo-####??')) . '.png',
             'alt' => fake()->sentence(),
             'position' => null,
         ];
@@ -37,7 +37,7 @@ class PhotoFactory extends Factory
         return $this->state(fn (): array => [
             'photo_gallery_id' => $gallery->id,
             'photo_section_id' => $gallery->sections()->where('is_default', true)->value('id'),
-            'path' => $gallery->id.'/'.Str::lower(fake()->bothify('photo-####??')).'.png',
+            'path' => $gallery->id . '/' . Str::lower(fake()->bothify('photo-####??')) . '.png',
         ]);
     }
 }

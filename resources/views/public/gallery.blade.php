@@ -101,7 +101,7 @@
                 @if ($photoGallery->coverPhoto)
                     <div class="relative rounded-2xl overflow-hidden mb-8 shadow-2xl mt-16">
                         <img src="{{ Storage::disk('thumbnails')->url($photoGallery->coverPhoto->path) }}"
-                            alt="Cover for {{ $photoGallery->name }}" 
+                            alt="Cover for {{ $photoGallery->name }}"
                             class="w-full h-80 md:h-[32rem] object-cover">
                         <div class="absolute inset-0 bg-gradient-to-t from-black/60 to-transparent"></div>
                         <div class="absolute bottom-0 left-0 right-0 p-8 text-white">
@@ -263,18 +263,18 @@
         function nextSlide() {
             if (totalPhotos <= 1 || isAnimating) return;
             isAnimating = true;
-            
+
             // Slide current image to the left (exiting)
             currentSlide.classList.remove('current');
             currentSlide.classList.add('sliding-out-left');
-            
+
             setTimeout(() => {
                 currentIndex = (currentIndex + 1) % totalPhotos;
                 updateSlide();
                 // New image enters from the right
                 currentSlide.classList.remove('sliding-out-left');
                 currentSlide.classList.add('sliding-in-right');
-                
+
                 setTimeout(() => {
                     currentSlide.classList.remove('sliding-in-right');
                     currentSlide.classList.add('current');
@@ -286,18 +286,18 @@
         function prevSlide() {
             if (totalPhotos <= 1 || isAnimating) return;
             isAnimating = true;
-            
+
             // Slide current image to the right (exiting)
             currentSlide.classList.remove('current');
             currentSlide.classList.add('sliding-out-right');
-            
+
             setTimeout(() => {
                 currentIndex = (currentIndex - 1 + totalPhotos) % totalPhotos;
                 updateSlide();
                 // New image enters from the left
                 currentSlide.classList.remove('sliding-out-right');
                 currentSlide.classList.add('sliding-in-left');
-                
+
                 setTimeout(() => {
                     currentSlide.classList.remove('sliding-in-left');
                     currentSlide.classList.add('current');

@@ -28,16 +28,16 @@
                         <path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5" d="M3 16.5v2.25A2.25 2.25 0 0 0 5.25 21h13.5A2.25 2.25 0 0 0 21 18.75V16.5M16.5 12 12 16.5m0 0L7.5 12m4.5 4.5V3"></path>
                     </svg>
                 </div>
-                
+
                 <h1 class="font-display text-2xl font-bold text-gray-900 mb-2">Accéder à ma galerie</h1>
-                
+
                 <p class="text-gray-600">Entrez vos identifiants pour accéder à votre galerie privée</p>
             </div>
 
             <!-- Form -->
             <form action="{{ route('public.authenticate-select') }}" method="POST" class="space-y-6">
                 @csrf
-                
+
                 <div>
                     <label for="access-code" class="block text-sm font-medium text-gray-700 mb-2">Code d'accès</label>
                     <input
@@ -52,7 +52,7 @@
                         <p class="text-red-500 text-sm mt-2">{{ $message }}</p>
                     @enderror
                 </div>
-                
+
                 <div>
                     <label for="password" class="block text-sm font-medium text-gray-700 mb-2">Mot de passe</label>
                     <input
@@ -68,8 +68,8 @@
                     @enderror
                 </div>
 
-                <button 
-                    type="submit" 
+                <button
+                    type="submit"
                     class="w-full py-4 bg-gray-900 text-white rounded-lg font-medium transition-all hover:bg-gray-800 hover:shadow-lg"
                 >
                     Accéder à la galerie
@@ -83,7 +83,7 @@
                 </a>
             </div>
         </div>
-        
+
         <!-- Brand -->
         <div class="text-center mt-8">
             <span class="font-display text-lg text-gray-400">Pinaton Photographie</span>

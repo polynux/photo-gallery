@@ -69,17 +69,17 @@ test('deleting a photo removes its original and thumbnail files', function () {
     config()->set('gallery.generate_thumbnails', false);
 
     $gallery = PhotoGallery::factory()->create();
-    Storage::disk('photo')->put($gallery->id.'/doomed.jpg', 'content');
-    Storage::disk('thumbnails')->put($gallery->id.'/doomed.jpg', 'content');
+    Storage::disk('photo')->put($gallery->id . '/doomed.jpg', 'content');
+    Storage::disk('thumbnails')->put($gallery->id . '/doomed.jpg', 'content');
 
     $photo = Photo::factory()->forGallery($gallery)->create([
-        'path' => $gallery->id.'/doomed.jpg',
+        'path' => $gallery->id . '/doomed.jpg',
         'position' => 1,
     ]);
     $photo->delete();
 
-    Storage::disk('photo')->assertMissing($gallery->id.'/doomed.jpg');
-    Storage::disk('thumbnails')->assertMissing($gallery->id.'/doomed.jpg');
+    Storage::disk('photo')->assertMissing($gallery->id . '/doomed.jpg');
+    Storage::disk('thumbnails')->assertMissing($gallery->id . '/doomed.jpg');
 });
 
 test('deleting a gallery removes all photo files', function () {
@@ -88,15 +88,15 @@ test('deleting a gallery removes all photo files', function () {
     config()->set('gallery.generate_thumbnails', false);
 
     $gallery = PhotoGallery::factory()->create();
-    Storage::disk('photo')->put($gallery->id.'/a.jpg', 'content-a');
-    Storage::disk('photo')->put($gallery->id.'/b.jpg', 'content-b');
+    Storage::disk('photo')->put($gallery->id . '/a.jpg', 'content-a');
+    Storage::disk('photo')->put($gallery->id . '/b.jpg', 'content-b');
 
     $section = $gallery->sections()->where('is_default', true)->firstOrFail();
-    Photo::factory()->forGallery($gallery)->create(['path' => $gallery->id.'/a.jpg', 'position' => 1]);
-    Photo::factory()->forGallery($gallery)->create(['path' => $gallery->id.'/b.jpg', 'position' => 2]);
+    Photo::factory()->forGallery($gallery)->create(['path' => $gallery->id . '/a.jpg', 'position' => 1]);
+    Photo::factory()->forGallery($gallery)->create(['path' => $gallery->id . '/b.jpg', 'position' => 2]);
 
     $gallery->delete();
 
-    Storage::disk('photo')->assertMissing($gallery->id.'/a.jpg');
-    Storage::disk('photo')->assertMissing($gallery->id.'/b.jpg');
+    Storage::disk('photo')->assertMissing($gallery->id . '/a.jpg');
+    Storage::disk('photo')->assertMissing($gallery->id . '/b.jpg');
 });
