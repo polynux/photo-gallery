@@ -11,7 +11,7 @@ class Header extends Component
     /**
      * Create a new component instance.
      */
-    public function __construct()
+    public function __construct(public bool $transparent = false)
     {
         //
     }
@@ -21,6 +21,6 @@ class Header extends Component
      */
     public function render(): View|Closure|string
     {
-        return view('components.header');
+        return view('components.header', ['transparent' => $this->transparent]);
     }
 }
