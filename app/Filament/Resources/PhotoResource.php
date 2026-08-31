@@ -7,6 +7,7 @@ use App\Filament\Resources\PhotoResource\Pages\EditPhoto;
 use App\Filament\Resources\PhotoResource\Pages\ListPhotos;
 use App\Models\Photo;
 use App\Models\PhotoSection;
+use App\Services\PhotoPositionService;
 use Filament\Forms;
 use Filament\Forms\Components\FileUpload;
 use Filament\Forms\Components\Select;
@@ -56,6 +57,27 @@ class PhotoResource extends Resource
                     ->helperText('Description of the image for accessibility')
                     ->maxLength(255),
             ]);
+    }
+
+    public static function getEloquentQuery(): Builder
+    {
+        $query = parent::getEloquentQuery()
+            ->orderBy('position')
+            ->with(['photoSection', 'photoGallery']);
+
+        $galleryId = request()->get('photo_gallery_id');
+
+        if ($galleryId) {
+            $query->where('photo_gallery_id', $galleryId);
+        }
+
+        $sectionId = request()->get('photo_section_id');
+
+        if ($sectionId) {
+            $query->where('photo_section_id', $sectionId);
+        }
+
+        return $query;
     }
 
     public static function table(Table $table): Table
@@ -122,7 +144,7 @@ class PhotoResource extends Resource
                                         ->pluck('name', 'id');
                                 }),
                         ])
-                        ->action(function (array $data, $records) {
+                        ->action(function (array $data, $records, PhotoPositionService $positionService) {
                             $targetSection = PhotoSection::query()->findOrFail($data['photo_section_id']);
 
                             foreach ($records as $record) {
@@ -130,7 +152,7 @@ class PhotoResource extends Resource
                                     continue;
                                 }
 
-                                $record->update(['photo_section_id' => $data['photo_section_id']]);
+                                $positionService->moveToSection($record, $targetSection->id);
                             }
                         }),
                 ]),

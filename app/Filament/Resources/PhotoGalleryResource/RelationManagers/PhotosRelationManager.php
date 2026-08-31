@@ -3,8 +3,8 @@
 namespace App\Filament\Resources\PhotoGalleryResource\RelationManagers;
 
 use App\Filament\Resources\PhotoGalleryResource;
-use App\Models\Photo;
 use App\Models\PhotoSection;
+use App\Services\PhotoPositionService;
 use Filament\Forms\Components\FileUpload;
 use Filament\Forms\Components\Select;
 use Filament\Forms\Components\TextInput;
@@ -112,9 +112,15 @@ class PhotosRelationManager extends RelationManager
                                 ->required()
                                 ->options(fn ($livewire) => PhotoSection::where('photo_gallery_id', $livewire->getOwnerRecord()->id)->pluck('name', 'id')),
                         ])
-                        ->action(function (array $data, $records) {
+                        ->action(function (array $data, $records, PhotoPositionService $positionService) {
+                            $targetSection = PhotoSection::query()->findOrFail($data['photo_section_id']);
+
                             foreach ($records as $record) {
-                                $record->update(['photo_section_id' => $data['photo_section_id']]);
+                                if ($record->photo_gallery_id !== $targetSection->photo_gallery_id) {
+                                    continue;
+                                }
+
+                                $positionService->moveToSection($record, $targetSection->id);
                             }
                         }),
                 ]),
@@ -126,22 +132,12 @@ class PhotosRelationManager extends RelationManager
         $sectionFilter = $this->getTableFilterState('photo_section_id');
         $sectionId = $sectionFilter['value'] ?? null;
 
-        if ($sectionId) {
-            $position = 1;
-            foreach ($orderIds as $id) {
-                Photo::where('id', $id)
-                    ->where('photo_section_id', $sectionId)
-                    ->update(['position' => $position++]);
-            }
-        } else {
-            $galleryId = $this->ownerRecord->id;
+        $positionService = app(PhotoPositionService::class);
 
-            $position = 1;
-            foreach ($orderIds as $id) {
-                Photo::where('id', $id)
-                    ->where('photo_gallery_id', $galleryId)
-                    ->update(['position' => $position++]);
-            }
+        if ($sectionId) {
+            $positionService->reindexSection($orderIds, (int) $sectionId);
+        } else {
+            $positionService->reindexGallery($orderIds, $this->ownerRecord->id);
         }
     }
 }

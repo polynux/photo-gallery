@@ -3,10 +3,9 @@
 namespace App\Filament\Resources\PhotoResource\Pages;
 
 use App\Filament\Resources\PhotoResource;
-use App\Models\Photo;
+use App\Services\PhotoPositionService;
 use Filament\Actions\CreateAction;
 use Filament\Resources\Pages\ListRecords;
-use Illuminate\Database\Eloquent\Builder;
 
 class ListPhotos extends ListRecords
 {
@@ -26,20 +25,12 @@ class ListPhotos extends ListRecords
 
     public function reorder(array $orderIds): void
     {
+        $positionService = app(PhotoPositionService::class);
+
         if ($this->photo_section_id) {
-            $position = 1;
-            foreach ($orderIds as $id) {
-                Photo::where('id', $id)
-                    ->where('photo_section_id', $this->photo_section_id)
-                    ->update(['position' => $position++]);
-            }
+            $positionService->reindexSection($orderIds, (int) $this->photo_section_id);
         } elseif ($this->photo_gallery_id) {
-            $position = 1;
-            foreach ($orderIds as $id) {
-                Photo::where('id', $id)
-                    ->where('photo_gallery_id', $this->photo_gallery_id)
-                    ->update(['position' => $position++]);
-            }
+            $positionService->reindexGallery($orderIds, (int) $this->photo_gallery_id);
         } else {
             parent::reorder($orderIds);
         }
@@ -50,20 +41,5 @@ class ListPhotos extends ListRecords
         return [
             CreateAction::make(),
         ];
-    }
-
-    protected function getTableQuery(): ?Builder
-    {
-        $query = Photo::query()->orderBy('position');
-
-        if ($this->photo_gallery_id) {
-            $query->where('photo_gallery_id', $this->photo_gallery_id);
-        }
-
-        if ($this->photo_section_id) {
-            $query->where('photo_section_id', $this->photo_section_id);
-        }
-
-        return $query;
     }
 }

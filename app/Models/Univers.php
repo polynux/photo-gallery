@@ -12,7 +12,7 @@ class Univers extends Model
     {
         static::creating(function (Univers $univers) {
             if ($univers->position === null) {
-                $univers->position = Univers::max('position') + 1 ?? 1;
+                $univers->position = (Univers::max('position') ?? 0) + 1;
             }
         });
     }

@@ -3,6 +3,7 @@
 namespace App\Models;
 
 use App\Jobs\GeneratePhotoThumbnail;
+use App\Services\PhotoPositionService;
 use App\Services\ThumbnailService;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
@@ -21,17 +22,15 @@ class Photo extends Model
     {
         static::creating(function (Photo $photo) {
             if ($photo->position === null && $photo->photo_section_id) {
-                $photo->position = (Photo::where('photo_section_id', $photo->photo_section_id)
-                    ->max('position') ?? 0) + 1;
+                $photo->position = app(PhotoPositionService::class)->appendPosition($photo->photo_section_id);
             }
         });
 
         static::updating(function (Photo $photo) {
-            if ($photo->isDirty('photo_section_id')) {
+            if ($photo->isDirty('photo_section_id') && $photo->previousSectionId === null) {
                 $photo->previousSectionId = $photo->getOriginal('photo_section_id');
 
-                $photo->position = (Photo::where('photo_section_id', $photo->photo_section_id)
-                    ->max('position') ?? 0) + 1;
+                $photo->position = app(PhotoPositionService::class)->appendPosition($photo->photo_section_id);
             }
         });
 
@@ -109,15 +108,7 @@ class Photo extends Model
 
     protected function reindexSectionPositions(int $sectionId): void
     {
-        $photos = Photo::where('photo_section_id', $sectionId)
-            ->orderBy('position')
-            ->get();
-
-        foreach ($photos as $index => $photo) {
-            if ($photo->position !== $index + 1) {
-                $photo->update(['position' => $index + 1]);
-            }
-        }
+        app(PhotoPositionService::class)->reindexAllInSection($sectionId);
     }
 
     protected function shouldGenerateThumbnail(): bool
