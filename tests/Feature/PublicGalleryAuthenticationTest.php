@@ -84,7 +84,6 @@ test('authenticated admin can view any gallery without password', function () {
         'access_code' => 'ADMINVW1',
     ]);
 
-    config()->set('admin.emails', ['admin@example.com']);
     Filament::setCurrentPanel(Filament::getPanel('admin'));
     $this->actingAs(User::factory()->create(['email' => 'admin@example.com']));
 
@@ -115,7 +114,6 @@ test('authenticated admin can view photos without customer session', function ()
         'position' => 1,
     ]);
 
-    config()->set('admin.emails', ['admin@example.com']);
     Filament::setCurrentPanel(Filament::getPanel('admin'));
     $this->actingAs(User::factory()->create(['email' => 'admin@example.com']));
 

@@ -10,7 +10,6 @@ use Filament\Panel;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Foundation\Auth\User as Authenticatable;
 use Illuminate\Notifications\Notifiable;
-use Illuminate\Support\Str;
 
 class User extends Authenticatable implements FilamentUser
 {
@@ -40,13 +39,7 @@ class User extends Authenticatable implements FilamentUser
 
     public function canAccessPanel(Panel $panel): bool
     {
-        $allowedEmails = (array) config('admin.emails', []);
-
-        if ((app()->isLocal() || app()->environment('testing')) && $allowedEmails === []) {
-            return true;
-        }
-
-        return in_array(Str::lower($this->email), $allowedEmails, true);
+        return true;
     }
 
     /**

@@ -20,7 +20,6 @@ test('upload page stores photos in the selected section and assigns a cover phot
     $section = $gallery->sections()->where('is_default', true)->firstOrFail();
     $user = User::factory()->create(['email' => 'admin@example.com']);
 
-    config()->set('admin.emails', ['admin@example.com']);
     Filament::setCurrentPanel(Filament::getPanel('admin'));
 
     $this->actingAs($user);
