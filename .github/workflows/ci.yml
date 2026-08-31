@@ -29,7 +29,7 @@ jobs:
         run: php artisan test
 
       - name: Blade syntax check
-        run: php artisan view:cache && php artisan optimize:clear
+        run: php artisan view:cache
 
   frontend:
     name: Frontend (build)
