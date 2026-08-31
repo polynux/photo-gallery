@@ -6,7 +6,7 @@ namespace App\Filament\Widgets;
 
 use App\Filament\Resources\PhotoGalleryResource;
 use App\Models\PhotoGallery;
-use Filament\Tables\Actions\Action;
+use Filament\Actions\Action;
 use Filament\Tables\Columns\ImageColumn;
 use Filament\Tables\Columns\TextColumn;
 use Filament\Tables\Table;
@@ -40,7 +40,7 @@ class RecentPhotoGalleries extends BaseWidget
                     ->dateTime()
                     ->sortable(),
             ])
-            ->actions([
+            ->recordActions([
                 Action::make('view_gallery')
                     ->label('View Gallery')
                     ->icon('heroicon-o-eye')

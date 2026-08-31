@@ -6,14 +6,14 @@ use App\Filament\Resources\UniversResource\Pages\CreateUnivers;
 use App\Filament\Resources\UniversResource\Pages\EditUnivers;
 use App\Filament\Resources\UniversResource\Pages\ListUnivers;
 use App\Models\Univers;
+use Filament\Actions\BulkActionGroup;
+use Filament\Actions\DeleteBulkAction;
+use Filament\Actions\EditAction;
 use Filament\Forms\Components\FileUpload;
 use Filament\Forms\Components\Textarea;
 use Filament\Forms\Components\TextInput;
-use Filament\Forms\Form;
 use Filament\Resources\Resource;
-use Filament\Tables\Actions\BulkActionGroup;
-use Filament\Tables\Actions\DeleteBulkAction;
-use Filament\Tables\Actions\EditAction;
+use Filament\Schemas\Schema;
 use Filament\Tables\Columns\ImageColumn;
 use Filament\Tables\Columns\TextColumn;
 use Filament\Tables\Table;
@@ -22,12 +22,12 @@ class UniversResource extends Resource
 {
     protected static ?string $model = Univers::class;
 
-    protected static ?string $navigationIcon = 'heroicon-o-table-cells';
+    protected static string|\BackedEnum|null $navigationIcon = 'heroicon-o-table-cells';
 
-    public static function form(Form $form): Form
+    public static function form(Schema $schema): Schema
     {
-        return $form
-            ->schema([
+        return $schema
+            ->components([
                 //
                 FileUpload::make('path')
                     ->label('Fichier')
@@ -79,10 +79,10 @@ class UniversResource extends Resource
             ->filters([
                 //
             ])
-            ->actions([
+            ->recordActions([
                 EditAction::make(),
             ])
-            ->bulkActions([
+            ->toolbarActions([
                 BulkActionGroup::make([
                     DeleteBulkAction::make(),
                 ]),

@@ -5,6 +5,7 @@ namespace App\Services;
 use App\Models\PhotoGallery;
 use Illuminate\Support\Facades\Storage;
 use Illuminate\Support\Str;
+use RuntimeException;
 use ZipStream\ZipStream;
 
 class GalleryZipStream
@@ -39,7 +40,7 @@ class GalleryZipStream
 
             foreach ($section->photos as $photo) {
                 if (! $photoDisk->exists($photo->path)) {
-                    report(new \RuntimeException("Photo file not found on disk: {$photo->path}"));
+                    report(new RuntimeException("Photo file not found on disk: {$photo->path}"));
 
                     continue;
                 }

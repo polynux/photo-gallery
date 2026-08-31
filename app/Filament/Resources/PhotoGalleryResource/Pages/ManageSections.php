@@ -7,13 +7,12 @@ use App\Filament\Resources\PhotoResource;
 use App\Models\PhotoGallery;
 use App\Models\PhotoSection;
 use Filament\Actions\Action as HeaderAction;
+use Filament\Actions\CreateAction;
+use Filament\Actions\DeleteAction;
+use Filament\Actions\EditAction;
 use Filament\Forms\Components\TextInput;
 use Filament\Notifications\Notification;
 use Filament\Resources\Pages\Page;
-use Filament\Tables\Actions\Action;
-use Filament\Tables\Actions\CreateAction;
-use Filament\Tables\Actions\DeleteAction;
-use Filament\Tables\Actions\EditAction;
 use Filament\Tables\Columns\IconColumn;
 use Filament\Tables\Columns\TextColumn;
 use Filament\Tables\Concerns\InteractsWithTable;
@@ -26,7 +25,7 @@ class ManageSections extends Page implements HasTable
 
     protected static string $resource = PhotoGalleryResource::class;
 
-    protected static string $view = 'filament.resources.photo-gallery-resource.pages.manage-sections';
+    protected string $view = 'filament.resources.photo-gallery-resource.pages.manage-sections';
 
     public $record;
 
@@ -63,8 +62,8 @@ class ManageSections extends Page implements HasTable
             ])
             ->reorderable('position')
             ->defaultSort('position', 'asc')
-            ->actions([
-                Action::make('manage_photos')
+            ->recordActions([
+                HeaderAction::make('manage_photos')
                     ->label('Manage Photos')
                     ->icon('heroicon-o-photo')
                     ->url(fn (PhotoSection $record): string => PhotoResource::getUrl('index', [
@@ -72,7 +71,7 @@ class ManageSections extends Page implements HasTable
                         'photo_section_id' => $record->id,
                     ])),
                 EditAction::make()
-                    ->form([
+                    ->schema([
                         TextInput::make('name')
                             ->required()
                             ->maxLength(255)
@@ -98,13 +97,13 @@ class ManageSections extends Page implements HasTable
                     ->label('Create Section')
                     ->modalHeading('Create New Section')
                     ->modalButton('Create')
-                    ->form([
+                    ->schema([
                         TextInput::make('name')
                             ->required()
                             ->maxLength(255)
                             ->label('Section Name'),
                     ])
-                    ->mutateFormDataUsing(function (array $data): array {
+                    ->mutateDataUsing(function (array $data): array {
                         $data['photo_gallery_id'] = $this->record;
                         $data['position'] = (PhotoSection::where('photo_gallery_id', $this->record)
                             ->max('position') ?? 0) + 1;

@@ -9,16 +9,16 @@ use App\Models\PhotoSection;
 use Filament\Forms\Components\FileUpload;
 use Filament\Forms\Components\Select;
 use Filament\Forms\Components\TextInput;
-use Filament\Forms\Form;
 use Filament\Notifications\Notification;
 use Filament\Resources\Pages\Page;
+use Filament\Schemas\Schema;
 use Illuminate\Support\Facades\DB;
 
 class UploadPhotos extends Page
 {
     protected static string $resource = PhotoGalleryResource::class;
 
-    protected static string $view = 'filament.resources.photo-resource.pages.upload-photos';
+    protected string $view = 'filament.resources.photo-resource.pages.upload-photos';
 
     public ?array $data = [];
 
@@ -34,10 +34,10 @@ class UploadPhotos extends Page
         ]);
     }
 
-    public function form(Form $form): Form
+    public function form(Schema $schema): Schema
     {
-        return $form
-            ->schema([
+        return $schema
+            ->components([
                 Select::make('data.photo_section_id')
                     ->label('Section')
                     ->options(fn (): array => $this->photoGallery->sections()

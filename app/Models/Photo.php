@@ -9,6 +9,7 @@ use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
 use Illuminate\Support\Facades\Storage;
+use Throwable;
 
 class Photo extends Model
 {
@@ -91,7 +92,7 @@ class Photo extends Model
     /**
      * Generate a JPEG thumbnail for this photo (max 1920px, never upscaled).
      *
-     * @throws \Throwable
+     * @throws Throwable
      */
     public function generateThumbnail(): void
     {

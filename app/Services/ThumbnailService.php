@@ -6,6 +6,8 @@ use App\Jobs\GeneratePhotoThumbnail;
 use App\Models\Photo;
 use Illuminate\Support\Facades\Storage;
 use Intervention\Image\ImageManager;
+use RuntimeException;
+use Throwable;
 
 class ThumbnailService
 {
@@ -26,14 +28,14 @@ class ThumbnailService
     /**
      * Generate a JPEG thumbnail (max 1920px, never upscaled) for the given photo.
      *
-     * @throws \Throwable when the source file cannot be read or encoded
+     * @throws Throwable when the source file cannot be read or encoded
      */
     public function generate(Photo $photo): void
     {
         $photoDisk = Storage::disk('photo');
 
         if (! $photoDisk->exists($photo->path)) {
-            throw new \RuntimeException("Photo file not found on disk: {$photo->path}");
+            throw new RuntimeException("Photo file not found on disk: {$photo->path}");
         }
 
         $image = $this->images->read($photoDisk->get($photo->path));

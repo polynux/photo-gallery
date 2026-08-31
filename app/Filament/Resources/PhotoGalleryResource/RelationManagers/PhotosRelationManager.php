@@ -5,18 +5,18 @@ namespace App\Filament\Resources\PhotoGalleryResource\RelationManagers;
 use App\Filament\Resources\PhotoGalleryResource;
 use App\Models\PhotoSection;
 use App\Services\PhotoPositionService;
+use Filament\Actions\Action;
+use Filament\Actions\BulkAction;
+use Filament\Actions\BulkActionGroup;
+use Filament\Actions\CreateAction;
+use Filament\Actions\DeleteAction;
+use Filament\Actions\DeleteBulkAction;
+use Filament\Actions\EditAction;
 use Filament\Forms\Components\FileUpload;
 use Filament\Forms\Components\Select;
 use Filament\Forms\Components\TextInput;
-use Filament\Forms\Form;
 use Filament\Resources\RelationManagers\RelationManager;
-use Filament\Tables\Actions\Action;
-use Filament\Tables\Actions\BulkAction;
-use Filament\Tables\Actions\BulkActionGroup;
-use Filament\Tables\Actions\CreateAction;
-use Filament\Tables\Actions\DeleteAction;
-use Filament\Tables\Actions\DeleteBulkAction;
-use Filament\Tables\Actions\EditAction;
+use Filament\Schemas\Schema;
 use Filament\Tables\Columns\ImageColumn;
 use Filament\Tables\Columns\TextColumn;
 use Filament\Tables\Filters\SelectFilter;
@@ -26,10 +26,10 @@ class PhotosRelationManager extends RelationManager
 {
     protected static string $relationship = 'photos';
 
-    public function form(Form $form): Form
+    public function form(Schema $schema): Schema
     {
-        return $form
-            ->schema([
+        return $schema
+            ->components([
                 Select::make('photo_section_id')
                     ->label('Section')
                     ->options(fn () => PhotoSection::where('photo_gallery_id', $this->ownerRecord->id)->pluck('name', 'id'))
@@ -90,7 +90,7 @@ class PhotosRelationManager extends RelationManager
                     ->url(fn ($livewire) => PhotoGalleryResource::getUrl('upload-photos', ['record' => $livewire->getOwnerRecord()->id]))
                     ->icon('heroicon-o-arrow-up-tray'),
             ])
-            ->actions([
+            ->recordActions([
                 EditAction::make(),
                 DeleteAction::make(),
                 Action::make('set_as_cover')
@@ -100,7 +100,7 @@ class PhotosRelationManager extends RelationManager
                         $livewire->getOwnerRecord()->update(['cover_photo_id' => $record->id]);
                     }),
             ])
-            ->bulkActions([
+            ->toolbarActions([
                 BulkActionGroup::make([
                     DeleteBulkAction::make(),
                     BulkAction::make('move_to_section')

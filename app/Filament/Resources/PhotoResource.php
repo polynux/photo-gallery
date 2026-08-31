@@ -8,18 +8,19 @@ use App\Filament\Resources\PhotoResource\Pages\ListPhotos;
 use App\Models\Photo;
 use App\Models\PhotoSection;
 use App\Services\PhotoPositionService;
-use Filament\Forms;
+use Filament\Actions\Action;
+use Filament\Actions\BulkAction;
+use Filament\Actions\BulkActionGroup;
+use Filament\Actions\DeleteAction;
+use Filament\Actions\DeleteBulkAction;
+use Filament\Actions\EditAction;
 use Filament\Forms\Components\FileUpload;
 use Filament\Forms\Components\Select;
 use Filament\Forms\Components\TextInput;
-use Filament\Forms\Form;
 use Filament\Resources\Resource;
-use Filament\Tables\Actions\Action;
-use Filament\Tables\Actions\BulkAction;
-use Filament\Tables\Actions\BulkActionGroup;
-use Filament\Tables\Actions\DeleteAction;
-use Filament\Tables\Actions\DeleteBulkAction;
-use Filament\Tables\Actions\EditAction;
+use Filament\Schemas\Components\Utilities\Get;
+use Filament\Schemas\Components\Utilities\Set;
+use Filament\Schemas\Schema;
 use Filament\Tables\Columns\ImageColumn;
 use Filament\Tables\Columns\TextColumn;
 use Filament\Tables\Filters\SelectFilter;
@@ -30,24 +31,24 @@ class PhotoResource extends Resource
 {
     protected static ?string $model = Photo::class;
 
-    protected static ?string $navigationIcon = 'heroicon-o-photo';
+    protected static string|\BackedEnum|null $navigationIcon = 'heroicon-o-photo';
 
-    public static function form(Form $form): Form
+    public static function form(Schema $schema): Schema
     {
-        return $form
-            ->schema([
+        return $schema
+            ->components([
                 Select::make('photo_gallery_id')
                     ->relationship('photoGallery', 'name')
                     ->required()
                     ->live()
-                    ->afterStateUpdated(fn (Forms\Set $set) => $set('photo_section_id', null)),
+                    ->afterStateUpdated(fn (Set $set) => $set('photo_section_id', null)),
                 Select::make('photo_section_id')
-                    ->relationship('photoSection', 'name', fn (Builder $query, Forms\Get $get) => $query->where('photo_gallery_id', $get('photo_gallery_id')))
+                    ->relationship('photoSection', 'name', fn (Builder $query, Get $get) => $query->where('photo_gallery_id', $get('photo_gallery_id')))
                     ->required()
                     ->label('Section'),
                 FileUpload::make('path')
                     ->disk('photo')
-                    ->directory(fn (Forms\Get $get): ?string => $get('photo_gallery_id'))
+                    ->directory(fn (Get $get): ?string => $get('photo_gallery_id'))
                     ->visibility('private')
                     ->image()
                     ->imageEditor()
@@ -114,7 +115,7 @@ class PhotoResource extends Resource
                     ->label('Section')
                     ->preload(),
             ])
-            ->actions([
+            ->recordActions([
                 EditAction::make(),
                 DeleteAction::make(),
                 Action::make('set_as_cover')
@@ -124,7 +125,7 @@ class PhotoResource extends Resource
                         $record->photoGallery->update(['cover_photo_id' => $record->id]);
                     }),
             ])
-            ->bulkActions([
+            ->toolbarActions([
                 BulkActionGroup::make([
                     DeleteBulkAction::make(),
                     BulkAction::make('move_to_section')

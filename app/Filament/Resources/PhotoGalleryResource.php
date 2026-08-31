@@ -6,18 +6,18 @@ use App\Filament\Resources\PhotoGalleryResource\Pages\CreatePhotoGallery;
 use App\Filament\Resources\PhotoGalleryResource\Pages\EditPhotoGallery;
 use App\Filament\Resources\PhotoGalleryResource\Pages\ListPhotoGalleries;
 use App\Filament\Resources\PhotoGalleryResource\Pages\ManageSections;
-use App\Filament\Resources\PhotoGalleryResource\RelationManagers;
+use App\Filament\Resources\PhotoGalleryResource\RelationManagers\PhotosRelationManager;
 use App\Filament\Resources\PhotoResource\Pages\UploadPhotos;
 use App\Models\PhotoGallery;
+use Filament\Actions\Action;
+use Filament\Actions\BulkActionGroup;
+use Filament\Actions\DeleteBulkAction;
+use Filament\Actions\EditAction;
 use Filament\Forms\Components\Select;
 use Filament\Forms\Components\Textarea;
 use Filament\Forms\Components\TextInput;
-use Filament\Forms\Form;
 use Filament\Resources\Resource;
-use Filament\Tables\Actions\Action;
-use Filament\Tables\Actions\BulkActionGroup;
-use Filament\Tables\Actions\DeleteBulkAction;
-use Filament\Tables\Actions\EditAction;
+use Filament\Schemas\Schema;
 use Filament\Tables\Columns\ImageColumn;
 use Filament\Tables\Columns\TextColumn;
 use Filament\Tables\Table;
@@ -27,12 +27,12 @@ class PhotoGalleryResource extends Resource
 {
     protected static ?string $model = PhotoGallery::class;
 
-    protected static ?string $navigationIcon = 'heroicon-o-camera';
+    protected static string|\BackedEnum|null $navigationIcon = 'heroicon-o-camera';
 
-    public static function form(Form $form): Form
+    public static function form(Schema $schema): Schema
     {
-        return $form
-            ->schema([
+        return $schema
+            ->components([
                 TextInput::make('name')
                     ->required()
                     ->maxLength(255),
@@ -81,14 +81,14 @@ class PhotoGalleryResource extends Resource
             ->filters([
                 //
             ])
-            ->actions([
+            ->recordActions([
                 EditAction::make(),
                 Action::make('upload_photos')
                     ->label('Upload Photos')
                     ->icon('heroicon-o-arrow-up-tray')
                     ->url(fn (PhotoGallery $record) => static::getUrl('upload-photos', ['record' => $record->id])),
             ])
-            ->bulkActions([
+            ->toolbarActions([
                 BulkActionGroup::make([
                     DeleteBulkAction::make(),
                 ]),
@@ -98,7 +98,7 @@ class PhotoGalleryResource extends Resource
     public static function getRelations(): array
     {
         return [
-            RelationManagers\PhotosRelationManager::class,
+            PhotosRelationManager::class,
         ];
     }
 
