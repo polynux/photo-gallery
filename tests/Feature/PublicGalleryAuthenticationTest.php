@@ -34,6 +34,19 @@ test('gallery selection rejects an invalid password', function () {
         ->assertSessionHasErrors('password');
 });
 
+test('gallery selection accepts lowercase access code and authenticates', function () {
+    $gallery = PhotoGallery::factory()->create([
+        'access_code' => 'SELECT12',
+        'password' => 'secret-password',
+    ]);
+
+    $this->post(route('public.authenticate-select'), [
+        'access_code' => 'select12',
+        'password' => 'secret-password',
+    ])->assertRedirect(route('public.gallery', $gallery->access_code))
+        ->assertSessionHas('authenticated_gallery_' . $gallery->id, true);
+});
+
 test('gallery authentication is throttled after repeated failed attempts', function () {
     $gallery = PhotoGallery::factory()->create([
         'access_code' => 'ACCESS56',

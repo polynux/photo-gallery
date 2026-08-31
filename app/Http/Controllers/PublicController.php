@@ -47,6 +47,10 @@ class PublicController extends Controller
 
     public function authenticateSelect(Request $request): RedirectResponse
     {
+        $request->merge([
+            'access_code' => Str::upper(trim((string) $request->input('access_code'))),
+        ]);
+
         $validated = $request->validate([
             'access_code' => ['required', 'string', 'exists:photo_galleries,access_code'],
             'password' => ['required', 'string', 'max:255'],
