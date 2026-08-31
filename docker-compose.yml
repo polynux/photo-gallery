@@ -3,6 +3,7 @@ services:
     image: laravel-ben
     build: .
     restart: always
+    user: "1000:1000"
     ports:
       - "8090:80" # HTTP
       - "8443:443" # HTTPS
@@ -17,6 +18,9 @@ services:
     tty: true
     environment:
       APP_URL: "http://localhost:8090"
+      APP_KEY: ${APP_KEY:-}
+      APP_ENV: ${APP_ENV:-production}
+      APP_DEBUG: ${APP_DEBUG:-false}
       APP_RUN_MIGRATIONS: "true"
       BACKUP_DB_PATH: "/app/database/database.sqlite"
       BACKUP_STORAGE_PATH: "/app/storage/app"
@@ -26,6 +30,7 @@ services:
   worker:
     image: laravel-ben
     restart: always
+    user: "1000:1000"
     volumes:
       - './test-docker/database.sqlite:/app/database/database.sqlite'
       - './test-docker/public:/app/storage/app/public'
@@ -33,6 +38,9 @@ services:
       - backup-repo:/backup
     environment:
       APP_URL: "http://localhost:8090"
+      APP_KEY: ${APP_KEY:-}
+      APP_ENV: ${APP_ENV:-production}
+      APP_DEBUG: ${APP_DEBUG:-false}
       BACKUP_DB_PATH: "/app/database/database.sqlite"
       BACKUP_STORAGE_PATH: "/app/storage/app"
       PUID: ${PUID:-1000}
