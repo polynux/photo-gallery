@@ -37,7 +37,7 @@
 @if ($transparent ?? false)
 <script>
     // Header scroll effect - only for transparent header on homepage
-    document.addEventListener('DOMContentLoaded', function() {
+    (function() {
         const header = document.getElementById('main-header');
         const logo = document.querySelector('.header-logo');
         const links = document.querySelectorAll('.header-link');
@@ -53,8 +53,8 @@
                 logo.classList.add('text-gray-900');
 
                 links.forEach(link => {
-                    link.classList.remove('text-white/80');
-                    link.classList.add('text-gray-600');
+                    link.classList.remove('text-white/80', 'hover:text-white');
+                    link.classList.add('text-gray-600', 'hover:text-gray-900');
                 });
 
                 if (icon) {
@@ -70,8 +70,8 @@
                 logo.classList.remove('text-gray-900');
 
                 links.forEach(link => {
-                    link.classList.add('text-white/80');
-                    link.classList.remove('text-gray-600');
+                    link.classList.remove('text-gray-600', 'hover:text-gray-900');
+                    link.classList.add('text-white/80', 'hover:text-white');
                 });
 
                 if (icon) {
@@ -86,7 +86,7 @@
 
         // Scroll listener
         window.addEventListener('scroll', updateHeader, { passive: true });
-    });
+    })();
 </script>
 @endif
 
