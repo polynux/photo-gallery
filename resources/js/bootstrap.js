@@ -1,4 +1,2 @@
-import axios from 'axios';
-window.axios = axios;
-
-window.axios.defaults.headers.common['X-Requested-With'] = 'XMLHttpRequest';
+// Frontend bootstrap: no external HTTP client is used by default.
+// Add global JS setup here if needed later.

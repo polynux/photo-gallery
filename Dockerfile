@@ -1,4 +1,4 @@
-FROM dunglas/frankenphp:latest AS base
+FROM dunglas/frankenphp:1.56-php8.5 AS base
 
 ENV SERVER_NAME=:80
 ENV CI=true
@@ -51,12 +51,8 @@ RUN composer install --no-scripts --no-autoloader --no-dev
 RUN composer dump-autoload --optimize --no-dev \
     && composer run-script post-autoload-dump --no-dev
 
-# Copy .env.example to .env
-COPY .env.example .env
-
-
 # Build frontend assets
-FROM node:20-slim AS frontend
+FROM node:24-slim AS frontend
 ENV PNPM_HOME="/pnpm"
 ENV PATH="$PNPM_HOME:$PATH"
 RUN corepack enable
@@ -75,16 +71,11 @@ COPY --from=frontend /app/public/build /app/public/build
 RUN chown -R ${UID}:${GID} /app \
     && chmod -R 755 /app/storage /app/bootstrap/cache
 
-# Run Laravel optimizations
-RUN php artisan key:generate \
-    && php artisan config:cache \
-    && php artisan route:cache \
-    && php artisan view:cache
-
-RUN php artisan storage:link \
-    && php artisan optimize:clear
-
 USER ${USER}
+
+# Runtime caches are created by entrypoint.sh (needs runtime env).
+# APP_KEY must be provided at runtime via environment (never baked in).
+# Run `php artisan key:generate` once before first deploy and store the key.
 
 ENTRYPOINT ["/usr/local/bin/entrypoint.sh"]
 CMD ["frankenphp", "run", "-c", "/etc/caddy/Caddyfile"]

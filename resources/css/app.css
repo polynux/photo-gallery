@@ -21,10 +21,6 @@
     --color-border-light: #f3f4f6;
 }
 
-@plugin "daisyui" {
-    themes: false;
-}
-
 /* Base Styles */
 html {
     scroll-behavior: smooth;
