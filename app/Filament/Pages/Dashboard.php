@@ -2,12 +2,10 @@
 
 namespace App\Filament\Pages;
 
-use App\Jobs\GeneratePhotoThumbnail;
-use App\Models\Photo;
+use App\Services\ThumbnailService;
 use Filament\Actions\Action;
 use Filament\Notifications\Notification;
 use Filament\Pages\Dashboard as BaseDashboard;
-use Illuminate\Support\Facades\Storage;
 
 class Dashboard extends BaseDashboard
 {
@@ -17,17 +15,8 @@ class Dashboard extends BaseDashboard
             Action::make('generate_thumbnails')
                 ->label('Générer les miniatures')
                 ->color('warning')
-                ->action(function () {
-                    $count = 0;
-                    Photo::chunk(100, function ($photos) use (&$count) {
-                        foreach ($photos as $photo) {
-                            $thumbnailPath = Storage::disk('private')->path('thumbnails/' . $photo->path);
-                            if (! file_exists($thumbnailPath)) {
-                                GeneratePhotoThumbnail::dispatch($photo);
-                                $count++;
-                            }
-                        }
-                    });
+                ->action(function (ThumbnailService $thumbnails) {
+                    $count = $thumbnails->queueMissing();
 
                     Notification::make()
                         ->title('Miniatures en file d\'attente')

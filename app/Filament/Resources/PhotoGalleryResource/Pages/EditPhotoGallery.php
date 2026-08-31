@@ -4,12 +4,11 @@ namespace App\Filament\Resources\PhotoGalleryResource\Pages;
 
 use App\Filament\Resources\PhotoGalleryResource;
 use App\Filament\Resources\PhotoResource;
-use App\Jobs\GeneratePhotoThumbnail;
+use App\Services\ThumbnailService;
 use Filament\Actions\Action;
 use Filament\Actions\DeleteAction;
 use Filament\Notifications\Notification;
 use Filament\Resources\Pages\EditRecord;
-use Illuminate\Support\Facades\Storage;
 
 class EditPhotoGallery extends EditRecord
 {
@@ -35,17 +34,8 @@ class EditPhotoGallery extends EditRecord
                 ->label('Generate Thumbnails')
                 ->icon('heroicon-o-photo')
                 ->color('warning')
-                ->action(function () {
-                    $count = 0;
-                    foreach ($this->record->sections as $section) {
-                        foreach ($section->photos as $photo) {
-                            $thumbnailPath = Storage::disk('private')->path('thumbnails/' . $photo->path);
-                            if (! file_exists($thumbnailPath)) {
-                                GeneratePhotoThumbnail::dispatch($photo);
-                                $count++;
-                            }
-                        }
-                    }
+                ->action(function (ThumbnailService $thumbnails) {
+                    $count = $thumbnails->queueMissing($this->record->id);
 
                     Notification::make()
                         ->title('Miniatures en file d\'attente')

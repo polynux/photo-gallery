@@ -4,15 +4,14 @@ namespace App\Http\Controllers;
 
 use App\Models\Photo;
 use App\Models\PhotoGallery;
+use App\Services\GalleryZipStream;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Hash;
 use Illuminate\Support\Facades\Log;
 use Illuminate\Support\Facades\Storage;
-use Illuminate\Support\Str;
 use Illuminate\View\View;
 use Symfony\Component\HttpFoundation\StreamedResponse;
-use ZipStream\ZipStream;
 
 class PublicController extends Controller
 {
@@ -76,7 +75,7 @@ class PublicController extends Controller
                 'photos' => $section->photos->map(function ($photo) {
                     return [
                         'src' => Storage::disk('photo')->url($photo->path),
-                        'alt' => $photo->alt ?? 'Photo #' . $photo->id,
+                        'alt' => $photo->alt ?? 'Photo #'.$photo->id,
                     ];
                 })->values()->toArray(),
             ];
@@ -90,89 +89,53 @@ class PublicController extends Controller
 
     public function download(string $accessCode): RedirectResponse|StreamedResponse
     {
-        $photoGallery = PhotoGallery::query()->where('access_code', $accessCode)
-            ->with(['sections' => function ($query) {
-                $query->orderBy('position')->with(['photos' => function ($q) {
-                    $q->orderBy('position');
-                }]);
-            }])
-            ->firstOrFail();
+        $photoGallery = PhotoGallery::query()->where('access_code', $accessCode)->firstOrFail();
 
         if (! session($this->gallerySessionKey($photoGallery))) {
             return redirect()->route('public.show', $accessCode);
         }
 
-        $zipName = Str::slug($photoGallery->name) . '.zip';
-        $galleryFolder = $photoGallery->name;
-        $sections = $photoGallery->sections;
-        $hasMultipleSections = $sections->count() > 1 || $sections->first()?->is_default === false;
+        $zipStream = app(GalleryZipStream::class);
+        $zipName = $zipStream->slugArchiveName($photoGallery);
 
-        return response()->streamDownload(function () use ($galleryFolder, $hasMultipleSections, $sections, $zipName): void {
+        return response()->streamDownload(function () use ($zipStream, $photoGallery, $zipName): void {
             set_time_limit(0);
-
-            $zip = new ZipStream(
-                outputName: $zipName,
-                sendHttpHeaders: false,
-            );
-
-            foreach ($sections as $section) {
-                $sectionFolder = $hasMultipleSections
-                    ? $galleryFolder . '/' . $section->name
-                    : $galleryFolder;
-
-                $maxPosition = $section->photos->count();
-                $paddingLength = max(2, strlen((string) $maxPosition));
-
-                foreach ($section->photos as $photo) {
-                    $filePath = storage_path('app/private/photos/' . $photo->path);
-
-                    if (! file_exists($filePath)) {
-                        Log::warning("File not found: {$filePath}");
-
-                        continue;
-                    }
-
-                    $position = str_pad((string) $photo->position, $paddingLength, '0', STR_PAD_LEFT);
-
-                    $filename = $hasMultipleSections
-                        ? "{$position} - {$section->name}.jpg"
-                        : "{$position}.jpg";
-
-                    $zip->addFileFromPath("{$sectionFolder}/{$filename}", $filePath);
-                }
-            }
-
-            $zip->finish();
+            $zipStream->stream($photoGallery, $zipName);
             set_time_limit(30);
         }, $zipName);
     }
 
     public function showPhoto(string $gallery, string $photo)
     {
-        if (! session('authenticated_gallery_' . $gallery) && ! auth()->check()) {
-            Log::info('User not authenticated for gallery: ' . $gallery);
+        if (! session('authenticated_gallery_'.$gallery) && ! auth()->check()) {
+            Log::info('User not authenticated for gallery: '.$gallery);
 
             return redirect()->route('public.select');
         }
-        $photo = Photo::where('path', $gallery . '/' . $photo)
+        $photo = Photo::where('path', $gallery.'/'.$photo)
             ->where('photo_gallery_id', $gallery)
             ->firstOrFail();
 
-        return Storage::disk('photo')->response($photo->path);
+        return Storage::disk('photo')->response($photo->path, headers: [
+            'Cache-Control' => 'private, max-age=86400',
+        ]);
     }
 
     public function showThumbnail(string $gallery, string $photo)
     {
-        if (! session('authenticated_gallery_' . $gallery) && ! auth()->check()) {
-            Log::info('User not authenticated for gallery: ' . $gallery);
+        if (! session('authenticated_gallery_'.$gallery) && ! auth()->check()) {
+            Log::info('User not authenticated for gallery: '.$gallery);
 
             return redirect()->route('public.select');
         }
-        $photo = Photo::where('path', $gallery . '/' . $photo)
+        $photo = Photo::where('path', $gallery.'/'.$photo)
             ->where('photo_gallery_id', $gallery)
             ->firstOrFail();
+
         if (Storage::disk('thumbnails')->exists($photo->path)) {
-            return Storage::disk('thumbnails')->response($photo->path);
+            return Storage::disk('thumbnails')->response($photo->path, headers: [
+                'Cache-Control' => 'private, max-age=604800',
+            ]);
         }
 
         return abort(404, 'Thumbnail not found');
@@ -198,6 +161,6 @@ class PublicController extends Controller
 
     private function gallerySessionKey(PhotoGallery $photoGallery): string
     {
-        return 'authenticated_gallery_' . $photoGallery->id;
+        return 'authenticated_gallery_'.$photoGallery->id;
     }
 }

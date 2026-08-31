@@ -4,21 +4,21 @@ namespace App\Console\Commands;
 
 use App\Models\Photo;
 use App\Models\PhotoGallery;
+use App\Services\ThumbnailService;
 use Illuminate\Console\Command;
-use Illuminate\Support\Facades\Storage;
 
 class GenerateThumbnails extends Command
 {
-    protected $signature = 'app:generate-thumbnails {--gallery= : The ID of a specific gallery to generate thumbnails for}';
+    protected $signature = 'app:generate-thumbnails {--gallery= : The ID of a specific gallery to generate thumbnails for} {--sync : Generate synchronously instead of dispatching queue jobs}';
 
     protected $description = 'Generate thumbnails for photos that are missing them';
 
-    public function handle(): void
+    public function handle(ThumbnailService $thumbnails): void
     {
         $galleryId = $this->option('gallery');
+        $currentGalleryId = null;
         $processedCount = 0;
         $skippedCount = 0;
-        $currentGalleryId = null;
 
         if ($galleryId) {
             $gallery = PhotoGallery::query()->find($galleryId);
@@ -36,13 +36,12 @@ class GenerateThumbnails extends Command
 
         Photo::query()
             ->when($galleryId, fn ($query) => $query->where('photo_gallery_id', $galleryId))
+            ->whereHas('photoSection')
             ->orderBy('photo_gallery_id')
             ->orderBy('id')
-            ->chunkById(100, function ($photos) use (&$currentGalleryId, &$processedCount, &$skippedCount): void {
+            ->chunkById(100, function ($photos) use ($thumbnails, &$currentGalleryId, &$processedCount, &$skippedCount): void {
                 foreach ($photos as $photo) {
-                    $thumbnailPath = Storage::disk('private')->path('thumbnails/' . $photo->path);
-
-                    if (file_exists($thumbnailPath)) {
+                    if ($thumbnails->exists($photo->path)) {
                         $skippedCount++;
 
                         continue;
@@ -53,7 +52,15 @@ class GenerateThumbnails extends Command
                         $this->info("Processing gallery ID: {$currentGalleryId}");
                     }
 
-                    $photo->generateThumbnail();
+                    try {
+                        $thumbnails->generate($photo);
+                    } catch (Throwable $exception) {
+                        report($exception);
+                        $this->warn("Failed to generate thumbnail for photo ID: {$photo->id}");
+
+                        continue;
+                    }
+
                     $processedCount++;
                 }
             });

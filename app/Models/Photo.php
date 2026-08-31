@@ -3,13 +3,11 @@
 namespace App\Models;
 
 use App\Jobs\GeneratePhotoThumbnail;
-use Exception;
+use App\Services\ThumbnailService;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
 use Illuminate\Support\Facades\Storage;
-use Intervention\Image\Drivers\Gd\Driver;
-use Intervention\Image\ImageManager;
 
 class Photo extends Model
 {
@@ -48,13 +46,23 @@ class Photo extends Model
                 $photo->reindexSectionPositions($photo->previousSectionId);
             }
 
+            if ($photo->wasChanged('path')) {
+                $originalPath = $photo->getOriginal('path');
+
+                if ($originalPath) {
+                    Storage::disk('photo')->delete($originalPath);
+                    Storage::disk('thumbnails')->delete($originalPath);
+                }
+            }
+
             if ($photo->wasChanged('path') && $photo->shouldGenerateThumbnail()) {
                 GeneratePhotoThumbnail::dispatch($photo)->afterCommit();
             }
         });
 
         static::deleting(function (Photo $photo) {
-            $photo->deleteThumbnail();
+            Storage::disk('photo')->delete($photo->path);
+            Storage::disk('thumbnails')->delete($photo->path);
 
             $sectionId = $photo->photo_section_id;
             if ($sectionId) {
@@ -81,36 +89,22 @@ class Photo extends Model
         return $this->belongsTo(PhotoSection::class);
     }
 
+    /**
+     * Generate a JPEG thumbnail for this photo (max 1920px, never upscaled).
+     *
+     * @throws \Throwable
+     */
     public function generateThumbnail(): void
     {
-        try {
-            $disk = Storage::disk('private');
-            $thumbnailPath = $disk->path('thumbnails/' . $this->path);
-
-            if (file_exists($thumbnailPath)) {
-                return;
-            }
-
-            $manager = new ImageManager(new Driver);
-            $image = $manager->read(Storage::disk('photo')->path($this->path));
-            $image->scale(1920);
-
-            $image->toJpeg(80);
-
-            if (! file_exists(dirname($thumbnailPath))) {
-                mkdir(dirname($thumbnailPath), 0755, true);
-            }
-            $image->save($thumbnailPath);
-        } catch (Exception $e) {
-            report($e);
-        }
+        app(ThumbnailService::class)->generate($this);
     }
 
+    /**
+     * Delete the stored thumbnail for this photo.
+     */
     public function deleteThumbnail(): void
     {
-        if ($this->path && Storage::disk('private')->exists('thumbnails/' . $this->path)) {
-            Storage::disk('private')->delete('thumbnails/' . $this->path);
-        }
+        app(ThumbnailService::class)->delete($this->path);
     }
 
     protected function reindexSectionPositions(int $sectionId): void
