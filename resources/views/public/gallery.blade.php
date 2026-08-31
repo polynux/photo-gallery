@@ -129,26 +129,15 @@
                         </svg>
                         Télécharger la galerie
                     </a>
-                    <button id="slideshow-btn"
-                            class="group cursor-pointer inline-flex items-center px-6 py-3 border-2 border-gray-900 text-gray-900 rounded-full font-medium transition-all hover:bg-gray-100 hover:shadow-lg hover:scale-105">
-                        <svg class="w-5 h-5 mr-2 transition-transform group-hover:scale-110" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 12a3 3 0 1 1-6 0 3 3 0 0 1 6 0Z"/>
-                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M2.458 12C3.732 7.943 7.523 5 12 5c4.478 0 8.268 2.943 9.542 7-1.274 4.057-5.064 7-9.542 7-4.477 0-8.268-2.943-9.542-7Z"/>
-                        </svg>
-                        Diaporama
-                    </button>
-                    <form action="{{ route('public.lock', $photoGallery->access_code) }}" method="POST" class="contents">
-                        @csrf
-                        <button type="submit"
-                                class="group cursor-pointer inline-flex items-center px-6 py-3 border-2 border-gray-300 text-gray-600 rounded-full font-medium transition-all hover:bg-gray-100 hover:shadow-lg"
-                                title="Verrouiller cette galerie sur cet appareil">
-                            <svg class="w-5 h-5 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 15v2m-6 4h12a2 2 0 0 0 2-2v-6a2 2 0 0 0-2-2H6a2 2 0 0 0-2 2v6a2 2 0 0 0 2 2Zm10-10V7a4 4 0 0 0-8 0v4h8Z"/>
-                            </svg>
-                            Verrouiller
-                        </button>
-                    </form>
-                </div>
+                     <button id="slideshow-btn"
+                             class="group cursor-pointer inline-flex items-center px-6 py-3 border-2 border-gray-900 text-gray-900 rounded-full font-medium transition-all hover:bg-gray-100 hover:shadow-lg hover:scale-105">
+                         <svg class="w-5 h-5 mr-2 transition-transform group-hover:scale-110" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                             <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 12a3 3 0 1 1-6 0 3 3 0 0 1 6 0Z"/>
+                             <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M2.458 12C3.732 7.943 7.523 5 12 5c4.478 0 8.268 2.943 9.542 7-1.274 4.057-5.064 7-9.542 7-4.477 0-8.268-2.943-9.542-7Z"/>
+                         </svg>
+                         Diaporama
+                     </button>
+                 </div>
             </div>
         </div>
     </section>

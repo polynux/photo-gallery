@@ -154,15 +154,6 @@ class PublicController extends Controller
         return abort(404, 'Thumbnail not found');
     }
 
-    public function lock(Request $request, string $accessCode): RedirectResponse
-    {
-        $photoGallery = PhotoGallery::query()->where('access_code', Str::upper($accessCode))->firstOrFail();
-
-        $request->session()->forget($this->gallerySessionKey($photoGallery));
-
-        return redirect()->route('public.show', $photoGallery->access_code);
-    }
-
     private function attemptGalleryAuthentication(
         Request $request,
         PhotoGallery $photoGallery,

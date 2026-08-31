@@ -67,8 +67,44 @@ test('gallery download streams a zip with slugged entry paths', function () {
     $zip->close();
 
     expect($entries)->toHaveCount(2);
-    expect($entries[0])->toBe('mariage-juin-2026/01.jpg');
+    expect($entries[0])->toBe('mariage-juin-2026/mariage-juin-2026/01.jpg');
     expect($entries[1])->toBe('mariage-juin-2026/ceremonie-eglise/01.jpg');
+});
+
+test('single default section keeps photos directly in the gallery folder', function () {
+    Storage::fake('photo');
+    Storage::fake('thumbnails');
+    config()->set('gallery.generate_thumbnails', false);
+
+    $gallery = PhotoGallery::factory()->create([
+        'name' => 'Simple Galerie',
+        'access_code' => 'ZIPTEST2',
+    ]);
+
+    $defaultSection = $gallery->sections()->where('is_default', true)->firstOrFail();
+    addPhotoWithJpgBytes($gallery, $defaultSection, 1, $gallery->id . '/only.jpg');
+
+    $response = $this->withSession([
+        'authenticated_gallery_' . $gallery->id => true,
+    ])->get(route('public.download', $gallery->access_code));
+
+    $response->assertSuccessful();
+
+    $tempResource = tmpfile();
+    $zipPath = stream_get_meta_data($tempResource)['uri'];
+    file_put_contents($zipPath, $response->streamedContent());
+
+    $zip = new ZipArchive;
+    expect($zip->open($zipPath))->toBeTrue();
+
+    $entries = [];
+    for ($index = 0; $index < $zip->numFiles; $index++) {
+        $entries[] = $zip->getNameIndex($index);
+    }
+    $zip->close();
+
+    expect($entries)->toHaveCount(1);
+    expect($entries[0])->toBe('simple-galerie/01.jpg');
 });
 
 test('unauthenticated visitors are redirected away from photo and thumbnail endpoints', function () {

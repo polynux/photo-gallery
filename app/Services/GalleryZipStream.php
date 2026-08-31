@@ -24,16 +24,18 @@ class GalleryZipStream
 
         $sections = $photoGallery->sections;
         $galleryFolder = Str::slug($photoGallery->name) ?: 'gallery';
-        $hasMultipleSections = $sections->count() > 1 || $sections->first()?->is_default === false;
+
+        // Single section (the default one) -> photos go directly into
+        // the gallery folder. Multiple sections -> each section gets
+        // its own sub-folder, including the default section.
+        $hasMultipleSections = $sections->count() > 1;
 
         $photoDisk = Storage::disk('photo');
 
         foreach ($sections as $section) {
-            $sectionSlug = Str::slug($section->name) ?: 'section';
-            $sectionIsGalleryRoot = $sectionSlug === $galleryFolder;
-            $sectionFolder = ! $hasMultipleSections || $sectionIsGalleryRoot
-                ? $galleryFolder
-                : $galleryFolder . '/' . $sectionSlug;
+            $sectionFolder = $hasMultipleSections
+                ? $galleryFolder . '/' . (Str::slug($section->name) ?: 'section')
+                : $galleryFolder;
 
             $maxPosition = $section->photos->count();
             $paddingLength = max(2, strlen((string) $maxPosition));
