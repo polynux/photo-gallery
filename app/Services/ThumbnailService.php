@@ -5,6 +5,7 @@ namespace App\Services;
 use App\Jobs\GeneratePhotoThumbnail;
 use App\Models\Photo;
 use Illuminate\Support\Facades\Storage;
+use Intervention\Image\Format;
 use Intervention\Image\ImageManager;
 use RuntimeException;
 use Throwable;
@@ -38,12 +39,12 @@ class ThumbnailService
             throw new RuntimeException("Photo file not found on disk: {$photo->path}");
         }
 
-        $image = $this->images->read($photoDisk->get($photo->path));
+        $image = $this->images->decodeBinary($photoDisk->get($photo->path));
         $image->scaleDown(config('gallery.thumbnail_max_dimension', 1920));
 
         Storage::disk('thumbnails')->put(
             $photo->path,
-            $image->toJpeg(config('gallery.thumbnail_quality', 80))->toString(),
+            $image->encodeUsingFormat(Format::JPEG, quality: config('gallery.thumbnail_quality', 80))->toString(),
         );
     }
 
