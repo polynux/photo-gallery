@@ -15,7 +15,7 @@ test('customers can authenticate with a hashed gallery password', function () {
     $this->post(route('public.authenticate', $gallery->access_code), [
         'password' => 'secret-password',
     ])->assertRedirect(route('public.gallery', $gallery->access_code))
-        ->assertSessionHas('authenticated_gallery_' . $gallery->id, true);
+        ->assertSessionHas('authenticated_gallery_'.$gallery->id, true);
 
     expect($gallery->refresh()->password)->not->toBe('secret-password');
 });
@@ -57,7 +57,7 @@ test('authenticated customers can access their gallery page', function () {
     ]);
 
     $this->withSession([
-        'authenticated_gallery_' . $gallery->id => true,
+        'authenticated_gallery_'.$gallery->id => true,
     ])->get(route('public.gallery', $gallery->access_code))
         ->assertSuccessful();
 });

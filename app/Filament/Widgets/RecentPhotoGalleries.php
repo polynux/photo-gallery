@@ -31,7 +31,7 @@ class RecentPhotoGalleries extends BaseWidget
                 ImageColumn::make('coverPhoto.path')
                     ->label('Cover')
                     ->defaultImageUrl(fn (PhotoGallery $record): ?string => $record->coverPhoto
-                        ? asset('thumbnails/' . $record->coverPhoto->path)
+                        ? asset('thumbnails/'.$record->coverPhoto->path)
                         : null)
                     ->circular(),
                 TextColumn::make('name'),
