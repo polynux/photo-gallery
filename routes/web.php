@@ -1,7 +1,9 @@
 <?php
 
 use App\Http\Controllers\PublicController;
+use App\Models\Univers;
 use Illuminate\Support\Facades\Route;
+use Illuminate\Support\Facades\Storage;
 
 Route::get('/', function () {
     return view('home');
@@ -25,3 +27,13 @@ Route::get('photos/{gallery}/{photo}', [PublicController::class, 'showPhoto'])
     ->name('photos.show');
 Route::get('thumbnails/{gallery}/{photo}', [PublicController::class, 'showThumbnail'])
     ->name('thumbnails.show');
+
+Route::get('univers/{univers}/source', function (Univers $univers) {
+    $disk = Storage::disk('photo')->exists($univers->source_path)
+        ? Storage::disk('photo')
+        : Storage::disk('public');
+
+    abort_unless($disk->exists($univers->source_path), 404);
+
+    return response()->file($disk->path($univers->source_path));
+})->name('univers.source');

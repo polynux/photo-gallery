@@ -26,7 +26,9 @@ test('legacy presets expose the current image count patterns', function () {
 });
 
 test('univers source path falls back to its display path for legacy records', function () {
-    $univers = Univers::query()->create(['path' => 'univers/example.jpg']);
+    $univers = Univers::withoutEvents(fn (): Univers => Univers::query()->create([
+        'path' => 'univers/example.jpg',
+    ]));
 
     expect($univers->source_path)->toBe('univers/example.jpg');
 });

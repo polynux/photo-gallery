@@ -33,7 +33,7 @@ class UniversResource extends Resource
                 FileUpload::make('path')
                     ->label('Fichier')
                     ->required()
-                    ->disk('public')
+                    ->disk('photo')
                     ->directory('univers')
                     ->acceptedFileTypes(['image/*'])
                     ->image()
@@ -62,7 +62,7 @@ class UniversResource extends Resource
                     ->searchable(),
                 ImageColumn::make('path')
                     ->label('Fichier')
-                    ->disk('public')
+                    ->disk('photo')
                     ->circular()
                     ->searchable(),
                 TextColumn::make('title')

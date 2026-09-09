@@ -2,6 +2,7 @@
 
 namespace App\Models;
 
+use App\Jobs\GenerateUniversDerivatives;
 use Illuminate\Database\Eloquent\Model;
 
 class Univers extends Model
@@ -37,6 +38,16 @@ class Univers extends Model
         static::creating(function (Univers $univers) {
             if ($univers->position === null) {
                 $univers->position = (Univers::max('position') ?? 0) + 1;
+            }
+        });
+
+        static::created(function (Univers $univers): void {
+            GenerateUniversDerivatives::dispatch($univers)->afterCommit();
+        });
+
+        static::updated(function (Univers $univers): void {
+            if ($univers->wasChanged(['path', 'source_path'])) {
+                GenerateUniversDerivatives::dispatch($univers)->afterCommit();
             }
         });
     }

@@ -40,6 +40,11 @@ class UniversLayoutPresets
                     self::legacyClasses($count),
                 ),
             ];
+
+            $presets["variation-{$count}"] = [
+                'label' => "Variation {$count} images",
+                'items' => self::variation($count),
+            ];
         }
 
         return $presets;
@@ -54,5 +59,30 @@ class UniversLayoutPresets
             'large' => ['width' => 6, 'height' => 6],
             default => ['width' => 3, 'height' => 3],
         };
+    }
+
+    /**
+     * @return list<array{width: int, height: int}>
+     */
+    public static function variation(int $count): array
+    {
+        $types = array_fill(0, $count, 'standard');
+
+        if ($count > 0) {
+            $types[0] = 'large';
+        }
+
+        if ($count > 1) {
+            $types[1] = 'tall';
+        }
+
+        if ($count > 2) {
+            $types[2] = 'wide';
+        }
+
+        return array_map(
+            fn (string $type): array => self::dimensions($type),
+            $types,
+        );
     }
 }
