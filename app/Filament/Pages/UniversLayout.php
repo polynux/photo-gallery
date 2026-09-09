@@ -68,6 +68,12 @@ class UniversLayout extends Page
         if ($this->mode === 'preset') {
             $this->applyPreset($this->preset ?: array_key_first($this->presets()));
         } else {
+            if ($this->mode === 'generic') {
+                $this->layoutItems = app(UniversLayoutService::class)->generic(
+                    Univers::query()->orderBy('position')->get(),
+                );
+            }
+
             $this->dispatch('univers-layout-updated', items: $this->layoutItems, mode: $this->mode);
         }
     }
@@ -148,7 +154,11 @@ class UniversLayout extends Page
 
         $validIds = Univers::query()->whereKey($items ? collect($items)->pluck('univers_id') : [])->pluck('id');
 
-        abort_unless(count($items) === $validIds->count(), 422, 'Invalid Univers layout items.');
+        abort_unless(
+            count($items) === $validIds->count() && count($items) === $validIds->unique()->count(),
+            422,
+            'Invalid Univers layout items.',
+        );
 
         if ($this->mode === 'custom') {
             $this->validateNoOverlap($items);

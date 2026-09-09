@@ -42,3 +42,16 @@ test('admin can queue all Univers images for processing', function () {
 
     Queue::assertPushed(GenerateUniversDerivatives::class);
 });
+
+test('custom layout rejects duplicate images', function () {
+    $univers = Univers::withoutEvents(fn (): Univers => Univers::query()->create(['path' => 'univers/one.jpg']));
+
+    Livewire::test(UniversLayout::class)
+        ->set('mode', 'custom')
+        ->set('layoutItems', [
+            ['univers_id' => $univers->id, 'x' => 0, 'y' => 0, 'width' => 3, 'height' => 3],
+            ['univers_id' => $univers->id, 'x' => 3, 'y' => 0, 'width' => 3, 'height' => 3],
+        ])
+        ->call('saveLayout')
+        ->assertStatus(422);
+});

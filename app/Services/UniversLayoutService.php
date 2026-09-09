@@ -49,6 +49,12 @@ class UniversLayoutService
         ];
     }
 
+    /** @return list<array<string, int|string>> */
+    public function generic(Collection $univers): array
+    {
+        return $this->genericItems($univers);
+    }
+
     /** @param list<array{width: int, height: int}> $presetItems */
     private function itemsForPreset(Collection $univers, array $presetItems): array
     {

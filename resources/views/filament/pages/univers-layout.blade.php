@@ -61,7 +61,7 @@
                 </div>
 
                 <div wire:ignore class="mt-3 overflow-auto rounded-xl border border-dashed border-gray-300 bg-gray-50 p-3 dark:border-white/10 dark:bg-white/[0.03]" :class="preview === 'mobile' ? 'mx-auto max-w-sm' : ''">
-                    <div id="univers-layout-grid" class="univers-layout-grid" data-mode="{{ $mode }}" data-preview="{{ $preview }}">
+                    <div id="univers-layout-grid" class="univers-layout-grid" data-mode="{{ $mode }}" data-preview="{{ $preview }}" wire:key="univers-layout-grid-{{ $mode }}-{{ count($layoutItems) }}">
                         @foreach ($layoutItems as $item)
                             @php($univers = collect($this->universItems)->firstWhere('id', $item['univers_id']))
                             @if ($univers)

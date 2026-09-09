@@ -65,8 +65,8 @@
         }
 
         .univers-grid--custom .univers-tile {
-            grid-column: var(--univers-x) / span var(--univers-width);
-            grid-row: var(--univers-y) / span var(--univers-height);
+                    grid-column: calc(var(--univers-x) + 1) / span var(--univers-width);
+                    grid-row: calc(var(--univers-y) + 1) / span var(--univers-height);
         }
 
         .univers-grid__notice {
