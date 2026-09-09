@@ -78,6 +78,36 @@
                         @endforeach
                     </div>
                 </div>
+
+                <div class="mt-4 rounded-lg border border-gray-200 p-4 dark:border-white/10">
+                    <div class="flex items-center justify-between gap-3">
+                        <div>
+                            <h3 class="text-sm font-medium text-gray-950 dark:text-white">Focal point</h3>
+                            <p class="mt-1 text-xs text-gray-500 dark:text-gray-400">Set the part of the image that should remain visible when CSS crops the tile.</p>
+                        </div>
+                        <select wire:change="selectFocalPoint($event.target.value)" class="fi-select-input rounded-lg border-gray-300 text-sm dark:border-white/10 dark:bg-white/5 dark:text-white">
+                            <option value="">Choose an image</option>
+                            @foreach ($this->universItems as $univers)
+                                <option value="{{ $univers->id }}" @selected($focalPointUniversId === $univers->id)>{{ $univers->title ?: "Image {$univers->id}" }}</option>
+                            @endforeach
+                        </select>
+                    </div>
+                    @if ($focalPointUniversId)
+                        <div class="mt-4 grid gap-4 sm:grid-cols-2">
+                            <label class="text-sm text-gray-700 dark:text-gray-300">
+                                Horizontal position
+                                <input type="range" min="0" max="1" step="0.01" wire:model.live="focalX" class="mt-2 w-full">
+                            </label>
+                            <label class="text-sm text-gray-700 dark:text-gray-300">
+                                Vertical position
+                                <input type="range" min="0" max="1" step="0.01" wire:model.live="focalY" class="mt-2 w-full">
+                            </label>
+                        </div>
+                        <div class="mt-3 flex justify-end">
+                            <x-filament::button size="sm" wire:click="saveFocalPoint">Save focal point</x-filament::button>
+                        </div>
+                    @endif
+                </div>
             </x-filament::section>
 
             <x-filament::section>
@@ -92,6 +122,8 @@
                             </div>
                             @if (in_array($univers->processing_status, ['unprocessed', 'failed', 'partially_processed'], true))
                                 <x-filament::icon-button icon="heroicon-o-arrow-path" wire:click="process({{ $univers->id }})" label="Process image" />
+                            @else
+                                <x-filament::icon-button icon="heroicon-o-arrow-path" wire:click="reprocess({{ $univers->id }})" label="Reprocess image" />
                             @endif
                         </div>
                     @endforeach

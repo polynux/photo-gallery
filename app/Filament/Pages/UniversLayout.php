@@ -36,6 +36,12 @@ class UniversLayout extends Page
 
     public string $preview = 'desktop';
 
+    public ?int $focalPointUniversId = null;
+
+    public float $focalX = 0.5;
+
+    public float $focalY = 0.5;
+
     public function mount(UniversLayoutService $layouts): void
     {
         $univers = Univers::query()->orderBy('position')->get();
@@ -188,6 +194,34 @@ class UniversLayout extends Page
         $univers->forceFill(['processing_status' => 'queued'])->saveQuietly();
         GenerateUniversDerivatives::dispatch($univers);
         Notification::make()->title('Image queued for processing.')->success()->send();
+    }
+
+    public function reprocess(Univers $univers): void
+    {
+        $univers->forceFill(['processing_status' => 'queued'])->saveQuietly();
+        GenerateUniversDerivatives::dispatch($univers);
+        Notification::make()->title('Image queued for reprocessing.')->success()->send();
+    }
+
+    public function selectFocalPoint(int $universId): void
+    {
+        $univers = Univers::findOrFail($universId);
+
+        $this->focalPointUniversId = $univers->id;
+        $this->focalX = $univers->focal_x ?? 0.5;
+        $this->focalY = $univers->focal_y ?? 0.5;
+    }
+
+    public function saveFocalPoint(): void
+    {
+        $univers = Univers::findOrFail($this->focalPointUniversId);
+
+        $univers->update([
+            'focal_x' => min(max($this->focalX, 0), 1),
+            'focal_y' => min(max($this->focalY, 0), 1),
+        ]);
+
+        Notification::make()->title('Focal point saved.')->success()->send();
     }
 
     /** @return array<int, Action> */
