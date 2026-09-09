@@ -9,18 +9,66 @@
 }
 
 @utility univers-editor-grid {
+    --univers-grid-line-color: color-mix(in srgb, var(--color-gray-400) 30%, transparent);
+    --univers-grid-line-width: 1px;
     background-color: color-mix(in srgb, var(--color-gray-100) 75%, transparent);
-    background-image: linear-gradient(to right, color-mix(in srgb, var(--color-gray-400) 25%, transparent) 1px, transparent 1px), linear-gradient(to bottom, color-mix(in srgb, var(--color-gray-400) 25%, transparent) 1px, transparent 1px);
-    background-size: calc(100% / 12) 28px;
+    background-image: linear-gradient(to right, var(--univers-grid-line-color) var(--univers-grid-line-width), transparent var(--univers-grid-line-width)), linear-gradient(to bottom, var(--univers-grid-line-color) var(--univers-grid-line-width), transparent var(--univers-grid-line-width));
+    background-size: calc(var(--gs-column-width) + 0px) var(--gs-cell-height);
+    background-position: 0 0;
 }
 
 @variant dark {
     .univers-editor-grid {
         background-color: color-mix(in srgb, var(--color-gray-950) 75%, transparent);
-        background-image: linear-gradient(to right, color-mix(in srgb, var(--color-gray-700) 35%, transparent) 1px, transparent 1px), linear-gradient(to bottom, color-mix(in srgb, var(--color-gray-700) 35%, transparent) 1px, transparent 1px);
+        background-image: linear-gradient(to right, var(--univers-grid-line-color) var(--univers-grid-line-width), transparent var(--univers-grid-line-width)), linear-gradient(to bottom, var(--univers-grid-line-color) var(--univers-grid-line-width), transparent var(--univers-grid-line-width));
     }
 }
 
 .univers-editor-grid--custom .ui-resizable-se {
     filter: brightness(1.35);
+}
+
+.univers-layout-grid {
+    width: 100% !important;
+    min-width: 0;
+    max-width: none !important;
+}
+
+.univers-layout-grid.grid-stack {
+    min-height: 64px;
+}
+
+.univers-layout-grid:not(.grid-stack) {
+    display: flex;
+    flex-direction: column;
+    gap: 10px;
+}
+
+.univers-layout-grid--preset {
+    display: grid !important;
+    grid-template-columns: repeat(12, 64px);
+    grid-auto-rows: 64px;
+    gap: 10px;
+    width: 878px !important;
+    transform-origin: top left;
+}
+
+.univers-generic-item {
+    width: 50%;
+    align-self: center;
+    aspect-ratio: 4 / 3;
+}
+
+.univers-editor-grid--generic {
+    max-height: 36rem;
+    overflow-y: auto;
+    overflow-x: hidden;
+}
+
+.univers-editor-grid--preset {
+    overflow: hidden;
+}
+
+.univers-editor-item-content {
+    height: 100%;
 }

@@ -14,6 +14,7 @@ use Filament\Forms\Components\Textarea;
 use Filament\Forms\Components\TextInput;
 use Filament\Notifications\Notification;
 use Filament\Pages\Page;
+use Illuminate\Support\Facades\URL;
 
 class UniversLayout extends Page
 {
@@ -38,6 +39,8 @@ class UniversLayout extends Page
 
     public ?int $focalPointUniversId = null;
 
+    public bool $isDirty = false;
+
     public float $focalX = 0.5;
 
     public float $focalY = 0.5;
@@ -48,9 +51,10 @@ class UniversLayout extends Page
         $saved = UniversLayoutModel::singleton();
         $resolved = $layouts->resolve($univers, $saved);
 
-        $this->mode = $saved->mode;
-        $this->preset = $saved->layout['preset'] ?? null;
+        $this->mode = $resolved['mode'];
+        $this->preset = $resolved['preset'];
         $this->layoutItems = $resolved['items'];
+        $this->isDirty = false;
     }
 
     public function getUniversItemsProperty(): array
@@ -67,8 +71,34 @@ class UniversLayout extends Page
     public function presets(): array
     {
         return collect(UniversLayoutPresets::all())
-            ->filter(fn (array $preset): bool => count($preset['items']) === Univers::count())
             ->mapWithKeys(fn (array $preset, string $key): array => [$key => $preset['label']])
+            ->all();
+    }
+
+    /** @return list<array<string, int|string>> */
+    public function editorItems(): array
+    {
+        $univers = Univers::query()->orderBy('position')->get()->keyBy('id');
+
+        return collect($this->layoutItems)
+            ->map(function (array $item) use ($univers): ?array {
+                $image = $univers->get((int) $item['univers_id']);
+
+                if (! $image) {
+                    return null;
+                }
+
+                return [
+                    ...$item,
+                    'title' => $image->title ?: 'Untitled image',
+                    'status' => str_replace('_', ' ', $image->processing_status),
+                    'source' => URL::temporarySignedRoute('univers.source', now()->addMinutes(10), $image),
+                    'focal_x' => (float) ($image->focal_x ?? 0.5),
+                    'focal_y' => (float) ($image->focal_y ?? 0.5),
+                ];
+            })
+            ->filter()
+            ->values()
             ->all();
     }
 
@@ -85,7 +115,8 @@ class UniversLayout extends Page
                 );
             }
 
-            $this->dispatch('univers-layout-updated', items: $this->layoutItems, mode: $this->mode);
+            $this->isDirty = true;
+            $this->dispatchEditorUpdate();
         }
     }
 
@@ -106,20 +137,10 @@ class UniversLayout extends Page
 
         $this->mode = 'preset';
         $this->preset = $preset;
-        $this->layoutItems = $univers->values()->map(function (Univers $item, int $index) use ($presetItems): array {
-            $dimensions = $presetItems[$index];
+        $this->layoutItems = app(UniversLayoutService::class)->itemsForPreset($univers, $preset, $presetItems);
+        $this->isDirty = true;
 
-            return [
-                'univers_id' => $item->id,
-                'index' => $index,
-                'x' => 0,
-                'y' => $index,
-                'width' => $dimensions['width'],
-                'height' => $dimensions['height'],
-            ];
-        })->all();
-
-        $this->dispatch('univers-layout-updated', items: $this->layoutItems, mode: $this->mode);
+        $this->dispatchEditorUpdate();
     }
 
     private function compatiblePreset(): ?string
@@ -148,8 +169,6 @@ class UniversLayout extends Page
             $items = $items->values()->map(function (array $item, int $index) use ($dimensions): array {
                 return [
                     ...$item,
-                    'x' => 0,
-                    'y' => $index,
                     'width' => $dimensions[$index]['width'],
                     'height' => $dimensions[$index]['height'],
                 ];
@@ -157,10 +176,43 @@ class UniversLayout extends Page
         }
 
         $this->layoutItems = $items->all();
+        $this->isDirty = true;
 
-        $this->dispatch('univers-layout-updated', items: $this->layoutItems, mode: $this->mode);
+        $this->dispatchEditorUpdate();
+    }
 
-        // Preset changes only reorder its fixed-size slots.
+    /** @param list<int|string> $universIds */
+    public function reorderGeneric(array $universIds): void
+    {
+        abort_unless($this->mode === 'generic', 422, 'Generic order is not active.');
+
+        $validIds = Univers::query()->whereKey($universIds)->pluck('id')->all();
+        $universIds = collect($universIds)->map(fn (mixed $id): int => (int) $id)->unique()->values()->all();
+
+        abort_unless(count($universIds) === count($validIds) && count($universIds) === Univers::count(), 422, 'Invalid Univers order.');
+
+        $univers = Univers::query()->whereKey($universIds)->get()->keyBy('id');
+        $ordered = collect($universIds)->map(fn (int $id): Univers => $univers->get($id));
+        $this->layoutItems = app(UniversLayoutService::class)->generic($ordered);
+        $this->isDirty = true;
+        $this->dispatchEditorUpdate();
+    }
+
+    public function swapPresetItems(int $firstUniversId, int $secondUniversId): void
+    {
+        abort_unless($this->mode === 'preset', 422, 'Preset slots cannot be moved.');
+
+        $first = collect($this->layoutItems)->search(fn (array $item): bool => (int) $item['univers_id'] === $firstUniversId);
+        $second = collect($this->layoutItems)->search(fn (array $item): bool => (int) $item['univers_id'] === $secondUniversId);
+
+        abort_unless($first !== false && $second !== false, 422, 'Invalid Univers layout items.');
+
+        [$this->layoutItems[$first]['univers_id'], $this->layoutItems[$second]['univers_id']] = [
+            $this->layoutItems[$second]['univers_id'],
+            $this->layoutItems[$first]['univers_id'],
+        ];
+
+        $this->dispatchEditorUpdate();
     }
 
     public function saveLayout(): void
@@ -185,11 +237,21 @@ class UniversLayout extends Page
             $this->validateNoOverlap($items);
         }
 
+        if ($this->mode === 'generic') {
+            $layout = ['preset' => null, 'order' => collect($items)->pluck('univers_id')->all(), 'items' => []];
+        } elseif ($this->mode === 'preset') {
+            $layout = ['preset' => $this->preset, 'assignments' => collect($items)->pluck('univers_id')->all(), 'items' => []];
+        } else {
+            $layout = ['preset' => null, 'items' => $items];
+        }
+
         UniversLayoutModel::singleton()->update([
             'mode' => $this->mode,
             'version' => 1,
-            'layout' => ['preset' => $this->preset, 'items' => $items],
+            'layout' => $layout,
         ]);
+
+        $this->isDirty = false;
 
         Notification::make()->title('Univers layout saved.')->success()->send();
     }
@@ -253,6 +315,7 @@ class UniversLayout extends Page
                 ])
                 ->action(function (array $data): void {
                     Univers::create($data);
+                    $this->refreshEditorState();
                     Notification::make()->title('Image added.')->success()->send();
                 }),
             Action::make('edit')
@@ -288,5 +351,29 @@ class UniversLayout extends Page
                 abort_if($overlap, 422, 'Tiles cannot overlap.');
             }
         }
+    }
+
+    private function refreshEditorState(): void
+    {
+        $univers = Univers::query()->orderBy('position')->get();
+        $saved = UniversLayoutModel::singleton();
+        $resolved = app(UniversLayoutService::class)->resolve($univers, $saved);
+
+        $this->mode = $resolved['mode'];
+        $this->preset = $resolved['preset'];
+        $this->layoutItems = $resolved['items'];
+        $this->isDirty = false;
+        $this->dispatchEditorUpdate();
+    }
+
+    private function dispatchEditorUpdate(): void
+    {
+        $this->dispatch(
+            'univers-layout-updated',
+            editorItems: $this->editorItems(),
+            mode: $this->mode,
+            preset: $this->preset,
+            preview: $this->preview,
+        );
     }
 }

@@ -21,11 +21,13 @@ class UniversLayoutService
 
         if ($mode === 'preset' && $preset && $this->presetMatches($preset, $univers->count())) {
             $presetItems = UniversLayoutPresets::all()[$preset]['items'];
+            $assignments = collect($document['assignments'] ?? [])->map(fn (mixed $id): int => (int) $id)->all();
+            $univers = $this->orderedUnivers($univers, $assignments);
 
             return [
                 'mode' => 'preset',
                 'preset' => $preset,
-                'items' => $this->itemsForPreset($univers, $presetItems),
+                'items' => $this->itemsForPreset($univers, $preset, $presetItems),
                 'notice' => null,
             ];
         }
@@ -39,6 +41,9 @@ class UniversLayoutService
             ];
         }
 
+        $order = collect($document['order'] ?? [])->map(fn (mixed $id): int => (int) $id)->all();
+        $univers = $this->orderedUnivers($univers, $order);
+
         return [
             'mode' => 'generic',
             'preset' => null,
@@ -50,19 +55,36 @@ class UniversLayoutService
     }
 
     /** @return list<array<string, int|string>> */
-    public function generic(Collection $univers): array
+    public function generic(Collection $univers, array $order = []): array
     {
-        return $this->genericItems($univers);
+        return $this->genericItems($this->orderedUnivers($univers, $order));
     }
 
     /** @param list<array{width: int, height: int}> $presetItems */
-    private function itemsForPreset(Collection $univers, array $presetItems): array
+    public function itemsForPreset(Collection $univers, string $preset, array $presetItems): array
     {
-        return $univers->values()->map(function (Univers $item, int $index) use ($presetItems): array {
-            $dimensions = $presetItems[$index] ?? UniversLayoutPresets::dimensions('standard');
+        $positions = UniversLayoutPresets::positionsFor($preset, $presetItems);
 
-            return $this->item($item, $index, $dimensions, $index);
+        return $univers->values()->map(function (Univers $item, int $index) use ($presetItems, $positions): array {
+            $dimensions = $presetItems[$index] ?? UniversLayoutPresets::dimensions('standard');
+            $position = $positions[$index] ?? ['x' => 0, 'y' => $index];
+
+            return $this->item($item, $index, $dimensions, $position['y'], $position['x']);
         })->all();
+    }
+
+    /** @param list<int> $order */
+    private function orderedUnivers(Collection $univers, array $order): Collection
+    {
+        if ($order === []) {
+            return $univers;
+        }
+
+        $byId = $univers->keyBy('id');
+
+        return collect($order)->map(fn (int $id): ?Univers => $byId->get($id))->filter()->values()->merge(
+            $univers->reject(fn (Univers $item): bool => in_array($item->id, $order, true)),
+        );
     }
 
     /** @param list<array<string, mixed>> $savedItems */
@@ -74,10 +96,6 @@ class UniversLayoutService
             $saved = $savedById->get((string) $item->id, []);
             $width = (int) ($saved['width'] ?? 4);
             $height = (int) ($saved['height'] ?? 3);
-
-            if ($width === 3 && $height === 3) {
-                $width = 4;
-            }
 
             return $this->item($item, $index, [
                 'width' => $width,
@@ -118,7 +136,7 @@ class UniversLayoutService
 
     private function presetMatches(string $preset, int $count): bool
     {
-        return preg_match('/(?:legacy|variation)-(\d+)$/', $preset, $matches) === 1
+        return preg_match('/(?:legacy|variation|square)-(\d+)$/', $preset, $matches) === 1
             && (int) $matches[1] === $count
             && isset(UniversLayoutPresets::all()[$preset]);
     }
@@ -127,10 +145,11 @@ class UniversLayoutService
     private function classForDimensions(array $dimensions): string
     {
         return match ([$dimensions['width'], $dimensions['height']]) {
-            [6, 3] => 'wide',
-            [3, 6] => 'tall',
-            [6, 6] => 'big',
-            default => 'standard',
+            [6, 2] => 'wide',
+            [3, 4] => 'tall',
+            [6, 4] => 'big',
+            [3, 3] => 'square',
+            default => 'small',
         };
     }
 

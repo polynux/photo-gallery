@@ -1,7 +1,7 @@
 <x-filament-panels::page>
     @vite('resources/js/univers-layout.js')
 
-    <div class="space-y-6" x-data="universLayoutEditor(@js($layoutItems), @js($mode))">
+    <div class="space-y-6" x-data="universLayoutEditor(@js($this->editorItems()), @js($mode), @js($preview), @js($preset))" x-bind:data-dirty="$wire.isDirty">
         <div class="flex flex-wrap items-center justify-between gap-4">
             <div>
                 <h2 class="text-lg font-semibold text-gray-950 dark:text-white">Homepage Univers</h2>
@@ -10,7 +10,7 @@
                 </p>
             </div>
             <div class="flex flex-wrap gap-2">
-                <x-filament::button wire:click="saveLayout" icon="heroicon-o-check">Save layout</x-filament::button>
+                <x-filament::button x-on:click.prevent="saveLayout" icon="heroicon-o-check">Save layout</x-filament::button>
                 <x-filament::button wire:click="processAll" color="gray" icon="heroicon-o-arrow-path">Process all</x-filament::button>
             </div>
         </div>
@@ -39,16 +39,16 @@
                 @if ($mode === 'preset')
                     <div class="mt-4 max-w-sm">
                         <label class="fi-fo-field-wrp-label block text-sm font-medium text-gray-950 dark:text-white">Preset</label>
-                        <select wire:model.live="preset" wire:change="applyPreset($event.target.value)" class="fi-select-input mt-2 block w-full rounded-lg border-gray-300 shadow-sm dark:border-white/10 dark:bg-white/5 dark:text-white">
+                        <select wire:change="applyPreset($event.target.value)" class="fi-select-input mt-2 block w-full rounded-lg border-gray-300 shadow-sm dark:border-white/10 dark:bg-white/5 dark:text-white">
                             <option value="">Choose a preset</option>
                             @foreach ($this->presets() as $key => $label)
                                 @php($presetCount = (int) str($key)->afterLast('-')->toString())
-                                <option value="{{ $key }}" @disabled($presetCount !== $this->universItemsCount())>{{ $label }}{{ $presetCount !== $this->universItemsCount() ? " ({$presetCount} images)" : '' }}</option>
+                                <option value="{{ $key }}" @selected($preset === $key) @disabled($presetCount !== $this->universItemsCount())>{{ $label }}{{ $presetCount !== $this->universItemsCount() ? " ({$presetCount} images)" : '' }}</option>
                             @endforeach
                         </select>
                     </div>
                 @elseif ($mode === 'generic')
-                    <p class="mt-4 text-sm text-amber-700 dark:text-amber-300">Use Custom layout when the current number of images does not match a built-in preset.</p>
+                    <p class="mt-4 text-sm text-amber-700 dark:text-amber-300">Reorder the images without positioning them on a canvas.</p>
                 @else
                     <p class="mt-4 text-sm text-gray-500 dark:text-gray-400">Drag and resize tiles. The grid has 12 columns and grows vertically as needed.</p>
                 @endif
@@ -61,23 +61,8 @@
                     </div>
                 </div>
 
-                <div wire:ignore class="{{ $preview === 'mobile' ? 'mx-auto max-w-sm' : '' }} univers-editor-grid univers-editor-grid--{{ $mode }} mt-3 overflow-auto rounded-xl border border-dashed border-gray-300 p-3 dark:border-white/10" :class="preview === 'mobile' ? 'mx-auto max-w-sm' : ''">
-                    <div id="univers-layout-grid" class="univers-layout-grid" data-mode="{{ $mode }}" data-preview="{{ $preview }}" wire:key="univers-layout-grid-{{ $mode }}-{{ count($layoutItems) }}">
-                        @foreach ($layoutItems as $item)
-                            @php($univers = collect($this->universItems)->firstWhere('id', $item['univers_id']))
-                            @if ($univers)
-                                <div class="grid-stack-item" gs-id="{{ $univers->id }}" gs-x="{{ $item['x'] ?? 0 }}" gs-y="{{ $item['y'] ?? $loop->index }}" gs-w="{{ $item['width'] ?? 4 }}" gs-h="{{ $item['height'] ?? 3 }}">
-                                    <div class="grid-stack-item-content group relative cursor-pointer overflow-hidden rounded-lg bg-gray-200 shadow-sm dark:bg-gray-800" x-on:click="$wire.selectFocalPoint({{ $univers->id }})">
-                                        <img src="{{ URL::temporarySignedRoute('univers.source', now()->addMinutes(10), $univers) }}" alt="{{ $univers->title ?: 'Univers image' }}" class="absolute inset-0 block h-full w-full max-w-none object-cover" style="object-position: {{ $univers->focal_x * 100 }}% {{ $univers->focal_y * 100 }}%;">
-                                        <div class="absolute inset-x-0 bottom-0 bg-gradient-to-t from-black/80 to-transparent p-3 pt-8 text-white">
-                                            <div class="truncate text-sm font-medium">{{ $univers->title ?: 'Untitled image' }}</div>
-                                            <div class="text-xs opacity-75">{{ $univers->processing_status }}</div>
-                                        </div>
-                                    </div>
-                                </div>
-                            @endif
-                        @endforeach
-                    </div>
+                <div wire:ignore class="{{ $preview === 'mobile' ? 'mx-auto max-w-sm' : '' }} univers-editor-grid--{{ $mode }} mt-3 rounded-xl border border-dashed border-gray-300 p-3 dark:border-white/10" :class="preview === 'mobile' ? 'mx-auto max-w-sm' : ''">
+                    <div id="univers-layout-grid" class="univers-layout-grid univers-layout-grid--{{ $mode }}" data-mode="{{ $mode }}" data-preview="{{ $preview }}" wire:key="univers-layout-grid"></div>
                 </div>
 
                 <div class="mt-4 rounded-lg border border-gray-200 p-4 dark:border-white/10">

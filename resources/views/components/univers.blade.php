@@ -54,7 +54,7 @@
             display: grid;
             grid-template-columns: repeat(12, minmax(0, 1fr));
             grid-auto-rows: minmax(32px, 6vw);
-            grid-auto-flow: dense;
+            grid-auto-flow: row;
             gap: 10px;
         }
 
@@ -64,9 +64,10 @@
             min-height: 0;
         }
 
+        .univers-grid--preset .univers-tile,
         .univers-grid--custom .univers-tile {
-                    grid-column: calc(var(--univers-x) + 1) / span var(--univers-width);
-                    grid-row: calc(var(--univers-y) + 1) / span var(--univers-height);
+            grid-column: calc(var(--univers-x) + 1) / span var(--univers-width);
+            grid-row: calc(var(--univers-y) + 1) / span var(--univers-height);
         }
 
         .univers-grid__notice {
