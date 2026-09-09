@@ -2,7 +2,9 @@
 
 use App\Models\Univers;
 use App\Models\UniversLayout;
+use App\Services\UniversLayoutService;
 use App\UniversLayoutPresets;
+use Illuminate\Support\Facades\Storage;
 
 test('the layout singleton has a versioned document', function () {
     $layout = UniversLayout::singleton();
@@ -31,4 +33,58 @@ test('univers source path falls back to its display path for legacy records', fu
     ]));
 
     expect($univers->source_path)->toBe('univers/example.jpg');
+});
+
+test('the homepage renders responsive optimized image markup for Univers', function () {
+    Storage::fake('public');
+
+    foreach ([300, 500, 800] as $width) {
+        Storage::disk('public')->put("univers/1/{$width}.jpg", 'jpeg');
+        Storage::disk('public')->put("univers/1/{$width}.webp", 'webp');
+    }
+
+    $univers = Univers::withoutEvents(fn (): Univers => Univers::query()->create([
+        'path' => 'univers/example.jpg',
+        'derivatives' => [
+            '300' => ['jpg' => 'univers/1/300.jpg', 'webp' => 'univers/1/300.webp'],
+            '500' => ['jpg' => 'univers/1/500.jpg', 'webp' => 'univers/1/500.webp'],
+            '800' => ['jpg' => 'univers/1/800.jpg', 'webp' => 'univers/1/800.webp'],
+        ],
+        'processing_status' => 'processed',
+    ]));
+
+    $response = $this->get('/');
+
+    $response->assertSuccessful()
+        ->assertSee('type="image/webp"', false)
+        ->assertSee('300w', false);
+});
+
+test('private Univers sources require a valid signature', function () {
+    $univers = Univers::withoutEvents(fn (): Univers => Univers::query()->create([
+        'path' => 'univers/example.jpg',
+    ]));
+
+    $this->get(route('univers.source', $univers))->assertForbidden();
+});
+
+test('invalid persisted custom layouts fall back to generic placement', function () {
+    $first = Univers::withoutEvents(fn (): Univers => Univers::query()->create(['path' => 'univers/one.jpg']));
+    $second = Univers::withoutEvents(fn (): Univers => Univers::query()->create(['path' => 'univers/two.jpg']));
+    $layout = UniversLayout::singleton();
+    $layout->update([
+        'mode' => 'custom',
+        'layout' => [
+            'preset' => null,
+            'items' => [
+                ['univers_id' => $first->id, 'x' => 0, 'y' => 0, 'width' => 6, 'height' => 3],
+                ['univers_id' => $second->id, 'x' => 3, 'y' => 0, 'width' => 6, 'height' => 3],
+            ],
+        ],
+    ]);
+
+    $resolved = app(UniversLayoutService::class)->resolve(Univers::query()->orderBy('position')->get(), $layout);
+
+    expect($resolved['items'][0]['width'])->toBe(3)
+        ->and($resolved['items'][1]['y'])->toBe(1);
 });

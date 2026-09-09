@@ -9,7 +9,7 @@
                 $universItem = $univers->firstWhere('id', $item['univers_id']);
                 $sourcePath = $universItem->source_path;
                 $imageService = app(\App\Services\UniversImageService::class);
-                $imageUrl = $imageService->url($universItem, 800) ?? route('univers.source', $universItem);
+                $imageUrl = $imageService->url($universItem, 800) ?? URL::temporarySignedRoute('univers.source', now()->addMinutes(10), $universItem);
                 $imageJpegUrl = $imageService->url($universItem, 800, 'jpg') ?? $imageUrl;
                 $image500Url = $imageService->url($universItem, 500, 'jpg') ?? $imageJpegUrl;
                 $image300Url = $imageService->url($universItem, 300, 'jpg') ?? $image500Url;

@@ -36,4 +36,4 @@ Route::get('univers/{univers}/source', function (Univers $univers) {
     abort_unless($disk->exists($univers->source_path), 404);
 
     return response()->file($disk->path($univers->source_path));
-})->name('univers.source');
+})->middleware('signed')->name('univers.source');

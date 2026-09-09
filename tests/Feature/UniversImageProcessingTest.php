@@ -33,12 +33,16 @@ test('univers images generate public jpeg and webp derivatives without changing 
 
     $univers->refresh();
 
+    $derivativePaths = Storage::disk('public')->allFiles("univers/{$univers->id}");
+
     expect($univers->processing_status)->toBe('processed')
         ->and(Storage::disk('photo')->get($sourcePath))->toStartWith("\x89PNG")
-        ->and(Storage::disk('public')->exists("univers/{$univers->id}/300.jpg"))->toBeTrue()
-        ->and(Storage::disk('public')->exists("univers/{$univers->id}/300.webp"))->toBeTrue();
+        ->and($derivativePaths)->toHaveCount(6)
+        ->and(collect($derivativePaths)->filter(fn (string $path): bool => str_ends_with($path, '/300.jpg')))->toHaveCount(1)
+        ->and(collect($derivativePaths)->filter(fn (string $path): bool => str_ends_with($path, '/300.webp')))->toHaveCount(1);
 
-    [$width, $height] = getimagesizefromstring(Storage::disk('public')->get("univers/{$univers->id}/800.jpg"));
+    $eightHundredPath = collect($derivativePaths)->first(fn (string $path): bool => str_ends_with($path, '/800.jpg'));
+    [$width, $height] = getimagesizefromstring(Storage::disk('public')->get($eightHundredPath));
 
     expect($width)->toBe(800)->and($height)->toBe(600);
 });

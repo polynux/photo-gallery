@@ -5,6 +5,7 @@ namespace App\Services;
 use App\Models\Univers;
 use Illuminate\Filesystem\FilesystemAdapter;
 use Illuminate\Support\Facades\Storage;
+use Illuminate\Support\Str;
 use Intervention\Image\Format;
 use Intervention\Image\ImageManager;
 use RuntimeException;
@@ -26,13 +27,14 @@ class UniversImageService
 
         $generated = [];
         $failures = 0;
+        $version = Str::of($univers->source_path.'|'.$univers->updated_at?->getTimestamp())->slug('-');
 
         foreach (config('gallery.univers_derivative_sizes', [300, 500, 800]) as $width) {
             foreach (['jpg' => Format::JPEG, 'webp' => Format::WEBP] as $extension => $format) {
                 try {
                     $image = $this->images->decodeBinary($source->get($univers->source_path));
                     $image->scaleDown(width: (int) $width);
-                    $path = "univers/{$univers->id}/{$width}.{$extension}";
+                    $path = "univers/{$univers->id}/{$version}/{$width}.{$extension}";
 
                     Storage::disk('public')->put(
                         $path,
@@ -51,16 +53,26 @@ class UniversImageService
         $actual = collect($generated)->flatten()->count();
         $status = $actual === 0 ? 'failed' : ($actual < $expected ? 'partially_processed' : 'processed');
 
-        $univers->forceFill([
-            'processing_status' => $status,
-            'derivatives' => $generated,
-        ])->saveQuietly();
+        if ($status === 'processed') {
+            $oldDerivatives = $univers->derivatives ?? [];
+
+            $univers->forceFill([
+                'processing_status' => $status,
+                'derivatives' => $generated,
+            ])->saveQuietly();
+
+            $this->deleteDerivatives($oldDerivatives, $generated);
+        } else {
+            $univers->forceFill([
+                'processing_status' => $status,
+            ])->saveQuietly();
+        }
 
         if ($failures > 0 && $actual === 0) {
             throw new RuntimeException("Unable to generate Univers derivatives for {$univers->id}.");
         }
 
-        return ['status' => $status, 'derivatives' => $generated];
+        return ['status' => $status, 'derivatives' => $univers->derivatives ?? $generated];
     }
 
     public function url(Univers $univers, int $width, string $format = 'jpg'): ?string
@@ -79,5 +91,17 @@ class UniversImageService
         }
 
         return Storage::disk('public');
+    }
+
+    /** @param array<string, mixed> $oldDerivatives */
+    /** @param array<string, mixed> $newDerivatives */
+    private function deleteDerivatives(array $oldDerivatives, array $newDerivatives): void
+    {
+        $oldPaths = collect($oldDerivatives)->flatten()->filter()->values();
+        $newPaths = collect($newDerivatives)->flatten()->filter()->values();
+
+        foreach ($oldPaths->diff($newPaths) as $path) {
+            Storage::disk('public')->delete($path);
+        }
     }
 }

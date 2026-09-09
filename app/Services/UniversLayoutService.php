@@ -70,14 +70,16 @@ class UniversLayoutService
     {
         $savedById = collect($savedItems)->keyBy(fn (array $item): string => (string) ($item['univers_id'] ?? ''));
 
-        return $univers->values()->map(function (Univers $item, int $index) use ($savedById): array {
+        $items = $univers->values()->map(function (Univers $item, int $index) use ($savedById): array {
             $saved = $savedById->get((string) $item->id, []);
 
             return $this->item($item, $index, [
                 'width' => (int) ($saved['width'] ?? 3),
                 'height' => (int) ($saved['height'] ?? 3),
-            ], (int) ($saved['y'] ?? $index), (int) ($saved['x'] ?? 0), $saved);
+            ], max((int) ($saved['y'] ?? $index), 0), min(max((int) ($saved['x'] ?? 0), 0), 11), $saved);
         })->sortBy(['y', 'x'])->values()->all();
+
+        return $this->isValidCustomLayout($items) ? $items : $this->genericItems($univers);
     }
 
     private function genericItems(Collection $univers): array
@@ -120,5 +122,26 @@ class UniversLayoutService
             [6, 6] => 'big',
             default => 'standard',
         };
+    }
+
+    /** @param list<array<string, int|string>> $items */
+    private function isValidCustomLayout(array $items): bool
+    {
+        foreach ($items as $index => $item) {
+            if ($item['x'] + $item['width'] > 12 || $item['y'] < 0) {
+                return false;
+            }
+
+            foreach (array_slice($items, $index + 1) as $other) {
+                if ($item['x'] < $other['x'] + $other['width']
+                    && $other['x'] < $item['x'] + $item['width']
+                    && $item['y'] < $other['y'] + $other['height']
+                    && $other['y'] < $item['y'] + $item['height']) {
+                    return false;
+                }
+            }
+        }
+
+        return true;
     }
 }

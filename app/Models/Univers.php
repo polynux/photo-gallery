@@ -35,6 +35,12 @@ class Univers extends Model
 
     protected static function booted(): void
     {
+        static::saving(function (Univers $univers): void {
+            if ($univers->isDirty('path') && ! $univers->isDirty('source_path')) {
+                $univers->source_path = $univers->path;
+            }
+        });
+
         static::creating(function (Univers $univers) {
             if ($univers->position === null) {
                 $univers->position = (Univers::max('position') ?? 0) + 1;

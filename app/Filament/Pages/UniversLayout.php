@@ -250,10 +250,9 @@ class UniversLayout extends Page
                     TextInput::make('focal_x')->numeric()->minValue(0)->maxValue(1)->step(0.01)->default(0.5),
                     TextInput::make('focal_y')->numeric()->minValue(0)->maxValue(1)->step(0.01)->default(0.5),
                 ])
-                ->fillForm(fn (): array => ['focal_x' => 0.5, 'focal_y' => 0.5])
                 ->action(function (array $data): void {
                     $univers = Univers::findOrFail($data['univers_id']);
-                    $univers->update(collect($data)->except('univers_id')->all());
+                    $univers->update(collect($data)->except('univers_id')->filter(fn ($value): bool => $value !== null && $value !== '')->all());
                     Notification::make()->title('Image updated.')->success()->send();
                 }),
         ];

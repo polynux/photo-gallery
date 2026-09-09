@@ -1,6 +1,5 @@
 <?php
 
-use App\UniversLayoutPresets;
 use Illuminate\Database\Migrations\Migration;
 use Illuminate\Database\Schema\Blueprint;
 use Illuminate\Support\Facades\DB;
@@ -32,23 +31,14 @@ return new class extends Migration
         DB::table('univers')->update(['source_path' => DB::raw('path')]);
 
         $univers = DB::table('univers')->orderBy('position')->get();
-        $classes = UniversLayoutPresets::legacyClasses($univers->count());
-        $items = [];
-
-        foreach ($univers as $index => $universItem) {
-            $items[] = [
-                'univers_id' => $universItem->id,
-                'slot' => $index,
-                'type' => UniversLayoutPresets::classToType($classes[$index] ?? ''),
-            ];
-        }
-
         DB::table('univers_layouts')->insert([
             'mode' => $univers->count() >= 9 && $univers->count() <= 13 ? 'preset' : 'generic',
             'version' => 1,
             'layout' => json_encode([
-                'preset' => 'legacy',
-                'items' => $items,
+                'preset' => $univers->count() >= 9 && $univers->count() <= 13
+                    ? "legacy-{$univers->count()}"
+                    : null,
+                'items' => [],
             ], JSON_THROW_ON_ERROR),
             'created_at' => now(),
             'updated_at' => now(),

@@ -67,7 +67,7 @@
                             @if ($univers)
                                 <div class="grid-stack-item" gs-id="{{ $univers->id }}" gs-x="{{ $item['x'] ?? 0 }}" gs-y="{{ $item['y'] ?? $loop->index }}" gs-w="{{ $item['width'] ?? 3 }}" gs-h="{{ $item['height'] ?? 3 }}">
                                     <div class="grid-stack-item-content group relative overflow-hidden rounded-lg bg-gray-200 shadow-sm dark:bg-gray-800">
-                                        <img src="{{ route('univers.source', $univers) }}" alt="{{ $univers->title ?: 'Univers image' }}" class="absolute inset-0 block h-full w-full max-w-none object-cover" style="object-position: {{ $univers->focal_x * 100 }}% {{ $univers->focal_y * 100 }}%;">
+                                        <img src="{{ URL::temporarySignedRoute('univers.source', now()->addMinutes(10), $univers) }}" alt="{{ $univers->title ?: 'Univers image' }}" class="absolute inset-0 block h-full w-full max-w-none object-cover" style="object-position: {{ $univers->focal_x * 100 }}% {{ $univers->focal_y * 100 }}%;">
                                         <div class="absolute inset-x-0 bottom-0 bg-gradient-to-t from-black/80 to-transparent p-3 pt-8 text-white">
                                             <div class="truncate text-sm font-medium">{{ $univers->title ?: 'Untitled image' }}</div>
                                             <div class="text-xs opacity-75">{{ $univers->processing_status }}</div>
@@ -115,7 +115,7 @@
                 <div class="space-y-3">
                     @foreach ($this->universItems as $univers)
                         <div class="flex items-center gap-3 rounded-lg border border-gray-200 p-2 dark:border-white/10">
-                            <img src="{{ route('univers.source', $univers) }}" alt="" class="block h-12 w-12 shrink-0 rounded object-cover">
+                            <img src="{{ URL::temporarySignedRoute('univers.source', now()->addMinutes(10), $univers) }}" alt="" class="block h-12 w-12 shrink-0 rounded object-cover">
                             <div class="min-w-0 flex-1">
                                 <div class="truncate text-sm font-medium">{{ $univers->title ?: 'Untitled image' }}</div>
                                 <div class="text-xs text-gray-500">{{ str_replace('_', ' ', $univers->processing_status) }}</div>
