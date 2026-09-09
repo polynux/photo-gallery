@@ -37,7 +37,6 @@ class UniversResource extends Resource
                     ->directory('univers')
                     ->acceptedFileTypes(['image/*'])
                     ->image()
-                    ->maxSize(2048)
                     ->columnSpanFull(),
                 TextInput::make('title')
                     ->maxLength(255)

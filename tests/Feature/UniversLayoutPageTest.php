@@ -55,3 +55,19 @@ test('custom layout rejects duplicate images', function () {
         ->call('saveLayout')
         ->assertStatus(422);
 });
+
+test('custom layout keeps resized tile dimensions in its saved document', function () {
+    $univers = Univers::withoutEvents(fn (): Univers => Univers::query()->create(['path' => 'univers/one.jpg']));
+
+    Livewire::test(UniversLayout::class)
+        ->set('mode', 'custom')
+        ->set('layoutItems', [
+            ['univers_id' => $univers->id, 'x' => 0, 'y' => 0, 'width' => 6, 'height' => 3],
+        ])
+        ->call('saveLayout');
+
+    expect(App\Models\UniversLayout::singleton()->layout['items'][0])->toMatchArray([
+        'width' => 6,
+        'height' => 3,
+    ]);
+});

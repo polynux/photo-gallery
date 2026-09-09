@@ -72,11 +72,21 @@ class UniversLayoutService
 
         $items = $univers->values()->map(function (Univers $item, int $index) use ($savedById): array {
             $saved = $savedById->get((string) $item->id, []);
+            $width = (int) ($saved['width'] ?? 4);
+            $height = (int) ($saved['height'] ?? 3);
+
+            if ($width === 3 && $height === 3) {
+                $width = 4;
+            }
 
             return $this->item($item, $index, [
-                'width' => (int) ($saved['width'] ?? 3),
-                'height' => (int) ($saved['height'] ?? 3),
-            ], max((int) ($saved['y'] ?? $index), 0), min(max((int) ($saved['x'] ?? 0), 0), 11), $saved);
+                'width' => $width,
+                'height' => $height,
+            ], max((int) ($saved['y'] ?? $index), 0), min(max((int) ($saved['x'] ?? 0), 0), 11), [
+                ...$saved,
+                'width' => $width,
+                'height' => $height,
+            ]);
         })->sortBy(['y', 'x'])->values()->all();
 
         return $this->isValidCustomLayout($items) ? $items : $this->genericItems($univers);

@@ -68,7 +68,6 @@ return [
         'rules' => [
             'required',
             'file',
-            'max:51200', // 50MB
         ],
         'directory' => null,   // Example: 'tmp'                      | Default: 'livewire-tmp'
         'middleware' => null,  // Example: 'throttle:5,1'             | Default: 'throttle:60,1'

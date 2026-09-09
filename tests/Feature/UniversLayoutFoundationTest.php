@@ -27,6 +27,14 @@ test('legacy presets expose the current image count patterns', function () {
         ->and(UniversLayoutPresets::dimensions('tall'))->toBe(['width' => 3, 'height' => 6]);
 });
 
+test('standard tiles use a four by three footprint', function () {
+    expect(UniversLayoutPresets::dimensions('standard'))->toBe(['width' => 4, 'height' => 3]);
+});
+
+test('preset options include a compatible layout for smaller Univers collections', function () {
+    expect(collect(UniversLayoutPresets::all())->filter(fn (array $preset): bool => count($preset['items']) === 3))->not->toBeEmpty();
+});
+
 test('univers source path falls back to its display path for legacy records', function () {
     $univers = Univers::withoutEvents(fn (): Univers => Univers::query()->create([
         'path' => 'univers/example.jpg',
@@ -85,6 +93,6 @@ test('invalid persisted custom layouts fall back to generic placement', function
 
     $resolved = app(UniversLayoutService::class)->resolve(Univers::query()->orderBy('position')->get(), $layout);
 
-    expect($resolved['items'][0]['width'])->toBe(3)
+    expect($resolved['items'][0]['width'])->toBe(4)
         ->and($resolved['items'][1]['y'])->toBe(1);
 });

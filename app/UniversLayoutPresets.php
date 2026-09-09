@@ -32,14 +32,16 @@ class UniversLayoutPresets
     {
         $presets = [];
 
-        foreach (range(9, 13) as $count) {
-            $presets["legacy-{$count}"] = [
-                'label' => "Legacy {$count} images",
-                'items' => array_map(
-                    fn (string $type): array => self::dimensions($type),
-                    self::legacyClasses($count),
-                ),
-            ];
+        foreach (range(1, 13) as $count) {
+            if ($count >= 9) {
+                $presets["legacy-{$count}"] = [
+                    'label' => "Legacy {$count} images",
+                    'items' => array_map(
+                        fn (string $type): array => self::dimensions($type),
+                        self::legacyClasses($count),
+                    ),
+                ];
+            }
 
             $presets["variation-{$count}"] = [
                 'label' => "Variation {$count} images",
@@ -57,7 +59,7 @@ class UniversLayoutPresets
             'wide' => ['width' => 6, 'height' => 3],
             'tall' => ['width' => 3, 'height' => 6],
             'large' => ['width' => 6, 'height' => 6],
-            default => ['width' => 3, 'height' => 3],
+            default => ['width' => 4, 'height' => 3],
         };
     }
 

@@ -42,7 +42,8 @@
                         <select wire:model.live="preset" wire:change="applyPreset($event.target.value)" class="fi-select-input mt-2 block w-full rounded-lg border-gray-300 shadow-sm dark:border-white/10 dark:bg-white/5 dark:text-white">
                             <option value="">Choose a preset</option>
                             @foreach ($this->presets() as $key => $label)
-                                <option value="{{ $key }}">{{ $label }}</option>
+                                @php($presetCount = (int) str($key)->afterLast('-')->toString())
+                                <option value="{{ $key }}" @disabled($presetCount !== $this->universItemsCount())>{{ $label }}{{ $presetCount !== $this->universItemsCount() ? " ({$presetCount} images)" : '' }}</option>
                             @endforeach
                         </select>
                     </div>
@@ -60,13 +61,13 @@
                     </div>
                 </div>
 
-                <div wire:ignore class="{{ $preview === 'mobile' ? 'mx-auto max-w-sm' : '' }} mt-3 overflow-auto rounded-xl border border-dashed border-gray-300 bg-gray-50 p-3 dark:border-white/10 dark:bg-white/[0.03]" :class="preview === 'mobile' ? 'mx-auto max-w-sm' : ''">
+                <div wire:ignore class="{{ $preview === 'mobile' ? 'mx-auto max-w-sm' : '' }} univers-editor-grid univers-editor-grid--{{ $mode }} mt-3 overflow-auto rounded-xl border border-dashed border-gray-300 p-3 dark:border-white/10" :class="preview === 'mobile' ? 'mx-auto max-w-sm' : ''">
                     <div id="univers-layout-grid" class="univers-layout-grid" data-mode="{{ $mode }}" data-preview="{{ $preview }}" wire:key="univers-layout-grid-{{ $mode }}-{{ count($layoutItems) }}">
                         @foreach ($layoutItems as $item)
                             @php($univers = collect($this->universItems)->firstWhere('id', $item['univers_id']))
                             @if ($univers)
-                                <div class="grid-stack-item" gs-id="{{ $univers->id }}" gs-x="{{ $item['x'] ?? 0 }}" gs-y="{{ $item['y'] ?? $loop->index }}" gs-w="{{ $item['width'] ?? 3 }}" gs-h="{{ $item['height'] ?? 3 }}">
-                                    <div class="grid-stack-item-content group relative overflow-hidden rounded-lg bg-gray-200 shadow-sm dark:bg-gray-800">
+                                <div class="grid-stack-item" gs-id="{{ $univers->id }}" gs-x="{{ $item['x'] ?? 0 }}" gs-y="{{ $item['y'] ?? $loop->index }}" gs-w="{{ $item['width'] ?? 4 }}" gs-h="{{ $item['height'] ?? 3 }}">
+                                    <div class="grid-stack-item-content group relative cursor-pointer overflow-hidden rounded-lg bg-gray-200 shadow-sm dark:bg-gray-800" x-on:click="$wire.selectFocalPoint({{ $univers->id }})">
                                         <img src="{{ URL::temporarySignedRoute('univers.source', now()->addMinutes(10), $univers) }}" alt="{{ $univers->title ?: 'Univers image' }}" class="absolute inset-0 block h-full w-full max-w-none object-cover" style="object-position: {{ $univers->focal_x * 100 }}% {{ $univers->focal_y * 100 }}%;">
                                         <div class="absolute inset-x-0 bottom-0 bg-gradient-to-t from-black/80 to-transparent p-3 pt-8 text-white">
                                             <div class="truncate text-sm font-medium">{{ $univers->title ?: 'Untitled image' }}</div>

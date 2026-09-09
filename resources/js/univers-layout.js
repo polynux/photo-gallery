@@ -5,6 +5,9 @@ window.universLayoutEditor = (initialItems, mode) => ({
     grid: null,
     preview: 'desktop',
     syncingPreview: false,
+    syncingItems: false,
+    desktopItems: null,
+    pendingSync: null,
 
     init() {
         this.$nextTick(() => this.initializeGrid(initialItems, mode));
@@ -37,17 +40,9 @@ window.universLayoutEditor = (initialItems, mode) => ({
             handle: '.grid-stack-item-content',
         }, element);
 
-        this.grid.on('change', () => {
-            if (this.grid) {
-                this.$wire.setLayoutItems(this.grid.save(false).map((item) => ({
-                    univers_id: item.id,
-                    x: item.x,
-                    y: item.y,
-                    width: item.w,
-                    height: item.h,
-                })));
-            }
-        });
+        this.grid.on('change', () => this.scheduleSync());
+        this.grid.on('dragstop', () => this.scheduleSync());
+        this.grid.on('resizestop', () => this.scheduleSync());
     },
 
     loadItems(items) {
@@ -55,13 +50,41 @@ window.universLayoutEditor = (initialItems, mode) => ({
             return;
         }
 
-        this.grid.load(items.map((item) => ({
-            id: String(item.univers_id),
-            x: item.x,
-            y: item.y,
-            w: item.width,
-            h: item.height,
-        })));
+        this.syncingItems = true;
+        this.grid.batchUpdate();
+
+        items.forEach((item) => {
+            const element = this.grid.engine.nodes.find((node) => node.id === String(item.univers_id))?.el;
+
+            if (element) {
+                this.grid.update(element, {
+                    x: item.x,
+                    y: item.y,
+                    w: item.width,
+                    h: item.height,
+                });
+            }
+        });
+
+        this.grid.batchUpdate(false);
+        this.syncingItems = false;
+    },
+
+    scheduleSync() {
+        if (! this.grid || this.syncingItems || this.preview === 'mobile') {
+            return;
+        }
+
+        window.clearTimeout(this.pendingSync);
+        this.pendingSync = window.setTimeout(() => {
+            this.$wire.setLayoutItems(this.grid.save(false).map((item) => ({
+                univers_id: item.id,
+                x: item.x,
+                y: item.y,
+                width: item.w,
+                height: item.h,
+            })));
+        }, 100);
     },
 
     setMode(value) {
@@ -71,6 +94,10 @@ window.universLayoutEditor = (initialItems, mode) => ({
 
         this.grid.enableResize(value === 'custom');
         this.grid.enableMove(true);
+
+        if (value === 'custom') {
+            this.grid.setStatic(false);
+        }
     },
 
     setPreview(value) {
@@ -81,11 +108,23 @@ window.universLayoutEditor = (initialItems, mode) => ({
         this.syncingPreview = true;
 
         if (value === 'mobile') {
+            this.desktopItems = this.grid.save(false).map((item) => ({
+                id: item.id,
+                x: item.x,
+                y: item.y,
+                w: item.w,
+                h: item.h,
+            }));
             this.grid.column(1, false);
             this.grid.disable();
         } else {
             this.grid.enable();
             this.grid.column(12, false);
+
+            if (this.desktopItems) {
+                this.grid.load(this.desktopItems);
+                this.desktopItems = null;
+            }
         }
 
         this.syncingPreview = false;

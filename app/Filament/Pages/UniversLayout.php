@@ -58,6 +58,11 @@ class UniversLayout extends Page
         return Univers::query()->orderBy('position')->get()->all();
     }
 
+    public function universItemsCount(): int
+    {
+        return count($this->universItems);
+    }
+
     /** @return array<string, string> */
     public function presets(): array
     {
@@ -72,7 +77,7 @@ class UniversLayout extends Page
         $this->mode = in_array($mode, ['preset', 'custom', 'generic'], true) ? $mode : 'generic';
 
         if ($this->mode === 'preset') {
-            $this->applyPreset($this->preset ?: array_key_first($this->presets()));
+            $this->applyPreset($this->preset ?: $this->compatiblePreset());
         } else {
             if ($this->mode === 'generic') {
                 $this->layoutItems = app(UniversLayoutService::class)->generic(
@@ -117,6 +122,16 @@ class UniversLayout extends Page
         $this->dispatch('univers-layout-updated', items: $this->layoutItems, mode: $this->mode);
     }
 
+    private function compatiblePreset(): ?string
+    {
+        $count = count($this->universItems);
+
+        return collect(UniversLayoutPresets::all())
+            ->filter(fn (array $preset): bool => count($preset['items']) === $count)
+            ->keys()
+            ->first();
+    }
+
     /** @param list<array<string, int|string>> $items */
     public function setLayoutItems(array $items): void
     {
@@ -124,7 +139,7 @@ class UniversLayout extends Page
             'univers_id' => (int) ($item['univers_id'] ?? $item['id'] ?? 0),
             'x' => (int) ($item['x'] ?? 0),
             'y' => (int) ($item['y'] ?? 0),
-            'width' => (int) ($item['width'] ?? $item['w'] ?? 3),
+            'width' => (int) ($item['width'] ?? $item['w'] ?? 4),
             'height' => (int) ($item['height'] ?? $item['h'] ?? 3),
         ])->sortBy(['y', 'x'])->values();
 
@@ -154,7 +169,7 @@ class UniversLayout extends Page
             'univers_id' => (int) $item['univers_id'],
             'x' => max((int) ($item['x'] ?? 0), 0),
             'y' => max((int) ($item['y'] ?? 0), 0),
-            'width' => min(max((int) ($item['width'] ?? 3), 1), 12),
+            'width' => min(max((int) ($item['width'] ?? 4), 1), 12),
             'height' => min(max((int) ($item['height'] ?? 3), 1), 18),
         ])->values()->all();
 
@@ -232,7 +247,7 @@ class UniversLayout extends Page
                 ->label('Add image')
                 ->icon('heroicon-o-plus')
                 ->form([
-                    FileUpload::make('path')->image()->disk('photo')->directory('univers')->required()->maxSize(20480),
+                    FileUpload::make('path')->image()->disk('photo')->directory('univers')->required(),
                     TextInput::make('title')->maxLength(255),
                     Textarea::make('description')->maxLength(65535),
                 ])
