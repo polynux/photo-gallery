@@ -3,19 +3,39 @@ import 'gridstack/dist/gridstack.min.css';
 
 const CANVAS_WIDTH = 878;
 
-window.universLayoutEditor = (initialItems, mode, preview = 'desktop', preset = null) => ({
+window.universLayoutEditor = () => ({
     grid: null,
-    mode,
-    items: initialItems,
-    preview,
-    preset,
+    mode: 'generic',
+    items: [],
+    preview: 'desktop',
+    preset: null,
     syncing: false,
     pendingSync: null,
     draggedId: null,
     canvasResizeObserver: null,
     renderFrame: null,
 
+    readInitialState() {
+        const script = this.$root.querySelector('script[data-univers-editor-state]');
+
+        if (! script) {
+            return;
+        }
+
+        try {
+            const state = JSON.parse(script.textContent);
+            this.items = state.items ?? [];
+            this.mode = state.mode ?? 'generic';
+            this.preview = state.preview ?? 'desktop';
+            this.preset = state.preset ?? null;
+        } catch {
+            this.items = [];
+            this.mode = 'generic';
+        }
+    },
+
     init() {
+        this.readInitialState();
         this.canvasResizeObserver = new ResizeObserver(() => this.fitCanvasByMode());
         this.$nextTick(() => this.render(this.items, this.mode));
         window.addEventListener('beforeunload', (event) => {
@@ -135,6 +155,13 @@ window.universLayoutEditor = (initialItems, mode, preview = 'desktop', preset = 
     },
 
     destroyGrid() {
+        const element = this.$root.querySelector('#univers-layout-grid');
+
+        if (element?.gridstack) {
+            element.gridstack.destroy(false);
+            element.gridstack = null;
+        }
+
         if (this.grid) {
             this.grid.destroy(false);
             this.grid = null;
@@ -153,6 +180,7 @@ window.universLayoutEditor = (initialItems, mode, preview = 'desktop', preset = 
 
         element.className = 'grid-stack univers-layout-grid univers-editor-grid';
         items.forEach((item) => element.append(this.createCustomItem(item)));
+        element.gridstack = null;
         this.grid = GridStack.init({
             column: 12,
             cellHeight: 'auto',

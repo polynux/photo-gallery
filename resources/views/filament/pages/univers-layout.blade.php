@@ -1,7 +1,7 @@
 <x-filament-panels::page>
     @vite('resources/js/univers-layout.js')
 
-    <div class="space-y-6" x-data="universLayoutEditor(@js($this->editorItems()), @js($mode), @js($preview), @js($preset))" x-bind:data-dirty="$wire.isDirty">
+    <div class="space-y-6" x-data="universLayoutEditor()" x-bind:data-dirty="$wire.isDirty">
         <div class="flex flex-wrap items-center justify-between gap-4">
             <div>
                 <h2 class="text-lg font-semibold text-gray-950 dark:text-white">Homepage Univers</h2>
@@ -62,6 +62,7 @@
                 </div>
 
                 <div wire:ignore class="{{ $preview === 'mobile' ? 'mx-auto max-w-sm' : '' }} univers-editor-grid--{{ $mode }} mt-3 rounded-xl border border-dashed border-gray-300 p-3 dark:border-white/10">
+                    <script type="application/json" data-univers-editor-state>{!! json_encode(['items' => $this->editorItems(), 'mode' => $mode, 'preview' => $preview, 'preset' => $preset], JSON_HEX_TAG | JSON_HEX_AMP | JSON_HEX_APOS | JSON_HEX_QUOT) !!}</script>
                     <div id="univers-layout-grid" class="univers-layout-grid univers-layout-grid--{{ $mode }}" data-mode="{{ $mode }}" data-preview="{{ $preview }}" wire:key="univers-layout-grid"></div>
                 </div>
 
