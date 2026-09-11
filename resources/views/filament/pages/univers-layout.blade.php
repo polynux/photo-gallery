@@ -61,7 +61,7 @@
                     </div>
                 </div>
 
-                <div wire:ignore class="{{ $preview === 'mobile' ? 'mx-auto max-w-sm' : '' }} univers-editor-grid--{{ $mode }} mt-3 rounded-xl border border-dashed border-gray-300 p-3 dark:border-white/10" :class="preview === 'mobile' ? 'mx-auto max-w-sm' : ''">
+                <div wire:ignore class="{{ $preview === 'mobile' ? 'mx-auto max-w-sm' : '' }} univers-editor-grid--{{ $mode }} mt-3 rounded-xl border border-dashed border-gray-300 p-3 dark:border-white/10">
                     <div id="univers-layout-grid" class="univers-layout-grid univers-layout-grid--{{ $mode }}" data-mode="{{ $mode }}" data-preview="{{ $preview }}" wire:key="univers-layout-grid"></div>
                 </div>
 
