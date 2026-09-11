@@ -1,34 +1,28 @@
 @if ($univers->isNotEmpty())
-    <div class="univers-grid univers-grid--{{ $layout['mode'] }} max-w-7xl mx-auto p-2" data-univers-layout="{{ $layout['mode'] }}">
+    <div class="univers-grid univers-grid--{{ $layout['mode'] }} mx-auto max-w-7xl p-2" data-univers-layout="{{ $layout['mode'] }}">
         @if ($layout['notice'])
             <p class="univers-grid__notice col-span-full mb-3 text-sm text-gray-500">{{ $layout['notice'] }}</p>
         @endif
 
         @foreach ($layout['items'] as $item)
-            @php
-                $universItem = $univers->firstWhere('id', $item['univers_id']);
-                $sourcePath = $universItem->source_path;
-                $imageService = app(\App\Services\UniversImageService::class);
-                $imageUrl = $imageService->url($universItem, 800) ?? URL::temporarySignedRoute('univers.source', now()->addMinutes(10), $universItem);
-                $imageJpegUrl = $imageService->url($universItem, 800, 'jpg') ?? $imageUrl;
-                $image500Url = $imageService->url($universItem, 500, 'jpg') ?? $imageJpegUrl;
-                $image300Url = $imageService->url($universItem, 300, 'jpg') ?? $image500Url;
-            @endphp
+            @php($universItem = $univers->firstWhere('id', $item['univers_id']))
+            @continue(! $universItem)
+            @php($sources = $universItem->gallerySources)
             <div
                 class="univers-tile group relative overflow-hidden rounded-lg bg-white shadow-lg {{ $item['class'] }}"
                 style="--univers-x: {{ $item['x'] }}; --univers-y: {{ $item['y'] }}; --univers-width: {{ $item['width'] }}; --univers-height: {{ $item['height'] }};"
             >
                 <picture>
-                    @if ($imageService->url($universItem, 300, 'webp') || $imageService->url($universItem, 500, 'webp') || $imageService->url($universItem, 800, 'webp'))
+                    @if ($sources['webp'])
                         <source
                             type="image/webp"
-                            srcset="{{ $imageService->url($universItem, 300, 'webp') ?? $image300Url }} 300w, {{ $imageService->url($universItem, 500, 'webp') ?? $image500Url }} 500w, {{ $imageService->url($universItem, 800, 'webp') ?? $imageUrl }} 800w"
+                            srcset="{{ collect($sources['widths'])->map(fn (array $formats, string $width): string => ($formats['webp'] ?? $formats['jpg'])." {$width}w")->implode(', ') }}"
                             sizes="(max-width: 640px) 100vw, 800px"
                         >
                     @endif
                     <img
-                        src="{{ $imageJpegUrl }}"
-                        srcset="{{ $image300Url }} 300w, {{ $image500Url }} 500w, {{ $imageJpegUrl }} 800w"
+                        src="{{ $sources['jpeg'] }}"
+                        srcset="{{ collect($sources['widths'])->map(fn (array $formats, string $width): string => "{$formats['jpg']} {$width}w")->implode(', ') }}"
                         sizes="(max-width: 640px) 100vw, 800px"
                         alt="{{ $universItem->title }}"
                         class="h-full w-full object-cover transition-transform duration-300 group-hover:scale-105"
@@ -49,42 +43,4 @@
             </div>
         @endforeach
     </div>
-    <style>
-        .univers-grid {
-            display: grid;
-            grid-template-columns: repeat(12, minmax(0, 1fr));
-            grid-auto-rows: minmax(32px, 6vw);
-            grid-auto-flow: row;
-            gap: 10px;
-        }
-
-        .univers-tile {
-            grid-column: span var(--univers-width);
-            grid-row: span var(--univers-height);
-            min-height: 0;
-        }
-
-        .univers-grid--preset .univers-tile,
-        .univers-grid--custom .univers-tile {
-            grid-column: calc(var(--univers-x) + 1) / span var(--univers-width);
-            grid-row: calc(var(--univers-y) + 1) / span var(--univers-height);
-        }
-
-        .univers-grid__notice {
-            grid-column: 1 / -1;
-        }
-
-        @media (max-width: 640px) {
-            .univers-grid {
-                grid-template-columns: 1fr;
-                grid-auto-rows: minmax(180px, 55vw);
-            }
-
-            .univers-tile,
-            .univers-grid--custom .univers-tile {
-                grid-column: 1 / -1;
-                grid-row: span 1;
-            }
-        }
-    </style>
 @endif
