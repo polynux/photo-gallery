@@ -22,8 +22,20 @@ window.universLayoutEditor = (initialItems, mode, preview = 'desktop', preset = 
             }
         });
         this.$wire.on('univers-layout-updated', ({ editorItems, mode, preset, preview }) => {
+            const structuralChange = mode !== this.mode
+                || preview !== this.preview
+                || (preset ?? null) !== (this.preset ?? null);
+
             this.preset = preset ?? this.preset;
             this.preview = preview ?? this.preview;
+
+            if (! structuralChange && mode === 'custom' && this.grid && this.preview === 'desktop') {
+                this.items = editorItems;
+                this.syncGridItems(editorItems);
+
+                return;
+            }
+
             this.requestRender(editorItems, mode);
         });
     },
@@ -33,6 +45,44 @@ window.universLayoutEditor = (initialItems, mode, preview = 'desktop', preset = 
         this.mode = mode;
         cancelAnimationFrame(this.renderFrame);
         this.renderFrame = requestAnimationFrame(() => this.render(this.items, this.mode));
+    },
+
+    syncGridItems(items) {
+        this.syncing = true;
+        window.clearTimeout(this.pendingSync);
+        this.grid.batchUpdate();
+
+        const nodes = new Map(this.grid.engine.nodes.map((node) => [String(node.id), node]));
+        const removedIds = new Set(nodes.keys());
+
+        items.forEach((item) => {
+            const id = String(item.univers_id);
+            removedIds.delete(id);
+
+            const node = nodes.get(id);
+
+            if (node) {
+                this.grid.update(node.el, {
+                    x: item.x,
+                    y: item.y,
+                    w: item.width,
+                    h: item.height,
+                });
+            } else {
+                this.grid.addWidget(this.createCustomItem(item));
+            }
+        });
+
+        removedIds.forEach((id) => {
+            const node = nodes.get(id);
+
+            if (node) {
+                this.grid.removeWidget(node.el, true, false);
+            }
+        });
+
+        this.grid.batchUpdate(false);
+        this.syncing = false;
     },
 
     render(items, mode) {
