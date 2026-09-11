@@ -21,7 +21,6 @@ window.universLayoutEditor = (initialItems, mode, preview = 'desktop', preset = 
                 event.returnValue = '';
             }
         });
-        this.presetResizeObserver = new ResizeObserver(() => this.fitPresetCanvas());
         this.$wire.on('univers-layout-updated', ({ editorItems, mode, preset, preview }) => {
             this.preset = preset ?? this.preset;
             this.preview = preview ?? this.preview;
@@ -50,10 +49,7 @@ window.universLayoutEditor = (initialItems, mode, preview = 'desktop', preset = 
         this.items = items;
         this.mode = mode;
 
-        if (this.grid) {
-            this.grid.destroy(false);
-            this.grid = null;
-        }
+        this.destroyGrid();
 
         const viewport = element.parentElement;
         viewport.classList.remove('univers-editor-grid--custom', 'univers-editor-grid--preset', 'univers-editor-grid--generic', 'mx-auto', 'max-w-sm');
@@ -70,35 +66,62 @@ window.universLayoutEditor = (initialItems, mode, preview = 'desktop', preset = 
         element.style.removeProperty('height');
         element.style.removeProperty('width');
         element.replaceChildren();
-        element.className = mode === 'custom'
-            ? 'grid-stack univers-layout-grid univers-editor-grid'
-            : `univers-layout-grid univers-layout-grid--${mode}`;
 
         if (mode === 'custom') {
-            items.forEach((item) => element.append(this.createGridItem(item)));
-            this.grid = GridStack.init({
-                column: 12,
-                cellHeight: 'auto',
-                margin: 5,
-                float: false,
-                disableOneColumnMode: true,
-                disableResize: false,
-                disableDrag: false,
-                handle: '.grid-stack-item-content',
-            }, element);
-            this.grid.on('change', () => this.scheduleSync());
-            this.grid.on('dragstop', () => this.scheduleSync());
-            this.grid.on('resizestop', () => this.scheduleSync());
+            this.renderCustom(element, items);
         } else if (mode === 'preset') {
-            items.forEach((item) => element.append(this.createPresetItem(item)));
-            this.startPresetObserver(viewport);
-            this.$nextTick(() => this.fitPresetCanvas());
+            this.renderPreset(element, viewport, items);
         } else {
-            items.forEach((item) => element.append(this.createGenericItem(item)));
-            this.enableGenericSorting(element);
+            this.renderGeneric(element, items);
         }
 
         this.syncing = false;
+    },
+
+    destroyGrid() {
+        if (this.grid) {
+            this.grid.destroy(false);
+            this.grid = null;
+        }
+    },
+
+    renderCustom(element, items) {
+        if (this.preview === 'mobile') {
+            element.className = 'univers-layout-grid univers-layout-grid--custom';
+            items.forEach((item) => element.append(this.createStaticItem(item)));
+            this.$nextTick(() => this.fitStaticCanvas(element));
+
+            return;
+        }
+
+        element.className = 'grid-stack univers-layout-grid univers-editor-grid';
+        items.forEach((item) => element.append(this.createCustomItem(item)));
+        this.grid = GridStack.init({
+            column: 12,
+            cellHeight: 'auto',
+            margin: 5,
+            float: false,
+            disableOneColumnMode: true,
+            disableResize: false,
+            disableDrag: false,
+            handle: '.univers-editor-item-content',
+        }, element);
+        this.grid.on('change', () => this.scheduleSync());
+        this.grid.on('dragstop', () => this.scheduleSync());
+        this.grid.on('resizestop', () => this.scheduleSync());
+    },
+
+    renderPreset(element, viewport, items) {
+        element.className = 'univers-layout-grid univers-layout-grid--preset';
+        items.forEach((item) => element.append(this.createStaticItem(item, true)));
+        this.startPresetObserver(viewport);
+        this.$nextTick(() => this.fitPresetCanvas());
+    },
+
+    renderGeneric(element, items) {
+        element.className = 'univers-layout-grid univers-layout-grid--generic';
+        items.forEach((item) => element.append(this.createGenericItem(item)));
+        this.enableGenericSorting(element);
     },
 
     startPresetObserver(viewport) {
@@ -112,13 +135,7 @@ window.universLayoutEditor = (initialItems, mode, preview = 'desktop', preset = 
         this.presetResizeObserver = null;
     },
 
-    fitPresetCanvas() {
-        const element = this.$root.querySelector('#univers-layout-grid');
-
-        if (! element || this.mode !== 'preset') {
-            return;
-        }
-
+    fitCanvas(element) {
         const viewport = element.parentElement;
         const viewportStyles = getComputedStyle(viewport);
         const horizontalChrome = parseFloat(viewportStyles.paddingLeft)
@@ -126,61 +143,110 @@ window.universLayoutEditor = (initialItems, mode, preview = 'desktop', preset = 
             + parseFloat(viewportStyles.borderLeftWidth)
             + parseFloat(viewportStyles.borderRightWidth);
         const availableWidth = Math.max(viewport.clientWidth - horizontalChrome, 1);
-        const canvasWidth = 878;
-        const scale = Math.max(0.1, Math.min(1, availableWidth / canvasWidth));
+        const scale = Math.max(0.1, Math.min(1, availableWidth / CANVAS_WIDTH));
 
         element.style.transform = `scale(${scale})`;
         element.style.transformOrigin = 'top left';
-        const styles = getComputedStyle(viewport);
-        const verticalChrome = parseFloat(styles.paddingTop)
-            + parseFloat(styles.paddingBottom)
-            + parseFloat(styles.borderTopWidth)
-            + parseFloat(styles.borderBottomWidth);
 
-        viewport.style.height = `${element.offsetHeight * scale + verticalChrome}px`;
+        const verticalChrome = parseFloat(viewportStyles.paddingTop)
+            + parseFloat(viewportStyles.paddingBottom)
+            + parseFloat(viewportStyles.borderTopWidth)
+            + parseFloat(viewportStyles.borderBottomWidth);
+        const unscaledHeight = element.getBoundingClientRect().height / scale;
+
+        viewport.style.height = `${unscaledHeight * scale + verticalChrome}px`;
         viewport.style.overflow = 'hidden';
+
+        return scale;
     },
 
-    createGridItem(item) {
-        const wrapper = this.createPresetItem(item);
+    fitPresetCanvas() {
+        const element = this.$root.querySelector('#univers-layout-grid');
+
+        if (! element || this.mode !== 'preset') {
+            return;
+        }
+
+        this.fitCanvas(element);
+    },
+
+    fitStaticCanvas(element) {
+        element.style.width = `${CANVAS_WIDTH}px`;
+        element.style.display = 'grid';
+        element.style.gridTemplateColumns = 'repeat(12, 1fr)';
+        element.style.gap = '10px';
+        element.style.alignContent = 'start';
+        this.fitCanvas(element);
+    },
+
+    createCustomItem(item) {
+        const wrapper = this.createTile(item);
         wrapper.className = 'grid-stack-item';
+        wrapper.setAttribute('gs-id', item.univers_id);
         wrapper.setAttribute('gs-x', item.x ?? 0);
         wrapper.setAttribute('gs-y', item.y ?? 0);
-        wrapper.setAttribute('gs-w', item.width ?? 4);
-        wrapper.setAttribute('gs-h', item.height ?? 3);
-        wrapper.querySelector('.univers-editor-item-content').classList.remove('cursor-grab');
+        wrapper.setAttribute('gs-w', item.width ?? 3);
+        wrapper.setAttribute('gs-h', item.height ?? 2);
+
         return wrapper;
     },
 
-    createPresetItem(item) {
+    createStaticItem(item, draggable = false) {
+        const wrapper = this.createTile(item);
+        wrapper.className = 'univers-editor-item';
+        wrapper.style.gridColumn = `${Number(item.x ?? 0) + 1} / span ${item.width ?? 3}`;
+        wrapper.style.gridRow = `${Number(item.y ?? 0) + 1} / span ${item.height ?? 2}`;
+
+        if (draggable) {
+            this.makePresetDraggable(wrapper);
+        }
+
+        return wrapper;
+    },
+
+    createGenericItem(item) {
+        const wrapper = this.createTile(item);
+        wrapper.className = 'univers-generic-item';
+        wrapper.style.aspectRatio = '4 / 3';
+        this.makeGenericDraggable(wrapper);
+
+        return wrapper;
+    },
+
+    makePresetDraggable(wrapper) {
+        const content = wrapper.querySelector('.univers-editor-item-content');
+        content.draggable = true;
+        content.classList.add('cursor-grab');
+        content.addEventListener('dragstart', (event) => {
+            this.draggedId = String(wrapper.dataset.universId);
+            event.dataTransfer.effectAllowed = 'move';
+            event.dataTransfer.setData('text/plain', this.draggedId);
+        });
+        content.addEventListener('dragover', (event) => event.preventDefault());
+        content.addEventListener('drop', (event) => {
+            event.preventDefault();
+            const targetId = Number(wrapper.dataset.universId);
+            const sourceId = Number(event.dataTransfer.getData('text/plain') || this.draggedId);
+            if (sourceId && sourceId !== targetId) {
+                this.$wire.swapPresetItems(sourceId, targetId);
+            }
+        });
+    },
+
+    makeGenericDraggable(wrapper) {
+        const content = wrapper.querySelector('.univers-editor-item-content');
+        content.draggable = true;
+        content.classList.add('cursor-grab');
+    },
+
+    createTile(item) {
         const wrapper = document.createElement('div');
         wrapper.className = 'univers-editor-item';
         wrapper.dataset.universId = item.univers_id;
-        wrapper.style.gridColumn = `${Number(item.x ?? 0) + 1} / span ${item.width ?? 4}`;
-        wrapper.style.gridRow = `${Number(item.y ?? 0) + 1} / span ${item.height ?? 3}`;
 
         const content = document.createElement('div');
         content.className = 'univers-editor-item-content group relative overflow-hidden rounded-lg bg-gray-200 shadow-sm dark:bg-gray-800';
         content.addEventListener('click', () => this.selectTile(item.univers_id));
-
-        if (this.mode === 'preset') {
-            content.draggable = true;
-            content.classList.add('cursor-grab');
-            content.addEventListener('dragstart', (event) => {
-                this.draggedId = String(item.univers_id);
-                event.dataTransfer.effectAllowed = 'move';
-                event.dataTransfer.setData('text/plain', this.draggedId);
-            });
-            content.addEventListener('dragover', (event) => event.preventDefault());
-            content.addEventListener('drop', (event) => {
-                event.preventDefault();
-                const targetId = Number(item.univers_id);
-                const sourceId = Number(event.dataTransfer.getData('text/plain') || this.draggedId);
-                if (sourceId && sourceId !== targetId) {
-                    this.$wire.swapPresetItems(sourceId, targetId);
-                }
-            });
-        }
 
         const image = document.createElement('img');
         image.src = item.source;
@@ -196,18 +262,7 @@ window.universLayoutEditor = (initialItems, mode, preview = 'desktop', preset = 
 
         content.append(image, footer);
         wrapper.append(content);
-        return wrapper;
-    },
 
-    createGenericItem(item) {
-        const wrapper = this.createPresetItem(item);
-        wrapper.className = 'univers-generic-item';
-        wrapper.style.gridColumn = '';
-        wrapper.style.gridRow = '';
-        const content = wrapper.querySelector('.univers-editor-item-content');
-        content.draggable = true;
-        content.classList.add('cursor-grab');
-        wrapper.style.aspectRatio = '4 / 3';
         return wrapper;
     },
 
@@ -236,18 +291,28 @@ window.universLayoutEditor = (initialItems, mode, preview = 'desktop', preset = 
         this.$wire.selectFocalPoint(universId);
     },
 
+    collectGridItems() {
+        if (! this.grid) {
+            return [];
+        }
+
+        return this.grid.save(false)
+            .filter((item) => item.id !== undefined && item.id !== null)
+            .map((item) => ({
+                univers_id: item.id,
+                x: item.x ?? 0,
+                y: item.y ?? 0,
+                width: item.w ?? 1,
+                height: item.h ?? 1,
+            }));
+    },
+
     saveLayout() {
         window.clearTimeout(this.pendingSync);
 
         if (this.grid && this.mode === 'custom' && this.preview === 'desktop') {
             this.syncing = true;
-            const items = this.grid.save(false).map((item) => ({
-                univers_id: item.id,
-                x: item.x,
-                y: item.y,
-                width: item.w,
-                height: item.h,
-            }));
+            const items = this.collectGridItems();
 
             this.$wire.setLayoutItems(items).then(() => {
                 this.syncing = false;
@@ -266,13 +331,7 @@ window.universLayoutEditor = (initialItems, mode, preview = 'desktop', preset = 
         }
         window.clearTimeout(this.pendingSync);
         this.pendingSync = window.setTimeout(() => {
-            this.$wire.setLayoutItems(this.grid.save(false).map((item) => ({
-                univers_id: item.id,
-                x: item.x,
-                y: item.y,
-                width: item.w,
-                height: item.h,
-            })));
+            this.$wire.setLayoutItems(this.collectGridItems());
         }, 150);
     },
 });
