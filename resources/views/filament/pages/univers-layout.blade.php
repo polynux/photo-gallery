@@ -65,34 +65,55 @@
                     <div id="univers-layout-grid" class="univers-layout-grid univers-layout-grid--{{ $mode }}" data-mode="{{ $mode }}" data-preview="{{ $preview }}" wire:key="univers-layout-grid"></div>
                 </div>
 
-                <div class="mt-4 rounded-lg border border-gray-200 p-4 dark:border-white/10">
+                <div class="mt-4 rounded-lg border border-gray-200 p-4 dark:border-white/10" x-data="{ focal: { id: @js($focalPointUniversId), x: @js($focalX), y: @js($focalY), source: @js($focalPointUniversId ? $this->focalPreviewSource($focalPointUniversId) : null) } }">
                     <div class="flex items-center justify-between gap-3">
                         <div>
                             <h3 class="text-sm font-medium text-gray-950 dark:text-white">Focal point</h3>
                             <p class="mt-1 text-xs text-gray-500 dark:text-gray-400">Set the part of the image that should remain visible when CSS crops the tile.</p>
                         </div>
-                        <select wire:change="selectFocalPoint($event.target.value)" class="fi-select-input rounded-lg border-gray-300 text-sm dark:border-white/10 dark:bg-white/5 dark:text-white">
+                        <select
+                            class="fi-select-input rounded-lg border-gray-300 text-sm dark:border-white/10 dark:bg-white/5 dark:text-white"
+                            x-on:change="focal.id === '' ? (focal.id = null, focal.source = null) : $wire.selectFocalPoint(Number(focal.id)).then(() => { focal.x = $wire.focalX; focal.y = $wire.focalY; focal.source = $wire.focalPreviewSource })"
+                        >
                             <option value="">Choose an image</option>
                             @foreach ($this->universItems as $univers)
                                 <option value="{{ $univers->id }}" @selected($focalPointUniversId === $univers->id)>{{ $univers->title ?: "Image {$univers->id}" }}</option>
                             @endforeach
                         </select>
                     </div>
-                    @if ($focalPointUniversId)
-                        <div class="mt-4 grid gap-4 sm:grid-cols-2">
-                            <label class="text-sm text-gray-700 dark:text-gray-300">
-                                Horizontal position
-                                <input type="range" min="0" max="1" step="0.01" wire:model.live="focalX" class="mt-2 w-full">
-                            </label>
-                            <label class="text-sm text-gray-700 dark:text-gray-300">
-                                Vertical position
-                                <input type="range" min="0" max="1" step="0.01" wire:model.live="focalY" class="mt-2 w-full">
-                            </label>
+                    <template x-if="focal.id">
+                        <div>
+                            <div
+                                class="relative mt-4 aspect-[16/9] overflow-hidden rounded-lg bg-gray-100 dark:bg-gray-800"
+                                x-on:click="$event.offsetX && $event.offsetY && (focal.x = $event.offsetX / $event.target.clientWidth, focal.y = $event.offsetY / $event.target.clientHeight, $wire.setFocalX(focal.x), $wire.setFocalY(focal.y))"
+                            >
+                                <img
+                                    x-show="focal.source"
+                                    :src="focal.source"
+                                    alt="Focal point preview"
+                                    class="absolute inset-0 block h-full w-full object-cover"
+                                    :style="`object-position: ${focal.x * 100}% ${focal.y * 100}%`"
+                                >
+                                <span
+                                    class="pointer-events-none absolute h-5 w-5 -translate-x-1/2 -translate-y-1/2 rounded-full border-2 border-white shadow"
+                                    :style="`left: ${focal.x * 100}%; top: ${focal.y * 100}%`"
+                                ></span>
+                            </div>
+                            <div class="mt-4 grid gap-4 sm:grid-cols-2">
+                                <label class="text-sm text-gray-700 dark:text-gray-300">
+                                    Horizontal position
+                                    <input type="range" min="0" max="1" step="0.01" x-model="focal.x" x-on:input="$wire.setFocalX(focal.x)" class="mt-2 w-full">
+                                </label>
+                                <label class="text-sm text-gray-700 dark:text-gray-300">
+                                    Vertical position
+                                    <input type="range" min="0" max="1" step="0.01" x-model="focal.y" x-on:input="$wire.setFocalY(focal.y)" class="mt-2 w-full">
+                                </label>
+                            </div>
+                            <div class="mt-3 flex justify-end">
+                                <x-filament::button size="sm" wire:click="saveFocalPoint">Save focal point</x-filament::button>
+                            </div>
                         </div>
-                        <div class="mt-3 flex justify-end">
-                            <x-filament::button size="sm" wire:click="saveFocalPoint">Save focal point</x-filament::button>
-                        </div>
-                    @endif
+                    </template>
                 </div>
             </x-filament::section>
 

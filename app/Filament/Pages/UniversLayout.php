@@ -62,6 +62,13 @@ class UniversLayout extends Page
         return Univers::query()->orderBy('position')->get()->all();
     }
 
+    public function getFocalPreviewSourceProperty(): ?string
+    {
+        $univers = $this->focalPointUniversId ? Univers::find($this->focalPointUniversId) : null;
+
+        return $univers ? URL::temporarySignedRoute('univers.source', now()->addMinutes(30), $univers) : null;
+    }
+
     public function universItemsCount(): int
     {
         return count($this->universItems);
@@ -316,6 +323,16 @@ class UniversLayout extends Page
         $this->focalPointUniversId = $univers->id;
         $this->focalX = $univers->focal_x ?? 0.5;
         $this->focalY = $univers->focal_y ?? 0.5;
+    }
+
+    public function setFocalX(float $value): void
+    {
+        $this->focalX = min(max($value, 0), 1);
+    }
+
+    public function setFocalY(float $value): void
+    {
+        $this->focalY = min(max($value, 0), 1);
     }
 
     public function saveFocalPoint(): void
