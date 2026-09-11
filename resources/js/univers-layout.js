@@ -10,10 +10,11 @@ window.universLayoutEditor = (initialItems, mode, preview = 'desktop', preset = 
     syncing: false,
     pendingSync: null,
     draggedId: null,
-    presetResizeObserver: null,
+    canvasResizeObserver: null,
     renderFrame: null,
 
     init() {
+        this.canvasResizeObserver = new ResizeObserver(() => this.fitCanvasByMode());
         this.$nextTick(() => this.render(this.items, this.mode));
         window.addEventListener('beforeunload', (event) => {
             if (this.$wire.isDirty) {
@@ -99,7 +100,7 @@ window.universLayoutEditor = (initialItems, mode, preview = 'desktop', preset = 
 
         window.clearTimeout(this.pendingSync);
         cancelAnimationFrame(this.renderFrame);
-        this.stopPresetObserver();
+        this.stopCanvasObserver();
         this.syncing = true;
         this.items = items;
         this.mode = mode;
@@ -121,7 +122,7 @@ window.universLayoutEditor = (initialItems, mode, preview = 'desktop', preset = 
         element.replaceChildren();
 
         if (mode === 'custom') {
-            this.renderCustom(element, items);
+            this.renderCustom(element, viewport, items);
         } else if (mode === 'preset') {
             this.renderPreset(element, viewport, items);
         } else {
@@ -138,10 +139,11 @@ window.universLayoutEditor = (initialItems, mode, preview = 'desktop', preset = 
         }
     },
 
-    renderCustom(element, items) {
+    renderCustom(element, viewport, items) {
         if (this.preview === 'mobile') {
             element.className = 'univers-layout-grid univers-layout-grid--custom';
             items.forEach((item) => element.append(this.createStaticItem(item)));
+            this.startCanvasObserver(viewport);
             this.$nextTick(() => this.fitStaticCanvas(element));
 
             return;
@@ -167,8 +169,8 @@ window.universLayoutEditor = (initialItems, mode, preview = 'desktop', preset = 
     renderPreset(element, viewport, items) {
         element.className = 'univers-layout-grid univers-layout-grid--preset';
         items.forEach((item) => element.append(this.createStaticItem(item, true)));
-        this.startPresetObserver(viewport);
-        this.$nextTick(() => this.fitPresetCanvas());
+        this.startCanvasObserver(viewport);
+        this.$nextTick(() => this.fitCanvasByMode());
     },
 
     renderGeneric(element, items) {
@@ -182,15 +184,27 @@ window.universLayoutEditor = (initialItems, mode, preview = 'desktop', preset = 
         viewport.classList.toggle('max-w-sm', this.preview === 'mobile');
     },
 
-    startPresetObserver(viewport) {
-        this.stopPresetObserver();
-        this.presetResizeObserver = new ResizeObserver(() => this.fitPresetCanvas());
-        this.presetResizeObserver.observe(viewport);
+    startCanvasObserver(viewport) {
+        this.canvasResizeObserver.disconnect();
+        this.canvasResizeObserver.observe(viewport);
     },
 
-    stopPresetObserver() {
-        this.presetResizeObserver?.disconnect();
-        this.presetResizeObserver = null;
+    stopCanvasObserver() {
+        this.canvasResizeObserver.disconnect();
+    },
+
+    fitCanvasByMode() {
+        const element = this.$root.querySelector('#univers-layout-grid');
+
+        if (! element || this.grid) {
+            return;
+        }
+
+        if (this.mode === 'preset') {
+            this.fitCanvas(element);
+        } else if (this.mode === 'custom' && this.preview === 'mobile') {
+            this.fitCanvas(element);
+        }
     },
 
     fitCanvas(element) {
@@ -216,16 +230,6 @@ window.universLayoutEditor = (initialItems, mode, preview = 'desktop', preset = 
         viewport.style.overflow = 'hidden';
 
         return scale;
-    },
-
-    fitPresetCanvas() {
-        const element = this.$root.querySelector('#univers-layout-grid');
-
-        if (! element || this.mode !== 'preset') {
-            return;
-        }
-
-        this.fitCanvas(element);
     },
 
     fitStaticCanvas(element) {
