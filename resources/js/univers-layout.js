@@ -1,6 +1,8 @@
 import { GridStack } from 'gridstack';
 import 'gridstack/dist/gridstack.min.css';
 
+const CANVAS_WIDTH = 878;
+
 window.universLayoutEditor = (initialItems, mode, preview = 'desktop', preset = null) => ({
     grid: null,
     mode,

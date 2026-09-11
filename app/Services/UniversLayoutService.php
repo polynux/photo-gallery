@@ -147,7 +147,7 @@ class UniversLayoutService
         $known = $univers->filter(fn (Univers $item): bool => $savedById->has((string) $item->id));
         $unknown = $univers->reject(fn (Univers $item): bool => $savedById->has((string) $item->id));
 
-        $knownItems = $known->values()->map(function (Univers $item) use ($savedById): array {
+        $knownItems = collect($known->values()->map(function (Univers $item) use ($savedById): array {
             $saved = $savedById->get((string) $item->id, []);
             $width = (int) ($saved['width'] ?? 3);
             $height = (int) ($saved['height'] ?? 2);
@@ -160,7 +160,7 @@ class UniversLayoutService
                 'width' => $width,
                 'height' => $height,
             ]);
-        });
+        })->all());
 
         if ($unknown->isEmpty()) {
             $items = $knownItems->map(fn (array $item, int $index): array => [...$item, 'index' => $index])->values();
@@ -196,14 +196,18 @@ class UniversLayoutService
         $positions = UniversLayoutPresets::positions($footprints);
         $knownCount = $knownItems->count();
 
-        return $knownItems
+        $unknownItems = $unknown
             ->values()
-            ->map(fn (array $item, int $index): array => [...$item, 'x' => $positions[$index]['x'], 'y' => $positions[$index]['y']])
-            ->merge($unknown->values()->map(function (Univers $item, int $index) use ($positions, $knownCount): array {
+            ->map(function (Univers $item, int $index) use ($positions, $knownCount): array {
                 $position = $positions[$knownCount + $index] ?? ['x' => 0, 'y' => 0];
 
                 return $this->item($item, 0, UniversLayoutPresets::dimensions('standard'), $position['y'], $position['x']);
-            }))
+            });
+
+        return $knownItems
+            ->values()
+            ->map(fn (array $item, int $index): array => [...$item, 'x' => $positions[$index]['x'], 'y' => $positions[$index]['y']])
+            ->merge($unknownItems)
             ->values();
     }
 
