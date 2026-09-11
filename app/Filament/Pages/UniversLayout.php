@@ -7,6 +7,7 @@ use App\Models\Univers;
 use App\Models\UniversLayout as UniversLayoutModel;
 use App\Services\UniversLayoutService;
 use App\UniversLayoutPresets;
+use BackedEnum;
 use Filament\Actions\Action;
 use Filament\Forms\Components\FileUpload;
 use Filament\Forms\Components\Select;
@@ -18,9 +19,7 @@ use Illuminate\Support\Facades\URL;
 
 class UniversLayout extends Page
 {
-    protected string $view = 'filament.pages.univers-layout';
-
-    protected static string|\BackedEnum|null $navigationIcon = 'heroicon-o-squares-2x2';
+    protected static string|BackedEnum|null $navigationIcon = 'heroicon-o-squares-2x2';
 
     protected static ?string $navigationLabel = 'Univers Layout';
 
@@ -44,6 +43,8 @@ class UniversLayout extends Page
     public float $focalX = 0.5;
 
     public float $focalY = 0.5;
+
+    protected string $view = 'filament.pages.univers-layout';
 
     public function mount(UniversLayoutService $layouts): void
     {
@@ -134,21 +135,6 @@ class UniversLayout extends Page
         }
     }
 
-    /** @return list<array<string, mixed>> */
-    private function savedCustomItems(): array
-    {
-        $saved = UniversLayoutModel::singleton();
-
-        if ($saved->mode !== 'custom') {
-            return [];
-        }
-
-        return collect($saved->layout['items'] ?? [])
-            ->filter(fn (array $item): bool => filled($item['univers_id'] ?? null))
-            ->values()
-            ->all();
-    }
-
     public function applyPreset(?string $preset): void
     {
         if (! $preset || ! isset(UniversLayoutPresets::all()[$preset])) {
@@ -170,16 +156,6 @@ class UniversLayout extends Page
         $this->isDirty = true;
 
         $this->dispatchEditorUpdate();
-    }
-
-    private function compatiblePreset(): ?string
-    {
-        $count = count($this->universItems);
-
-        return collect(UniversLayoutPresets::all())
-            ->filter(fn (array $preset): bool => count($preset['items']) === $count)
-            ->keys()
-            ->first();
     }
 
     /** @param list<array<string, int|string>> $items */
@@ -380,6 +356,31 @@ class UniversLayout extends Page
                     Notification::make()->title('Image updated.')->success()->send();
                 }),
         ];
+    }
+
+    /** @return list<array<string, mixed>> */
+    private function savedCustomItems(): array
+    {
+        $saved = UniversLayoutModel::singleton();
+
+        if ($saved->mode !== 'custom') {
+            return [];
+        }
+
+        return collect($saved->layout['items'] ?? [])
+            ->filter(fn (array $item): bool => filled($item['univers_id'] ?? null))
+            ->values()
+            ->all();
+    }
+
+    private function compatiblePreset(): ?string
+    {
+        $count = count($this->universItems);
+
+        return collect(UniversLayoutPresets::all())
+            ->filter(fn (array $preset): bool => count($preset['items']) === $count)
+            ->keys()
+            ->first();
     }
 
     /** @param list<array{univers_id: int, x: int, y: int, width: int, height: int}> $items */

@@ -27,7 +27,7 @@ class UniversImageService
 
         $generated = [];
         $failures = 0;
-        $version = Str::of($univers->source_path.'|'.$univers->updated_at?->getTimestamp())->slug('-');
+        $version = Str::of($univers->source_path . '|' . $univers->updated_at?->getTimestamp())->slug('-');
 
         foreach (config('gallery.univers_derivative_sizes', [300, 500, 800]) as $width) {
             foreach (['jpg' => Format::JPEG, 'webp' => Format::WEBP] as $extension => $format) {

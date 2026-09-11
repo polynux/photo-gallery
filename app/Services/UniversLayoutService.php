@@ -98,6 +98,24 @@ class UniversLayoutService
         })->all();
     }
 
+    /**
+     * Compact every image into the first fitting slot, producing a clean
+     * non-overlapping grid used when entering custom mode without a saved layout.
+     *
+     * @return list<array<string, int|string>>
+     */
+    public function autoCompact(Collection $univers): array
+    {
+        $items = $univers->values()->map(fn (Univers $item): array => UniversLayoutPresets::dimensions('standard'));
+        $positions = UniversLayoutPresets::positions($items->all());
+
+        return $univers->values()->map(function (Univers $item, int $index) use ($positions): array {
+            $position = $positions[$index] ?? ['x' => 0, 'y' => $index];
+
+            return $this->item($item, $index, UniversLayoutPresets::dimensions('standard'), $position['y'], $position['x']);
+        })->all();
+    }
+
     /** @param list<int> $order */
     private function orderedUnivers(Collection $univers, array $order): Collection
     {
@@ -144,9 +162,13 @@ class UniversLayoutService
             ]);
         });
 
-        $items = $unknown->isNotEmpty()
-            ? $this->placeUnknownItems($unknown, $knownItems)
-            : $knownItems;
+        if ($unknown->isEmpty()) {
+            $items = $knownItems->map(fn (array $item, int $index): array => [...$item, 'index' => $index])->values();
+
+            return $this->isValidCustomLayout($items->all()) ? $items->sortBy(['y', 'x'])->values()->all() : null;
+        }
+
+        $items = $this->placeUnknownItems($unknown, $knownItems);
 
         $items = $items->map(fn (array $item, int $index): array => [...$item, 'index' => $index])->values();
 
@@ -174,31 +196,15 @@ class UniversLayoutService
         $positions = UniversLayoutPresets::positions($footprints);
         $knownCount = $knownItems->count();
 
-        $unknownItems = $unknown->values()->map(function (Univers $item, int $index) use ($positions, $knownCount): array {
-            $position = $positions[$knownCount + $index] ?? ['x' => 0, 'y' => 0];
+        return $knownItems
+            ->values()
+            ->map(fn (array $item, int $index): array => [...$item, 'x' => $positions[$index]['x'], 'y' => $positions[$index]['y']])
+            ->merge($unknown->values()->map(function (Univers $item, int $index) use ($positions, $knownCount): array {
+                $position = $positions[$knownCount + $index] ?? ['x' => 0, 'y' => 0];
 
-            return $this->item($item, 0, UniversLayoutPresets::dimensions('standard'), $position['y'], $position['x']);
-        });
-
-        return $knownItems->merge($unknownItems)->values();
-    }
-
-    /**
-     * Compact every image into the first fitting slot, producing a clean
-     * non-overlapping grid used when entering custom mode without a saved layout.
-     *
-     * @return list<array<string, int|string>>
-     */
-    public function autoCompact(Collection $univers): array
-    {
-        $items = $univers->values()->map(fn (Univers $item): array => UniversLayoutPresets::dimensions('standard'));
-        $positions = UniversLayoutPresets::positions($items->all());
-
-        return $univers->values()->map(function (Univers $item, int $index) use ($positions): array {
-            $position = $positions[$index] ?? ['x' => 0, 'y' => $index];
-
-            return $this->item($item, $index, UniversLayoutPresets::dimensions('standard'), $position['y'], $position['x']);
-        })->all();
+                return $this->item($item, 0, UniversLayoutPresets::dimensions('standard'), $position['y'], $position['x']);
+            }))
+            ->values();
     }
 
     private function genericItems(Collection $univers): array

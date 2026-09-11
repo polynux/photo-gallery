@@ -175,22 +175,6 @@ class UniversLayoutPresets
         return self::positions($items, 3, 1);
     }
 
-    /**
-     * @param  array<int, array<int, bool>>  $occupied
-     */
-    private static function fits(array $occupied, int $x, int $y, int $width, int $height): bool
-    {
-        for ($row = $y; $row < $y + $height; $row++) {
-            for ($column = $x; $column < $x + $width; $column++) {
-                if ($occupied[$row][$column] ?? false) {
-                    return false;
-                }
-            }
-        }
-
-        return true;
-    }
-
     /** @return array{width: int, height: int} */
     public static function dimensions(string $type): array
     {
@@ -246,5 +230,21 @@ class UniversLayoutPresets
     public static function squareVariation(int $count): array
     {
         return array_fill(0, $count, self::dimensions('square'));
+    }
+
+    /**
+     * @param  array<int, array<int, bool>>  $occupied
+     */
+    private static function fits(array $occupied, int $x, int $y, int $width, int $height): bool
+    {
+        for ($row = $y; $row < $y + $height; $row++) {
+            for ($column = $x; $column < $x + $width; $column++) {
+                if ($occupied[$row][$column] ?? false) {
+                    return false;
+                }
+            }
+        }
+
+        return true;
     }
 }

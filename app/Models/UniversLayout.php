@@ -8,14 +8,6 @@ class UniversLayout extends Model
 {
     protected $fillable = ['mode', 'version', 'layout'];
 
-    protected function casts(): array
-    {
-        return [
-            'version' => 'integer',
-            'layout' => 'array',
-        ];
-    }
-
     public static function singleton(): self
     {
         return static::query()->firstOrCreate(
@@ -26,5 +18,13 @@ class UniversLayout extends Model
                 'layout' => ['preset' => null, 'items' => []],
             ],
         );
+    }
+
+    protected function casts(): array
+    {
+        return [
+            'version' => 'integer',
+            'layout' => 'array',
+        ];
     }
 }

@@ -19,20 +19,6 @@ class Univers extends Model
         'derivatives',
     ];
 
-    protected function casts(): array
-    {
-        return [
-            'focal_x' => 'float',
-            'focal_y' => 'float',
-            'derivatives' => 'array',
-        ];
-    }
-
-    public function getSourcePathAttribute(?string $value): string
-    {
-        return $value ?: $this->path;
-    }
-
     protected static function booted(): void
     {
         static::saving(function (Univers $univers): void {
@@ -56,5 +42,19 @@ class Univers extends Model
                 GenerateUniversDerivatives::dispatch($univers)->afterCommit();
             }
         });
+    }
+
+    public function getSourcePathAttribute(?string $value): string
+    {
+        return $value ?: $this->path;
+    }
+
+    protected function casts(): array
+    {
+        return [
+            'focal_x' => 'float',
+            'focal_y' => 'float',
+            'derivatives' => 'array',
+        ];
     }
 }

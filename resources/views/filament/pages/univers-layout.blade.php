@@ -65,7 +65,7 @@
                     <div id="univers-layout-grid" class="univers-layout-grid univers-layout-grid--{{ $mode }}" data-mode="{{ $mode }}" data-preview="{{ $preview }}" wire:key="univers-layout-grid"></div>
                 </div>
 
-                <div class="mt-4 rounded-lg border border-gray-200 p-4 dark:border-white/10" x-data="{ focal: { id: @js($focalPointUniversId), x: @js($focalX), y: @js($focalY), source: @js($focalPointUniversId ? $this->focalPreviewSource($focalPointUniversId) : null) } }">
+                <div class="mt-4 rounded-lg border border-gray-200 p-4 dark:border-white/10" x-data="{ focal: { id: @js($focalPointUniversId), x: @js($focalX), y: @js($focalY), source: @js($this->focalPreviewSource) } }">
                     <div class="flex items-center justify-between gap-3">
                         <div>
                             <h3 class="text-sm font-medium text-gray-950 dark:text-white">Focal point</h3>
