@@ -29,9 +29,14 @@ window.universLayoutEditor = (initialItems, mode, preview = 'desktop', preset = 
             this.preset = preset ?? this.preset;
             this.preview = preview ?? this.preview;
 
-            if (! structuralChange && mode === 'custom' && this.grid && this.preview === 'desktop') {
+            if (! structuralChange) {
                 this.items = editorItems;
-                this.syncGridItems(editorItems);
+
+                if (mode === 'custom' && this.grid && this.preview === 'desktop') {
+                    this.syncGridItems(editorItems);
+                } else {
+                    this.requestRender(editorItems, mode);
+                }
 
                 return;
             }
@@ -102,11 +107,9 @@ window.universLayoutEditor = (initialItems, mode, preview = 'desktop', preset = 
         this.destroyGrid();
 
         const viewport = element.parentElement;
-        viewport.classList.remove('univers-editor-grid--custom', 'univers-editor-grid--preset', 'univers-editor-grid--generic', 'mx-auto', 'max-w-sm');
+        viewport.classList.remove('univers-editor-grid--custom', 'univers-editor-grid--preset', 'univers-editor-grid--generic');
         viewport.classList.add(`univers-editor-grid--${mode}`);
-        if (this.preview === 'mobile') {
-            viewport.classList.add('mx-auto', 'max-w-sm');
-        }
+        this.applyPreview(viewport);
         viewport.style.removeProperty('height');
         viewport.style.removeProperty('overflow');
         viewport.style.removeProperty('overflow-x');
@@ -172,6 +175,11 @@ window.universLayoutEditor = (initialItems, mode, preview = 'desktop', preset = 
         element.className = 'univers-layout-grid univers-layout-grid--generic';
         items.forEach((item) => element.append(this.createGenericItem(item)));
         this.enableGenericSorting(element);
+    },
+
+    applyPreview(viewport) {
+        viewport.classList.toggle('mx-auto', this.preview === 'mobile');
+        viewport.classList.toggle('max-w-sm', this.preview === 'mobile');
     },
 
     startPresetObserver(viewport) {
