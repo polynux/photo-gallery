@@ -56,8 +56,8 @@
                 <div class="mt-5 flex items-center justify-between gap-3">
                     <span class="text-sm font-medium text-gray-700 dark:text-gray-300">Editor</span>
                     <div class="flex gap-1 rounded-lg bg-gray-100 p-1 dark:bg-white/5">
-                        <button type="button" class="rounded-md px-3 py-1 text-xs {{ $preview === 'desktop' ? 'bg-white shadow dark:bg-white/10' : '' }}" wire:click="$set('preview', 'desktop')">Desktop</button>
-                        <button type="button" class="rounded-md px-3 py-1 text-xs {{ $preview === 'mobile' ? 'bg-white shadow dark:bg-white/10' : '' }}" wire:click="$set('preview', 'mobile')">Mobile</button>
+                        <button type="button" class="rounded-md px-3 py-1 text-xs {{ $preview === 'desktop' ? 'bg-white shadow dark:bg-white/10' : '' }}" wire:click="setPreview('desktop')">Desktop</button>
+                        <button type="button" class="rounded-md px-3 py-1 text-xs {{ $preview === 'mobile' ? 'bg-white shadow dark:bg-white/10' : '' }}" wire:click="setPreview('mobile')">Mobile</button>
                     </div>
                 </div>
 

@@ -109,6 +109,13 @@ class UniversLayout extends Page
         if ($this->mode === 'preset') {
             $this->applyPreset($this->preset ?: $this->compatiblePreset());
         } else {
+            if ($this->mode === 'custom') {
+                $this->layoutItems = app(UniversLayoutService::class)->custom(
+                    Univers::query()->orderBy('position')->get(),
+                    $this->savedCustomItems(),
+                );
+            }
+
             if ($this->mode === 'generic') {
                 $this->layoutItems = app(UniversLayoutService::class)->generic(
                     Univers::query()->orderBy('position')->get(),
@@ -118,6 +125,21 @@ class UniversLayout extends Page
             $this->isDirty = true;
             $this->dispatchEditorUpdate();
         }
+    }
+
+    /** @return list<array<string, mixed>> */
+    private function savedCustomItems(): array
+    {
+        $saved = UniversLayoutModel::singleton();
+
+        if ($saved->mode !== 'custom') {
+            return [];
+        }
+
+        return collect($saved->layout['items'] ?? [])
+            ->filter(fn (array $item): bool => filled($item['univers_id'] ?? null))
+            ->values()
+            ->all();
     }
 
     public function applyPreset(?string $preset): void
@@ -160,8 +182,8 @@ class UniversLayout extends Page
             'univers_id' => (int) ($item['univers_id'] ?? $item['id'] ?? 0),
             'x' => (int) ($item['x'] ?? 0),
             'y' => (int) ($item['y'] ?? 0),
-            'width' => (int) ($item['width'] ?? $item['w'] ?? 4),
-            'height' => (int) ($item['height'] ?? $item['h'] ?? 3),
+            'width' => min(max((int) ($item['width'] ?? $item['w'] ?? 3), 1), 12),
+            'height' => min(max((int) ($item['height'] ?? $item['h'] ?? 2), 1), 18),
         ])->sortBy(['y', 'x'])->values();
 
         if ($this->mode === 'preset' && $this->preset && isset(UniversLayoutPresets::all()[$this->preset])) {
@@ -177,6 +199,11 @@ class UniversLayout extends Page
 
         $this->layoutItems = $items->all();
         $this->isDirty = true;
+    }
+
+    public function setPreview(string $preview): void
+    {
+        $this->preview = in_array($preview, ['desktop', 'mobile'], true) ? $preview : 'desktop';
 
         $this->dispatchEditorUpdate();
     }
@@ -211,6 +238,8 @@ class UniversLayout extends Page
             $this->layoutItems[$second]['univers_id'],
             $this->layoutItems[$first]['univers_id'],
         ];
+
+        $this->isDirty = true;
 
         $this->dispatchEditorUpdate();
     }

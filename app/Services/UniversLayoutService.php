@@ -33,12 +33,16 @@ class UniversLayoutService
         }
 
         if ($mode === 'custom' && ! empty($document['items'])) {
-            return [
-                'mode' => 'custom',
-                'preset' => null,
-                'items' => $this->itemsForCustomLayout($univers, $document['items']),
-                'notice' => null,
-            ];
+            $items = $this->itemsForCustomLayout($univers, $document['items']);
+
+            if ($items !== null) {
+                return [
+                    'mode' => 'custom',
+                    'preset' => null,
+                    'items' => $items,
+                    'notice' => null,
+                ];
+            }
         }
 
         $order = collect($document['order'] ?? [])->map(fn (mixed $id): int => (int) $id)->all();
@@ -48,10 +52,31 @@ class UniversLayoutService
             'mode' => 'generic',
             'preset' => null,
             'items' => $this->genericItems($univers),
-            'notice' => $mode === 'preset'
-                ? 'This photo count has no matching preset. Custom layout is recommended.'
-                : null,
+            'notice' => match ($mode) {
+                'preset' => 'This photo count has no matching preset. Custom layout is recommended.',
+                'custom' => 'The saved custom layout is invalid. Images are shown in generic order instead.',
+                default => null,
+            },
         ];
+    }
+
+    /**
+     * Build editor items for custom mode, restoring saved geometry when it is valid.
+     *
+     * @param  list<array<string, mixed>>  $savedItems
+     * @return list<array<string, int|string>>
+     */
+    public function custom(Collection $univers, array $savedItems = []): array
+    {
+        if ($savedItems !== []) {
+            $items = $this->itemsForCustomLayout($univers, $savedItems);
+
+            if ($items !== null) {
+                return $items;
+            }
+        }
+
+        return $this->autoCompact($univers);
     }
 
     /** @return list<array<string, int|string>> */
@@ -87,27 +112,93 @@ class UniversLayoutService
         );
     }
 
-    /** @param list<array<string, mixed>> $savedItems */
-    private function itemsForCustomLayout(Collection $univers, array $savedItems): array
+    /**
+     * Merge saved custom geometry with the current Univers collection.
+     *
+     * Known images keep their saved tile geometry; unknown (new) images are
+     * placed in the first free slot. Returns null when the result would be
+     * an invalid layout, so callers can fall back to generic placement.
+     *
+     * @param  list<array<string, mixed>>  $savedItems
+     * @return list<array<string, int|string>>|null
+     */
+    private function itemsForCustomLayout(Collection $univers, array $savedItems): ?array
     {
-        $savedById = collect($savedItems)->keyBy(fn (array $item): string => (string) ($item['univers_id'] ?? ''));
+        $savedById = collect($savedItems)
+            ->keyBy(fn (array $item): string => (string) ($item['univers_id'] ?? ''));
+        $known = $univers->filter(fn (Univers $item): bool => $savedById->has((string) $item->id));
+        $unknown = $univers->reject(fn (Univers $item): bool => $savedById->has((string) $item->id));
 
-        $items = $univers->values()->map(function (Univers $item, int $index) use ($savedById): array {
+        $knownItems = $known->values()->map(function (Univers $item) use ($savedById): array {
             $saved = $savedById->get((string) $item->id, []);
-            $width = (int) ($saved['width'] ?? 4);
-            $height = (int) ($saved['height'] ?? 3);
+            $width = (int) ($saved['width'] ?? 3);
+            $height = (int) ($saved['height'] ?? 2);
 
-            return $this->item($item, $index, [
+            return $this->item($item, 0, [
                 'width' => $width,
                 'height' => $height,
-            ], max((int) ($saved['y'] ?? $index), 0), min(max((int) ($saved['x'] ?? 0), 0), 11), [
+            ], max((int) ($saved['y'] ?? 0), 0), min(max((int) ($saved['x'] ?? 0), 0), 11), [
                 ...$saved,
                 'width' => $width,
                 'height' => $height,
             ]);
-        })->sortBy(['y', 'x'])->values()->all();
+        });
 
-        return $this->isValidCustomLayout($items) ? $items : $this->genericItems($univers);
+        $items = $unknown->isNotEmpty()
+            ? $this->placeUnknownItems($unknown, $knownItems)
+            : $knownItems;
+
+        $items = $items->map(fn (array $item, int $index): array => [...$item, 'index' => $index])->values();
+
+        return $this->isValidCustomLayout($items->all()) ? $items->sortBy(['y', 'x'])->values()->all() : null;
+    }
+
+    /**
+     * Position images without saved geometry in the first free slot that
+     * accommodates a standard tile, keeping known tiles untouched.
+     *
+     * @param  Collection<int, Univers>  $unknown
+     * @param  Collection<int, array<string, int|string>>  $knownItems
+     * @return Collection<int, array<string, int|string>>
+     */
+    private function placeUnknownItems(Collection $unknown, Collection $knownItems): Collection
+    {
+        $footprints = [
+            ...$knownItems->map(fn (array $item): array => [
+                'width' => (int) $item['width'],
+                'height' => (int) $item['height'],
+            ])->values()->all(),
+            ...$unknown->map(fn (): array => UniversLayoutPresets::dimensions('standard'))->values()->all(),
+        ];
+
+        $positions = UniversLayoutPresets::positions($footprints);
+        $knownCount = $knownItems->count();
+
+        $unknownItems = $unknown->values()->map(function (Univers $item, int $index) use ($positions, $knownCount): array {
+            $position = $positions[$knownCount + $index] ?? ['x' => 0, 'y' => 0];
+
+            return $this->item($item, 0, UniversLayoutPresets::dimensions('standard'), $position['y'], $position['x']);
+        });
+
+        return $knownItems->merge($unknownItems)->values();
+    }
+
+    /**
+     * Compact every image into the first fitting slot, producing a clean
+     * non-overlapping grid used when entering custom mode without a saved layout.
+     *
+     * @return list<array<string, int|string>>
+     */
+    public function autoCompact(Collection $univers): array
+    {
+        $items = $univers->values()->map(fn (Univers $item): array => UniversLayoutPresets::dimensions('standard'));
+        $positions = UniversLayoutPresets::positions($items->all());
+
+        return $univers->values()->map(function (Univers $item, int $index) use ($positions): array {
+            $position = $positions[$index] ?? ['x' => 0, 'y' => $index];
+
+            return $this->item($item, $index, UniversLayoutPresets::dimensions('standard'), $position['y'], $position['x']);
+        })->all();
     }
 
     private function genericItems(Collection $univers): array
