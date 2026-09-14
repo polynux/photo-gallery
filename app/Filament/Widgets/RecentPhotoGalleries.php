@@ -29,7 +29,8 @@ class RecentPhotoGalleries extends BaseWidget
             )
             ->columns([
                 ImageColumn::make('coverPhoto.path')
-                    ->label('Cover'),
+                    ->label('Cover')
+                    ->disk('photo'),
                 TextColumn::make('name'),
                 TextColumn::make('access_code')
                     ->copyable(),

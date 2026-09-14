@@ -22,12 +22,18 @@ use Filament\Schemas\Schema;
 use Filament\Tables\Columns\ImageColumn;
 use Filament\Tables\Columns\TextColumn;
 use Filament\Tables\Table;
+use Illuminate\Database\Eloquent\Builder;
 
 class PhotoGalleryResource extends Resource
 {
     protected static ?string $model = PhotoGallery::class;
 
     protected static string|BackedEnum|null $navigationIcon = 'heroicon-o-camera';
+
+    public static function getEloquentQuery(): Builder
+    {
+        return parent::getEloquentQuery()->with('coverPhoto');
+    }
 
     public static function form(Schema $schema): Schema
     {
@@ -64,7 +70,8 @@ class PhotoGalleryResource extends Resource
                 TextColumn::make('name')
                     ->searchable(),
                 ImageColumn::make('coverPhoto.path')
-                    ->label('Cover'),
+                    ->label('Cover')
+                    ->disk('photo'),
                 TextColumn::make('access_code')
                     ->copyable()
                     ->searchable(),

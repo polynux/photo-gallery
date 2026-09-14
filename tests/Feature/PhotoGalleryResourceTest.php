@@ -2,12 +2,15 @@
 
 use App\Filament\Resources\PhotoGalleryResource\Pages\EditPhotoGallery;
 use App\Filament\Resources\PhotoGalleryResource\Pages\ListPhotoGalleries;
+use App\Models\Photo;
 use App\Models\PhotoGallery;
 use App\Models\User;
 use Filament\Facades\Filament;
+use Illuminate\Support\Facades\Storage;
 use Livewire\Livewire;
 
 beforeEach(function () {
+    config()->set('gallery.generate_thumbnails', false);
     Filament::setCurrentPanel(Filament::getPanel('admin'));
     $this->actingAs(User::factory()->create(['email' => 'admin@example.com']));
 });
@@ -35,4 +38,31 @@ test('listing table renders a view gallery action pointing to the public gallery
     Livewire::test(ListPhotoGalleries::class)
         ->assertSuccessful()
         ->callTableAction('view_gallery', $gallery);
+});
+
+test('listing table resolves a cover image url from the photo disk', function () {
+    Storage::fake('photo');
+
+    $gallery = PhotoGallery::factory()->create([
+        'access_code' => 'COVERURL',
+    ]);
+    $section = $gallery->sections()->where('is_default', true)->firstOrFail();
+    Storage::disk('photo')->put($gallery->id.'/cover.jpg', 'cover-content');
+    $photo = Photo::create([
+        'photo_gallery_id' => $gallery->id,
+        'photo_section_id' => $section->id,
+        'path' => $gallery->id.'/cover.jpg',
+        'position' => 1,
+    ]);
+    $gallery->update(['cover_photo_id' => $photo->id]);
+
+    $page = Livewire::test(ListPhotoGalleries::class);
+
+    $column = $page->instance()->getTable()->getColumns()['coverPhoto.path'];
+
+    expect($column->getDiskName())->toBe('photo');
+
+    $imageUrl = $column->getImageUrl($gallery->coverPhoto->path);
+
+    expect($imageUrl)->toContain($gallery->id.'/cover.jpg');
 });
