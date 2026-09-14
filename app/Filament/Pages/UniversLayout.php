@@ -25,12 +25,12 @@ class UniversLayout extends Page
 
     public function getTitle(): string
     {
-        return __('admin.univers.navigation_label');
+        return __('admin.univers.layout_navigation_label');
     }
 
     public static function getNavigationLabel(): string
     {
-        return __('admin.univers.navigation_label');
+        return __('admin.univers.layout_navigation_label');
     }
 
     public string $mode = 'generic';
@@ -105,7 +105,7 @@ class UniversLayout extends Page
                 return [
                     ...$item,
                     'title' => $image->title ?: __('admin.univers.untitled_image'),
-                    'status' => str_replace('_', ' ', $image->processing_status),
+                    'status' => __('admin.univers.status_'.$image->processing_status),
                     'source' => URL::temporarySignedRoute('univers.source', now()->addMinutes(10), $image),
                     'focal_x' => (float) ($image->focal_x ?? 0.5),
                     'focal_y' => (float) ($image->focal_y ?? 0.5),

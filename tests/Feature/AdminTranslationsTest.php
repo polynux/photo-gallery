@@ -1,5 +1,6 @@
 <?php
 
+use App\Filament\Pages\UniversLayout;
 use App\Filament\Resources\PhotoGalleryResource;
 use App\Filament\Resources\PhotoResource;
 use App\Filament\Resources\UniversResource;
@@ -65,6 +66,7 @@ test('resources resolve model and navigation labels in french', function () {
     expect(PhotoGalleryResource::getModelLabel())->toBe('Galerie photo');
     expect(PhotoResource::getNavigationLabel())->toBe('Photos');
     expect(UniversResource::getNavigationLabel())->toBe('Univers');
+    expect(UniversLayout::getNavigationLabel())->toBe('Mise en page des univers');
     expect(__('admin.layout.presets'))->toBe('Modèles prédéfinis');
 });
 

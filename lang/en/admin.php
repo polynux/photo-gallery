@@ -100,6 +100,7 @@ return [
 
     'univers' => [
         'navigation_label' => 'Univers',
+        'layout_navigation_label' => 'Univers Layout',
         'model_label' => 'Univers',
         'plural_model_label' => 'Univers',
         'file' => 'File',
