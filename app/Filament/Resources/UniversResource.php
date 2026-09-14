@@ -74,11 +74,9 @@ class UniversResource extends Resource
                     ->label('ID')
                     ->sortable()
                     ->searchable(),
-                ImageColumn::make('path')
+                ImageColumn::make('preview_url')
                     ->label(__('admin.univers.file'))
-                    ->disk('photo')
-                    ->circular()
-                    ->searchable(),
+                    ->circular(),
                 TextColumn::make('title')
                     ->label(__('admin.univers.title'))
                     ->searchable(),

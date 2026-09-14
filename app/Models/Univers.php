@@ -4,6 +4,7 @@ namespace App\Models;
 
 use App\Jobs\GenerateUniversDerivatives;
 use Illuminate\Database\Eloquent\Model;
+use Illuminate\Support\Facades\URL;
 
 class Univers extends Model
 {
@@ -47,6 +48,11 @@ class Univers extends Model
     public function getSourcePathAttribute(?string $value): string
     {
         return $value ?: $this->path;
+    }
+
+    public function getPreviewUrlAttribute(): string
+    {
+        return URL::temporarySignedRoute('univers.source', now()->addMinutes(30), $this);
     }
 
     protected function casts(): array
