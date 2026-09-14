@@ -23,6 +23,7 @@ use Filament\Tables\Columns\ImageColumn;
 use Filament\Tables\Columns\TextColumn;
 use Filament\Tables\Table;
 use Illuminate\Database\Eloquent\Builder;
+use Illuminate\Support\Str;
 
 class PhotoGalleryResource extends Resource
 {
@@ -47,6 +48,7 @@ class PhotoGalleryResource extends Resource
                     ->columnSpanFull(),
                 TextInput::make('password')
                     ->required(fn (string $operation): bool => $operation === 'create')
+                    ->default(fn (): string => Str::random(12))
                     ->maxLength(255),
                 Select::make('cover_photo_id')
                     ->label('Cover Photo')

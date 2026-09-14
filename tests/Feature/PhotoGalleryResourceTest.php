@@ -1,5 +1,6 @@
 <?php
 
+use App\Filament\Resources\PhotoGalleryResource\Pages\CreatePhotoGallery;
 use App\Filament\Resources\PhotoGalleryResource\Pages\EditPhotoGallery;
 use App\Filament\Resources\PhotoGalleryResource\Pages\ListPhotoGalleries;
 use App\Models\Photo;
@@ -65,4 +66,30 @@ test('listing table resolves a cover image url from the photo disk', function ()
     $imageUrl = $column->getImageUrl($gallery->coverPhoto->path);
 
     expect($imageUrl)->toContain($gallery->id.'/cover.jpg');
+});
+
+test('create form is pre-filled with a random 12 character password', function () {
+    $page = Livewire::test(CreatePhotoGallery::class);
+
+    $password = $page->instance()->data['password'] ?? null;
+
+    expect($password)->toBeString();
+    expect($password)->toHaveLength(12);
+    expect(ctype_alnum($password))->toBeTrue();
+});
+
+test('creating a gallery stores the pre-filled random password', function () {
+    $page = Livewire::test(CreatePhotoGallery::class);
+
+    $password = $page->instance()->data['password'];
+
+    $page->fillForm([
+        'name' => 'Random Password Gallery',
+        'password' => $password,
+    ])
+        ->call('create');
+
+    $gallery = PhotoGallery::query()->where('name', 'Random Password Gallery')->firstOrFail();
+
+    expect($gallery->password)->toBe($password);
 });
