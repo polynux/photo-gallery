@@ -22,7 +22,6 @@ use Filament\Schemas\Schema;
 use Filament\Tables\Columns\ImageColumn;
 use Filament\Tables\Columns\TextColumn;
 use Filament\Tables\Table;
-use Illuminate\Support\Facades\Hash;
 
 class PhotoGalleryResource extends Resource
 {
@@ -42,10 +41,7 @@ class PhotoGalleryResource extends Resource
                     ->columnSpanFull(),
                 TextInput::make('password')
                     ->required(fn (string $operation): bool => $operation === 'create')
-                    ->password()
-                    ->maxLength(255)
-                    ->dehydrated(fn (?string $state): bool => filled($state))
-                    ->dehydrateStateUsing(fn (string $state): string => Hash::make($state)),
+                    ->maxLength(255),
                 Select::make('cover_photo_id')
                     ->label('Cover Photo')
                     ->options(fn (?PhotoGallery $record): array => $record
@@ -83,6 +79,11 @@ class PhotoGalleryResource extends Resource
                 //
             ])
             ->recordActions([
+                Action::make('view_gallery')
+                    ->label('View Gallery')
+                    ->icon('heroicon-o-eye')
+                    ->url(fn (PhotoGallery $record) => route('public.show', $record->access_code))
+                    ->openUrlInNewTab(),
                 EditAction::make(),
                 Action::make('upload_photos')
                     ->label('Upload Photos')

@@ -74,14 +74,4 @@ class PhotoGallery extends Model
     {
         return $this->belongsTo(Photo::class, 'cover_photo_id');
     }
-
-    /**
-     * @return array<string, string>
-     */
-    protected function casts(): array
-    {
-        return [
-            'password' => 'hashed',
-        ];
-    }
 }

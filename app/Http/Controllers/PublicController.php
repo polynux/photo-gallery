@@ -7,7 +7,6 @@ use App\Models\PhotoGallery;
 use App\Services\GalleryZipStream;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
-use Illuminate\Support\Facades\Hash;
 use Illuminate\Support\Facades\Log;
 use Illuminate\Support\Facades\Storage;
 use Illuminate\Support\Str;
@@ -86,7 +85,7 @@ class PublicController extends Controller
                 'photos' => $section->photos->map(function ($photo) {
                     return [
                         'src' => Storage::disk('photo')->url($photo->path),
-                        'alt' => $photo->alt ?? 'Photo #' . $photo->id,
+                        'alt' => $photo->alt ?? 'Photo #'.$photo->id,
                     ];
                 })->values()->toArray(),
             ];
@@ -118,12 +117,12 @@ class PublicController extends Controller
 
     public function showPhoto(string $gallery, string $photo)
     {
-        $photo = Photo::where('path', $gallery . '/' . $photo)
+        $photo = Photo::where('path', $gallery.'/'.$photo)
             ->where('photo_gallery_id', $gallery)
             ->firstOrFail();
 
         if (! $this->canViewGallery($photo->photoGallery)) {
-            Log::info('User not authenticated for gallery: ' . $gallery);
+            Log::info('User not authenticated for gallery: '.$gallery);
 
             return redirect()->route('public.select');
         }
@@ -135,12 +134,12 @@ class PublicController extends Controller
 
     public function showThumbnail(string $gallery, string $photo)
     {
-        $photo = Photo::where('path', $gallery . '/' . $photo)
+        $photo = Photo::where('path', $gallery.'/'.$photo)
             ->where('photo_gallery_id', $gallery)
             ->firstOrFail();
 
         if (! $this->canViewGallery($photo->photoGallery)) {
-            Log::info('User not authenticated for gallery: ' . $gallery);
+            Log::info('User not authenticated for gallery: '.$gallery);
 
             return redirect()->route('public.select');
         }
@@ -160,7 +159,7 @@ class PublicController extends Controller
         string $password,
         string $accessCode,
     ): RedirectResponse {
-        if (! Hash::check($password, $photoGallery->password)) {
+        if (! hash_equals($photoGallery->password, $password)) {
             return back()
                 ->withErrors(['password' => 'Mot de passe incorrect'])
                 ->onlyInput('access_code');
@@ -185,6 +184,6 @@ class PublicController extends Controller
 
     private function gallerySessionKey(PhotoGallery $photoGallery): string
     {
-        return 'authenticated_gallery_' . $photoGallery->id;
+        return 'authenticated_gallery_'.$photoGallery->id;
     }
 }

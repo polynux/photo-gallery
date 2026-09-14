@@ -10,7 +10,7 @@ beforeEach(function () {
     config()->set('gallery.generate_thumbnails', false);
 });
 
-test('customers can authenticate with a hashed gallery password', function () {
+test('customers can authenticate with a plaintext gallery password', function () {
     $gallery = PhotoGallery::factory()->create([
         'access_code' => 'ACCESS12',
         'password' => 'secret-password',
@@ -19,9 +19,9 @@ test('customers can authenticate with a hashed gallery password', function () {
     $this->post(route('public.authenticate', $gallery->access_code), [
         'password' => 'secret-password',
     ])->assertRedirect(route('public.gallery', $gallery->access_code))
-        ->assertSessionHas('authenticated_gallery_' . $gallery->id, true);
+        ->assertSessionHas('authenticated_gallery_'.$gallery->id, true);
 
-    expect($gallery->refresh()->password)->not->toBe('secret-password');
+    expect($gallery->refresh()->password)->toBe('secret-password');
 });
 
 test('gallery selection rejects an invalid password', function () {
@@ -48,7 +48,7 @@ test('gallery selection accepts lowercase access code and authenticates', functi
         'access_code' => 'select12',
         'password' => 'secret-password',
     ])->assertRedirect(route('public.gallery', $gallery->access_code))
-        ->assertSessionHas('authenticated_gallery_' . $gallery->id, true);
+        ->assertSessionHas('authenticated_gallery_'.$gallery->id, true);
 });
 
 test('gallery authentication is throttled after repeated failed attempts', function () {
@@ -74,7 +74,7 @@ test('authenticated customers can access their gallery page', function () {
     ]);
 
     $this->withSession([
-        'authenticated_gallery_' . $gallery->id => true,
+        'authenticated_gallery_'.$gallery->id => true,
     ])->get(route('public.gallery', $gallery->access_code))
         ->assertSuccessful();
 });
@@ -106,11 +106,11 @@ test('authenticated admin can view photos without customer session', function ()
         'access_code' => 'ADMINVW2',
     ]);
     $section = $gallery->sections()->where('is_default', true)->firstOrFail();
-    Storage::disk('photo')->put($gallery->id . '/pic.jpg', 'content');
+    Storage::disk('photo')->put($gallery->id.'/pic.jpg', 'content');
     Photo::create([
         'photo_gallery_id' => $gallery->id,
         'photo_section_id' => $section->id,
-        'path' => $gallery->id . '/pic.jpg',
+        'path' => $gallery->id.'/pic.jpg',
         'position' => 1,
     ]);
 
