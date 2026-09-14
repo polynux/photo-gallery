@@ -9,6 +9,9 @@
                 "artisan",
                 "boost:mcp"
             ]
+        },
+        "plane": {
+            "enabled": true
         }
     }
 }

@@ -287,6 +287,10 @@ Valid types: `feat`, `fix`, `docs`, `style`, `refactor`, `test`, `chore`
 - **Access codes**: 8-character random strings for gallery access
 - **Session-based gallery authentication**: Check via `session('authenticated_gallery_' . $id)`
 
+## Plane
+
+Plane project: Pinaton Photos
+
 ===
 
 <laravel-boost-guidelines>
