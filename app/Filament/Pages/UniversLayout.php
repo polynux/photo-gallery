@@ -28,6 +28,11 @@ class UniversLayout extends Page
         return __('admin.univers.navigation_label');
     }
 
+    public static function getNavigationLabel(): string
+    {
+        return __('admin.univers.navigation_label');
+    }
+
     public string $mode = 'generic';
 
     public ?string $preset = null;
