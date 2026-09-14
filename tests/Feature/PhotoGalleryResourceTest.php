@@ -22,9 +22,8 @@ test('edit form displays the gallery password as plain text', function () {
 
     $page->assertSuccessful();
 
-    $field = $page->instance()->getRecord()->password;
-
-    expect($field)->toBe('secret-password');
+    expect($page->instance()->data['password'] ?? null)->toBe('secret-password');
+    expect($gallery->refresh()->password)->toBe('secret-password');
 });
 
 test('listing table renders a view gallery action pointing to the public gallery', function () {

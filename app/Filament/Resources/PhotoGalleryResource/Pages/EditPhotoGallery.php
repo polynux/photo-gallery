@@ -14,6 +14,17 @@ class EditPhotoGallery extends EditRecord
 {
     protected static string $resource = PhotoGalleryResource::class;
 
+    /**
+     * @param  array<string, mixed>  $data
+     * @return array<string, mixed>
+     */
+    protected function mutateFormDataBeforeFill(array $data): array
+    {
+        $data['password'] = $this->getRecord()->password;
+
+        return $data;
+    }
+
     protected function getHeaderActions(): array
     {
         return [
