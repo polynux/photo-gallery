@@ -18,8 +18,8 @@ beforeEach(function () {
 test('admin can open the Univers layout page', function () {
     $this->get('/administrafion/univers-layout')
         ->assertSuccessful()
-        ->assertSee('Homepage Univers')
-        ->assertSee('Custom 12-column grid');
+        ->assertSee(__('admin.layout.page_heading'))
+        ->assertSee(__('admin.layout.custom_grid'));
 });
 
 test('custom layout rejects overlapping tiles', function () {
@@ -283,7 +283,7 @@ test('invalid custom layouts surface a notice when falling back to generic', fun
     );
 
     expect($resolved['mode'])->toBe('generic')
-        ->and($resolved['notice'])->toContain('custom layout');
+        ->and($resolved['notice'])->toContain(__('admin.univers.notice_invalid_custom_layout'));
 });
 
 test('swapping preset slots marks the layout dirty', function () {

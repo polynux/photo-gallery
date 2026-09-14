@@ -35,7 +35,7 @@ class UniversLayoutPresets
         foreach (range(1, 13) as $count) {
             if ($count >= 9) {
                 $presets["legacy-{$count}"] = [
-                    'label' => "Legacy {$count} images",
+                    'label' => trans_choice('admin.univers.preset_legacy', $count, ['count' => $count]),
                     'items' => array_map(
                         fn (string $type): array => self::legacyDimensions($type),
                         self::legacyClasses($count),
@@ -44,12 +44,12 @@ class UniversLayoutPresets
             }
 
             $presets["variation-{$count}"] = [
-                'label' => "Variation {$count} images",
+                'label' => trans_choice('admin.univers.preset_variation', $count, ['count' => $count]),
                 'items' => self::explicitVariation($count),
             ];
 
             $presets["square-{$count}"] = [
-                'label' => "Square variation {$count} images",
+                'label' => trans_choice('admin.univers.preset_square_variation', $count, ['count' => $count]),
                 'items' => self::squareVariation($count),
             ];
         }

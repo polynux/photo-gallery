@@ -31,7 +31,7 @@ class PhotosRelationManager extends RelationManager
         return $schema
             ->components([
                 Select::make('photo_section_id')
-                    ->label('Section')
+                    ->label(__('admin.common.section'))
                     ->options(fn () => PhotoSection::where('photo_gallery_id', $this->ownerRecord->id)->pluck('name', 'id'))
                     ->required()
                     ->default(fn () => PhotoSection::where('photo_gallery_id', $this->ownerRecord->id)->where('is_default', true)->first()?->id),
@@ -60,7 +60,7 @@ class PhotosRelationManager extends RelationManager
                     ->disk('thumbnails')
                     ->visibility('private'),
                 TextColumn::make('photoSection.name')
-                    ->label('Section')
+                    ->label(__('admin.common.section'))
                     ->badge()
                     ->sortable(),
                 TextColumn::make('alt')
@@ -69,24 +69,24 @@ class PhotosRelationManager extends RelationManager
             ->reorderable('position')
             ->filters([
                 SelectFilter::make('photo_section_id')
-                    ->label('Section')
+                    ->label(__('admin.common.section'))
                     ->options(fn () => PhotoSection::where('photo_gallery_id', $this->ownerRecord->id)->pluck('name', 'id')),
             ])
             ->headerActions([
                 Action::make('manage_sections')
-                    ->label('Manage Sections')
+                    ->label(__('admin.gallery.manage_sections'))
                     ->icon('heroicon-o-folder')
                     ->url(fn ($livewire) => PhotoGalleryResource::getUrl('sections', ['record' => $livewire->getOwnerRecord()->id])),
                 Action::make('view_gallery')
-                    ->label('View Gallery')
+                    ->label(__('admin.gallery.view_gallery'))
                     ->icon('heroicon-o-eye')
                     ->url(fn ($livewire) => route('public.show', $livewire->getOwnerRecord()->access_code))
                     ->openUrlInNewTab(),
                 CreateAction::make()
-                    ->label('Upload Photo')
+                    ->label(__('admin.gallery.upload_photos'))
                     ->icon('heroicon-o-plus'),
                 Action::make('upload_multiple')
-                    ->label('Upload Multiple')
+                    ->label(__('admin.gallery.upload_photos'))
                     ->url(fn ($livewire) => PhotoGalleryResource::getUrl('upload-photos', ['record' => $livewire->getOwnerRecord()->id]))
                     ->icon('heroicon-o-arrow-up-tray'),
             ])
@@ -94,7 +94,7 @@ class PhotosRelationManager extends RelationManager
                 EditAction::make(),
                 DeleteAction::make(),
                 Action::make('set_as_cover')
-                    ->label('Set as Cover')
+                    ->label(__('admin.photo.set_as_cover'))
                     ->icon('heroicon-o-star')
                     ->action(function ($record, $livewire) {
                         $livewire->getOwnerRecord()->update(['cover_photo_id' => $record->id]);
@@ -104,11 +104,11 @@ class PhotosRelationManager extends RelationManager
                 BulkActionGroup::make([
                     DeleteBulkAction::make(),
                     BulkAction::make('move_to_section')
-                        ->label('Move to Section')
+                        ->label(__('admin.photo.move_to_section'))
                         ->icon('heroicon-o-folder')
                         ->form([
                             Select::make('photo_section_id')
-                                ->label('Section')
+                                ->label(__('admin.common.section'))
                                 ->required()
                                 ->options(fn ($livewire) => PhotoSection::where('photo_gallery_id', $livewire->getOwnerRecord()->id)->pluck('name', 'id')),
                         ])

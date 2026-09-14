@@ -98,7 +98,7 @@ class UniversLayout extends Page
 
                 return [
                     ...$item,
-                    'title' => $image->title ?: 'Untitled image',
+                    'title' => $image->title ?: __('admin.univers.untitled_image'),
                     'status' => str_replace('_', ' ', $image->processing_status),
                     'source' => URL::temporarySignedRoute('univers.source', now()->addMinutes(10), $image),
                     'focal_x' => (float) ($image->focal_x ?? 0.5),
@@ -145,7 +145,7 @@ class UniversLayout extends Page
         $presetItems = UniversLayoutPresets::all()[$preset]['items'];
 
         if (count($univers) !== count($presetItems)) {
-            Notification::make()->title('This preset needs a different number of images.')->warning()->send();
+            Notification::make()->title(__('admin.univers.preset_needs_different_count'))->warning()->send();
 
             return;
         }
@@ -194,12 +194,12 @@ class UniversLayout extends Page
     /** @param list<int|string> $universIds */
     public function reorderGeneric(array $universIds): void
     {
-        abort_unless($this->mode === 'generic', 422, 'Generic order is not active.');
+        abort_unless($this->mode === 'generic', 422, __('admin.univers.generic_not_active'));
 
         $validIds = Univers::query()->whereKey($universIds)->pluck('id')->all();
         $universIds = collect($universIds)->map(fn (mixed $id): int => (int) $id)->unique()->values()->all();
 
-        abort_unless(count($universIds) === count($validIds) && count($universIds) === Univers::count(), 422, 'Invalid Univers order.');
+        abort_unless(count($universIds) === count($validIds) && count($universIds) === Univers::count(), 422, __('admin.univers.invalid_univers_order'));
 
         $univers = Univers::query()->whereKey($universIds)->get()->keyBy('id');
         $ordered = collect($universIds)->map(fn (int $id): Univers => $univers->get($id));
@@ -210,12 +210,12 @@ class UniversLayout extends Page
 
     public function swapPresetItems(int $firstUniversId, int $secondUniversId): void
     {
-        abort_unless($this->mode === 'preset', 422, 'Preset slots cannot be moved.');
+        abort_unless($this->mode === 'preset', 422, __('admin.univers.preset_slots_cannot_move'));
 
         $first = collect($this->layoutItems)->search(fn (array $item): bool => (int) $item['univers_id'] === $firstUniversId);
         $second = collect($this->layoutItems)->search(fn (array $item): bool => (int) $item['univers_id'] === $secondUniversId);
 
-        abort_unless($first !== false && $second !== false, 422, 'Invalid Univers layout items.');
+        abort_unless($first !== false && $second !== false, 422, __('admin.univers.invalid_layout_items'));
 
         [$this->layoutItems[$first]['univers_id'], $this->layoutItems[$second]['univers_id']] = [
             $this->layoutItems[$second]['univers_id'],
@@ -242,7 +242,7 @@ class UniversLayout extends Page
         abort_unless(
             count($items) === $validIds->count() && count($items) === $validIds->unique()->count(),
             422,
-            'Invalid Univers layout items.',
+            __('admin.univers.invalid_layout_items'),
         );
 
         if ($this->mode === 'custom') {
@@ -265,7 +265,7 @@ class UniversLayout extends Page
 
         $this->isDirty = false;
 
-        Notification::make()->title('Univers layout saved.')->success()->send();
+        Notification::make()->title(__('admin.univers.layout_saved'))->success()->send();
     }
 
     public function processAll(): void
@@ -275,21 +275,21 @@ class UniversLayout extends Page
             GenerateUniversDerivatives::dispatch($univers);
         });
 
-        Notification::make()->title('Univers images queued for processing.')->success()->send();
+        Notification::make()->title(__('admin.univers.images_queued'))->success()->send();
     }
 
     public function process(Univers $univers): void
     {
         $univers->forceFill(['processing_status' => 'queued'])->saveQuietly();
         GenerateUniversDerivatives::dispatch($univers);
-        Notification::make()->title('Image queued for processing.')->success()->send();
+        Notification::make()->title(__('admin.univers.image_queued'))->success()->send();
     }
 
     public function reprocess(Univers $univers): void
     {
         $univers->forceFill(['processing_status' => 'queued'])->saveQuietly();
         GenerateUniversDerivatives::dispatch($univers);
-        Notification::make()->title('Image queued for reprocessing.')->success()->send();
+        Notification::make()->title(__('admin.univers.image_requeued'))->success()->send();
     }
 
     public function selectFocalPoint(int $universId): void
@@ -320,7 +320,7 @@ class UniversLayout extends Page
             'focal_y' => min(max($this->focalY, 0), 1),
         ]);
 
-        Notification::make()->title('Focal point saved.')->success()->send();
+        Notification::make()->title(__('admin.univers.focal_saved'))->success()->send();
     }
 
     /** @return array<int, Action> */
@@ -328,7 +328,7 @@ class UniversLayout extends Page
     {
         return [
             Action::make('upload')
-                ->label('Add image')
+                ->label(__('admin.univers.add_image'))
                 ->icon('heroicon-o-plus')
                 ->form([
                     FileUpload::make('path')->image()->disk('photo')->directory('univers')->required(),
@@ -338,13 +338,13 @@ class UniversLayout extends Page
                 ->action(function (array $data): void {
                     Univers::create($data);
                     $this->refreshEditorState();
-                    Notification::make()->title('Image added.')->success()->send();
+                    Notification::make()->title(__('admin.univers.image_added'))->success()->send();
                 }),
             Action::make('edit')
-                ->label('Edit image')
+                ->label(__('admin.univers.edit_image'))
                 ->icon('heroicon-o-pencil-square')
                 ->form([
-                    Select::make('univers_id')->label('Image')->options(fn (): array => Univers::query()->orderBy('position')->pluck('title', 'id')->map(fn (?string $title, int $id): string => $title ?: "Image {$id}")->all())->required(),
+                    Select::make('univers_id')->label(__('admin.univers.image'))->options(fn (): array => Univers::query()->orderBy('position')->pluck('title', 'id')->map(fn (?string $title, int $id): string => $title ?: __('admin.univers.image_number', ['id' => $id]))->all())->required(),
                     TextInput::make('title')->maxLength(255),
                     Textarea::make('description')->maxLength(65535),
                     TextInput::make('focal_x')->numeric()->minValue(0)->maxValue(1)->step(0.01)->default(0.5),
@@ -353,7 +353,7 @@ class UniversLayout extends Page
                 ->action(function (array $data): void {
                     $univers = Univers::findOrFail($data['univers_id']);
                     $univers->update(collect($data)->except('univers_id')->filter(fn ($value): bool => $value !== null && $value !== '')->all());
-                    Notification::make()->title('Image updated.')->success()->send();
+                    Notification::make()->title(__('admin.univers.image_updated'))->success()->send();
                 }),
         ];
     }
@@ -387,7 +387,7 @@ class UniversLayout extends Page
     private function validateNoOverlap(array $items): void
     {
         foreach ($items as $index => $item) {
-            abort_if($item['x'] + $item['width'] > 12, 422, 'A tile exceeds the 12-column grid.');
+            abort_if($item['x'] + $item['width'] > 12, 422, __('admin.univers.tile_exceeds_grid'));
 
             foreach (array_slice($items, $index + 1) as $other) {
                 $overlap = $item['x'] < $other['x'] + $other['width']
@@ -395,7 +395,7 @@ class UniversLayout extends Page
                     && $item['y'] < $other['y'] + $other['height']
                     && $other['y'] < $item['y'] + $item['height'];
 
-                abort_if($overlap, 422, 'Tiles cannot overlap.');
+                abort_if($overlap, 422, __('admin.univers.tiles_cannot_overlap'));
             }
         }
     }

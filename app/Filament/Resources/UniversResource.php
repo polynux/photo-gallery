@@ -31,7 +31,7 @@ class UniversResource extends Resource
             ->components([
                 //
                 FileUpload::make('path')
-                    ->label('Fichier')
+                    ->label(__('admin.univers.file'))
                     ->required()
                     ->disk('photo')
                     ->directory('univers')
@@ -40,10 +40,10 @@ class UniversResource extends Resource
                     ->columnSpanFull(),
                 TextInput::make('title')
                     ->maxLength(255)
-                    ->label('Titre'),
+                    ->label(__('admin.univers.title')),
                 Textarea::make('description')
                     ->maxLength(65535)
-                    ->label('Description'),
+                    ->label(__('admin.univers.description')),
             ]);
     }
 
@@ -53,26 +53,26 @@ class UniversResource extends Resource
             ->defaultSort('position', 'asc')
             ->columns([
                 TextColumn::make('position')
-                    ->label('Position')
+                    ->label(__('admin.common.position'))
                     ->sortable(),
                 TextColumn::make('id')
                     ->label('ID')
                     ->sortable()
                     ->searchable(),
                 ImageColumn::make('path')
-                    ->label('Fichier')
+                    ->label(__('admin.univers.file'))
                     ->disk('photo')
                     ->circular()
                     ->searchable(),
                 TextColumn::make('title')
-                    ->label('Titre')
+                    ->label(__('admin.univers.title'))
                     ->searchable(),
                 TextColumn::make('description')
-                    ->label('Description')
+                    ->label(__('admin.univers.description'))
                     ->limit(50)
                     ->searchable(),
                 TextColumn::make('created_at')
-                    ->label('Créé le')
+                    ->label(__('admin.univers.created_at'))
                     ->dateTime()
                     ->sortable(),
             ])

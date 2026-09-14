@@ -51,12 +51,12 @@ class PhotoGalleryResource extends Resource
                     ->default(fn (): string => Str::random(12))
                     ->maxLength(255),
                 Select::make('cover_photo_id')
-                    ->label('Cover Photo')
+                    ->label(__('admin.gallery.cover_photo'))
                     ->options(fn (?PhotoGallery $record): array => $record
                         ? $record->photos()
                             ->orderBy('position')
                             ->pluck('id', 'id')
-                            ->mapWithKeys(fn (int|string $id): array => [$id => "Photo #{$id}"])
+                            ->mapWithKeys(fn (int|string $id): array => [$id => __('admin.gallery.photo_number', ['id' => $id])])
                             ->all()
                         : [])
                     ->searchable()
@@ -72,14 +72,14 @@ class PhotoGalleryResource extends Resource
                 TextColumn::make('name')
                     ->searchable(),
                 ImageColumn::make('coverPhoto.path')
-                    ->label('Cover')
+                    ->label(__('admin.gallery.cover'))
                     ->disk('photo'),
                 TextColumn::make('access_code')
                     ->copyable()
                     ->searchable(),
                 TextColumn::make('photos_count')
                     ->counts('photos')
-                    ->label('Photos'),
+                    ->label(__('admin.gallery.photos_count')),
                 TextColumn::make('created_at')
                     ->dateTime()
                     ->sortable(),
@@ -89,13 +89,13 @@ class PhotoGalleryResource extends Resource
             ])
             ->recordActions([
                 Action::make('view_gallery')
-                    ->label('View Gallery')
+                    ->label(__('admin.gallery.view_gallery'))
                     ->icon('heroicon-o-eye')
                     ->url(fn (PhotoGallery $record) => route('public.show', $record->access_code))
                     ->openUrlInNewTab(),
                 EditAction::make(),
                 Action::make('upload_photos')
-                    ->label('Upload Photos')
+                    ->label(__('admin.gallery.upload_photos'))
                     ->icon('heroicon-o-arrow-up-tray')
                     ->url(fn (PhotoGallery $record) => static::getUrl('upload-photos', ['record' => $record->id])),
             ])

@@ -13,23 +13,23 @@ class Dashboard extends BaseDashboard
     {
         return [
             Action::make('generate_thumbnails')
-                ->label('Générer les miniatures')
+                ->label(__('admin.dashboard.generate_thumbnails'))
                 ->color('warning')
                 ->action(function (ThumbnailService $thumbnails) {
                     $count = $thumbnails->queueMissing();
 
                     Notification::make()
-                        ->title('Miniatures en file d\'attente')
+                        ->title(__('admin.dashboard.queued'))
                         ->body($count > 0
-                            ? "{$count} miniatures ont été mises en file d'attente pour la génération."
-                            : 'Toutes les miniatures existent déjà.')
+                            ? trans_choice('admin.dashboard.queued_count', $count, ['count' => $count])
+                            : __('admin.dashboard.already_exist'))
                         ->success()
                         ->send();
                 })
                 ->requiresConfirmation()
-                ->modalHeading('Générer les miniatures manquantes')
-                ->modalDescription('Lancer la génération des miniatures manquantes pour toutes les galeries ? Cette opération se fera en arrière-plan.')
-                ->modalSubmitActionLabel('Lancer la génération'),
+                ->modalHeading(__('admin.dashboard.modal_heading'))
+                ->modalDescription(__('admin.dashboard.modal_description'))
+                ->modalSubmitActionLabel(__('admin.dashboard.modal_submit')),
         ];
     }
 }

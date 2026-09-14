@@ -29,26 +29,26 @@ class RecentPhotoGalleries extends BaseWidget
             )
             ->columns([
                 ImageColumn::make('coverPhoto.path')
-                    ->label('Cover')
+                    ->label(__('admin.gallery.cover'))
                     ->disk('photo'),
                 TextColumn::make('name'),
                 TextColumn::make('access_code')
                     ->copyable(),
                 TextColumn::make('photos_count')
                     ->counts('photos')
-                    ->label('Photos'),
+                    ->label(__('admin.gallery.photos_count')),
                 TextColumn::make('created_at')
                     ->dateTime()
                     ->sortable(),
             ])
             ->recordActions([
                 Action::make('view_gallery')
-                    ->label('View Gallery')
+                    ->label(__('admin.gallery.view_gallery'))
                     ->icon('heroicon-o-eye')
                     ->url(fn (PhotoGallery $record) => route('public.show', $record->access_code))
                     ->openUrlInNewTab(),
                 Action::make('manage')
-                    ->label('Manage')
+                    ->label(__('admin.gallery.manage'))
                     ->icon('heroicon-o-pencil')
                     ->url(fn (PhotoGallery $record) => PhotoGalleryResource::getUrl('edit', ['record' => $record])),
             ]);

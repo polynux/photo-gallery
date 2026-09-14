@@ -39,7 +39,7 @@ class UploadPhotos extends Page
         return $schema
             ->components([
                 Select::make('data.photo_section_id')
-                    ->label('Section')
+                    ->label(__('admin.common.section'))
                     ->options(fn (): array => $this->photoGallery->sections()
                         ->orderBy('position')
                         ->pluck('name', 'id')
@@ -47,7 +47,7 @@ class UploadPhotos extends Page
                     ->required()
                     ->preload(),
                 FileUpload::make('data.photos')
-                    ->label('Upload Photos')
+                    ->label(__('admin.photo.upload_photos'))
                     ->multiple()
                     ->image()
                     ->maxFiles(50)
@@ -56,8 +56,8 @@ class UploadPhotos extends Page
                     ->directory($this->photoGallery->id)
                     ->required(),
                 TextInput::make('data.default_alt')
-                    ->label('Default Alt Text')
-                    ->helperText('This will be applied to all uploaded photos. You can change individual alt texts later.')
+                    ->label(__('admin.photo.default_alt'))
+                    ->helperText(__('admin.common.helper_alt_bulk'))
                     ->maxLength(255),
             ]);
     }
@@ -93,9 +93,9 @@ class UploadPhotos extends Page
         ]);
 
         Notification::make()
-            ->title('Photos Uploaded')
+            ->title(__('admin.photo.uploaded'))
             ->success()
-            ->body('Photos uploaded successfully')
+            ->body(__('admin.photo.uploaded_body'))
             ->send();
     }
 

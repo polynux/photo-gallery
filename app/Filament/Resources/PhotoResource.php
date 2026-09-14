@@ -55,8 +55,8 @@ class PhotoResource extends Resource
                     ->imageEditor()
                     ->required(),
                 TextInput::make('alt')
-                    ->label('Alt Text')
-                    ->helperText('Description of the image for accessibility')
+                    ->label(__('admin.photo.alt_text'))
+                    ->helperText(__('admin.common.helper_alt_description'))
                     ->maxLength(255),
             ]);
     }
@@ -92,10 +92,10 @@ class PhotoResource extends Resource
                     ->visibility('private')
                     ->square(),
                 TextColumn::make('photoSection.name')
-                    ->label('Section')
+                    ->label(__('admin.common.section'))
                     ->sortable(),
                 TextColumn::make('position')
-                    ->label('Position')
+                    ->label(__('admin.common.position'))
                     ->sortable(),
                 TextColumn::make('alt')
                     ->searchable()
@@ -109,18 +109,18 @@ class PhotoResource extends Resource
             ->filters([
                 SelectFilter::make('photo_gallery_id')
                     ->relationship('photoGallery', 'name')
-                    ->label('Photo Gallery')
+                    ->label(__('admin.photo.photo_gallery'))
                     ->preload(),
                 SelectFilter::make('photo_section_id')
                     ->relationship('photoSection', 'name')
-                    ->label('Section')
+                    ->label(__('admin.common.section'))
                     ->preload(),
             ])
             ->recordActions([
                 EditAction::make(),
                 DeleteAction::make(),
                 Action::make('set_as_cover')
-                    ->label('Set as Cover')
+                    ->label(__('admin.photo.set_as_cover'))
                     ->icon('heroicon-o-star')
                     ->action(function (Photo $record) {
                         $record->photoGallery->update(['cover_photo_id' => $record->id]);
@@ -130,11 +130,11 @@ class PhotoResource extends Resource
                 BulkActionGroup::make([
                     DeleteBulkAction::make(),
                     BulkAction::make('move_to_section')
-                        ->label('Move to Section')
+                        ->label(__('admin.photo.move_to_section'))
                         ->icon('heroicon-o-folder')
                         ->form([
                             Select::make('photo_section_id')
-                                ->label('Section')
+                                ->label(__('admin.common.section'))
                                 ->required()
                                 ->options(function () {
                                     $galleryId = request()->get('photo_gallery_id');

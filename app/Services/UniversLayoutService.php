@@ -53,8 +53,8 @@ class UniversLayoutService
             'preset' => null,
             'items' => $this->genericItems($univers),
             'notice' => match ($mode) {
-                'preset' => 'This photo count has no matching preset. Custom layout is recommended.',
-                'custom' => 'The saved custom layout is invalid. Images are shown in generic order instead.',
+                'preset' => __('admin.univers.notice_no_matching_preset'),
+                'custom' => __('admin.univers.notice_invalid_custom_layout'),
                 default => null,
             },
         ];

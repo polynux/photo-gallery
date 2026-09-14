@@ -29,36 +29,36 @@ class EditPhotoGallery extends EditRecord
     {
         return [
             Action::make('view_gallery')
-                ->label('View Gallery')
+                ->label(__('admin.gallery.view_gallery'))
                 ->icon('heroicon-o-eye')
                 ->url(fn () => route('public.show', $this->record->access_code))
                 ->openUrlInNewTab(),
             Action::make('manage_sections')
-                ->label('Manage Sections')
+                ->label(__('admin.gallery.manage_sections'))
                 ->icon('heroicon-o-folder')
                 ->url(fn () => PhotoGalleryResource::getUrl('sections', ['record' => $this->record->id])),
             Action::make('manage_photos')
-                ->label('Manage Photos')
+                ->label(__('admin.gallery.manage_photos'))
                 ->icon('heroicon-o-photo')
                 ->url(fn () => PhotoResource::getUrl('index', ['photo_gallery_id' => $this->record->id])),
             Action::make('generate_thumbnails')
-                ->label('Generate Thumbnails')
+                ->label(__('admin.gallery.generate_thumbnails'))
                 ->icon('heroicon-o-photo')
                 ->color('warning')
                 ->action(function (ThumbnailService $thumbnails) {
                     $count = $thumbnails->queueMissing($this->record->id);
 
                     Notification::make()
-                        ->title('Miniatures en file d\'attente')
+                        ->title(__('admin.dashboard.queued'))
                         ->body($count > 0
-                            ? "{$count} miniatures ont été mises en file d'attente pour la génération."
-                            : 'Toutes les miniatures existent déjà pour cette galerie.')
+                            ? trans_choice('admin.dashboard.queued_count', $count, ['count' => $count])
+                            : __('admin.dashboard.already_exist_gallery'))
                         ->success()
                         ->send();
                 })
                 ->requiresConfirmation()
-                ->modalHeading('Générer les miniatures')
-                ->modalDescription(fn () => "Générer les miniatures manquantes pour la galerie \"{$this->record->name}\" ?"),
+                ->modalHeading(__('admin.dashboard.edit_modal_heading'))
+                ->modalDescription(fn () => __('admin.dashboard.edit_modal_description', ['name' => $this->record->name])),
             DeleteAction::make(),
         ];
     }

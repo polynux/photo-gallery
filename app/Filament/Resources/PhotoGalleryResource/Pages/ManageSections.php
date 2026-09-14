@@ -44,18 +44,18 @@ class ManageSections extends Page implements HasTable
             )
             ->columns([
                 TextColumn::make('position')
-                    ->label('Position')
+                    ->label(__('admin.common.position'))
                     ->sortable(),
                 TextColumn::make('name')
-                    ->label('Section Name')
+                    ->label(__('admin.common.section_name'))
                     ->searchable()
                     ->sortable(),
                 TextColumn::make('photos_count')
-                    ->label('Photos')
+                    ->label(__('admin.common.photos'))
                     ->counts('photos')
                     ->sortable(),
                 IconColumn::make('is_default')
-                    ->label('Default')
+                    ->label(__('admin.sections.default'))
                     ->boolean()
                     ->trueIcon('heroicon-o-check-circle')
                     ->falseIcon('heroicon-o-x-circle'),
@@ -64,7 +64,7 @@ class ManageSections extends Page implements HasTable
             ->defaultSort('position', 'asc')
             ->recordActions([
                 HeaderAction::make('manage_photos')
-                    ->label('Manage Photos')
+                    ->label(__('admin.gallery.manage_photos'))
                     ->icon('heroicon-o-photo')
                     ->url(fn (PhotoSection $record): string => PhotoResource::getUrl('index', [
                         'photo_gallery_id' => $this->record,
@@ -75,10 +75,10 @@ class ManageSections extends Page implements HasTable
                         TextInput::make('name')
                             ->required()
                             ->maxLength(255)
-                            ->label('Section Name'),
+                            ->label(__('admin.common.section_name')),
                     ])
-                    ->modalHeading('Edit Section')
-                    ->modalButton('Save')
+                    ->modalHeading(__('admin.sections.edit_modal_heading'))
+                    ->modalButton(__('admin.common.save'))
                     ->visible(fn (PhotoSection $record): bool => ! $record->is_default),
                 DeleteAction::make()
                     ->visible(fn (PhotoSection $record): bool => ! $record->is_default)
@@ -94,14 +94,14 @@ class ManageSections extends Page implements HasTable
             ])
             ->headerActions([
                 CreateAction::make()
-                    ->label('Create Section')
-                    ->modalHeading('Create New Section')
-                    ->modalButton('Create')
+                    ->label(__('admin.sections.create_section'))
+                    ->modalHeading(__('admin.sections.create_modal_heading'))
+                    ->modalButton(__('admin.common.create'))
                     ->schema([
                         TextInput::make('name')
                             ->required()
                             ->maxLength(255)
-                            ->label('Section Name'),
+                            ->label(__('admin.common.section_name')),
                     ])
                     ->mutateDataUsing(function (array $data): array {
                         $data['photo_gallery_id'] = $this->record;
@@ -112,13 +112,13 @@ class ManageSections extends Page implements HasTable
                     })
                     ->successNotification(
                         Notification::make()
-                            ->title('Section Created')
+                            ->title(__('admin.sections.created'))
                             ->success()
-                            ->body('The section has been created successfully.')
+                            ->body(__('admin.sections.created_body'))
                     ),
             ])
-            ->emptyStateHeading('No sections found')
-            ->emptyStateDescription('Create a section to organize your photos.')
+            ->emptyStateHeading(__('admin.sections.empty_heading'))
+            ->emptyStateDescription(__('admin.sections.empty_description'))
             ->emptyStateIcon('heroicon-o-folder');
     }
 
@@ -126,14 +126,14 @@ class ManageSections extends Page implements HasTable
     {
         $gallery = PhotoGallery::find($this->record);
 
-        return "Manage Sections - {$gallery?->name}";
+        return __('admin.gallery.manage_sections_title', ['name' => $gallery?->name]);
     }
 
     protected function getHeaderActions(): array
     {
         return [
             HeaderAction::make('back_to_gallery')
-                ->label('Back to Gallery')
+                ->label(__('admin.sections.back_to_gallery'))
                 ->icon('heroicon-o-arrow-left')
                 ->url(fn (): string => PhotoGalleryResource::getUrl('edit', ['record' => $this->record])),
         ];
