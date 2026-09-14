@@ -126,7 +126,7 @@
                             <img src="{{ URL::temporarySignedRoute('univers.source', now()->addMinutes(10), $univers) }}" alt="" class="block h-12 w-12 shrink-0 rounded object-cover">
                             <div class="min-w-0 flex-1">
                                 <div class="truncate text-sm font-medium">{{ $univers->title ?: __('admin.univers.untitled_image') }}</div>
-                                <div class="text-xs text-gray-500">{{ str_replace('_', ' ', $univers->processing_status) }}</div>
+                                <div class="text-xs text-gray-500">{{ __('admin.univers.status_'.$univers->processing_status) }}</div>
                             </div>
                             @if (in_array($univers->processing_status, ['unprocessed', 'failed', 'partially_processed'], true))
                                 <x-filament::icon-button icon="heroicon-o-arrow-path" wire:click="process({{ $univers->id }})" label="{{ __('admin.layout.process_image') }}" />

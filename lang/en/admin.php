@@ -8,6 +8,8 @@ return [
         'created_at' => 'Created at',
         'file' => 'File',
         'title' => 'Title',
+        'path' => 'Path',
+        'alt' => 'Alt',
         'save' => 'Save',
         'create' => 'Create',
         'back' => 'Back',
@@ -45,9 +47,15 @@ return [
         'generate_thumbnails' => 'Generate Thumbnails',
         'manage' => 'Manage',
         'access_code' => 'Access code',
+        'password' => 'Password',
         'photos_count' => 'Photos',
         'photo_number' => 'Photo #:id',
         'manage_sections_title' => 'Manage Sections - :name',
+        'page_title_index' => 'Photo galleries',
+        'page_title_create' => 'Create photo gallery',
+        'page_title_edit' => 'Edit photo gallery',
+        'page_title_sections' => 'Manage sections',
+        'page_title_upload_photos' => 'Upload photos',
     ],
 
     'photo' => [
@@ -55,6 +63,7 @@ return [
         'model_label' => 'Photo',
         'plural_model_label' => 'Photos',
         'alt_text' => 'Alt Text',
+        'path' => 'Path',
         'photo_gallery' => 'Photo Gallery',
         'set_as_cover' => 'Set as Cover',
         'move_to_section' => 'Move to Section',
@@ -62,6 +71,10 @@ return [
         'uploaded_body' => 'Photos uploaded successfully',
         'upload_photos' => 'Upload Photos',
         'default_alt' => 'Default Alt Text',
+        'page_title_index' => 'Photos',
+        'page_title_create' => 'Create photo',
+        'page_title_edit' => 'Edit photo',
+        'page_title_upload_photos' => 'Upload photos',
     ],
 
     'sections' => [
@@ -117,6 +130,12 @@ return [
         'preset_legacy' => '{1} Legacy :count image|[2,*] Legacy :count images',
         'preset_variation' => '{1} Variation :count image|[2,*] Variation :count images',
         'preset_square_variation' => '{1} Square variation :count image|[2,*] Square variation :count images',
+        'status_unprocessed' => 'Unprocessed',
+        'status_queued' => 'Queued',
+        'status_processing' => 'Processing',
+        'status_processed' => 'Processed',
+        'status_failed' => 'Failed',
+        'status_partially_processed' => 'Partially processed',
     ],
 
     'layout' => [

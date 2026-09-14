@@ -14,6 +14,11 @@ class EditPhotoGallery extends EditRecord
 {
     protected static string $resource = PhotoGalleryResource::class;
 
+    public function getTitle(): string
+    {
+        return __('admin.gallery.page_title_edit');
+    }
+
     /**
      * @param  array<string, mixed>  $data
      * @return array<string, mixed>

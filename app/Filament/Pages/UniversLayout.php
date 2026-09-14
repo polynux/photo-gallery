@@ -19,13 +19,14 @@ use Illuminate\Support\Facades\URL;
 
 class UniversLayout extends Page
 {
-    protected static string|BackedEnum|null $navigationIcon = 'heroicon-o-squares-2x2';
-
-    protected static ?string $navigationLabel = 'Univers Layout';
-
-    protected static ?string $title = 'Univers Layout';
+    protected static string|BackedEnum|null $navigationIcon = 'heroicon-o-table-cells';
 
     protected static ?int $navigationSort = 2;
+
+    public function getTitle(): string
+    {
+        return __('admin.univers.navigation_label');
+    }
 
     public string $mode = 'generic';
 

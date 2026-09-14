@@ -126,7 +126,7 @@ class ManageSections extends Page implements HasTable
     {
         $gallery = PhotoGallery::find($this->record);
 
-        return __('admin.gallery.manage_sections_title', ['name' => $gallery?->name]);
+        return __('admin.gallery.page_title_sections').' - '.$gallery?->name;
     }
 
     protected function getHeaderActions(): array

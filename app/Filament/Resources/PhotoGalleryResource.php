@@ -31,6 +31,21 @@ class PhotoGalleryResource extends Resource
 
     protected static string|BackedEnum|null $navigationIcon = 'heroicon-o-camera';
 
+    public static function getNavigationLabel(): string
+    {
+        return __('admin.gallery.navigation_label');
+    }
+
+    public static function getModelLabel(): string
+    {
+        return __('admin.gallery.model_label');
+    }
+
+    public static function getPluralModelLabel(): string
+    {
+        return __('admin.gallery.plural_model_label');
+    }
+
     public static function getEloquentQuery(): Builder
     {
         return parent::getEloquentQuery()->with('coverPhoto');
@@ -41,12 +56,15 @@ class PhotoGalleryResource extends Resource
         return $schema
             ->components([
                 TextInput::make('name')
+                    ->label(__('admin.common.name'))
                     ->required()
                     ->maxLength(255),
                 Textarea::make('description')
+                    ->label(__('admin.common.description'))
                     ->maxLength(65535)
                     ->columnSpanFull(),
                 TextInput::make('password')
+                    ->label(__('admin.gallery.password'))
                     ->required(fn (string $operation): bool => $operation === 'create')
                     ->default(fn (): string => Str::random(12))
                     ->maxLength(255),
@@ -70,17 +88,20 @@ class PhotoGalleryResource extends Resource
         return $table
             ->columns([
                 TextColumn::make('name')
+                    ->label(__('admin.common.name'))
                     ->searchable(),
                 ImageColumn::make('coverPhoto.path')
                     ->label(__('admin.gallery.cover'))
                     ->disk('photo'),
                 TextColumn::make('access_code')
+                    ->label(__('admin.gallery.access_code'))
                     ->copyable()
                     ->searchable(),
                 TextColumn::make('photos_count')
                     ->counts('photos')
                     ->label(__('admin.gallery.photos_count')),
                 TextColumn::make('created_at')
+                    ->label(__('admin.common.created_at'))
                     ->dateTime()
                     ->sortable(),
             ])

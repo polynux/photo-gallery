@@ -24,6 +24,11 @@ class UploadPhotos extends Page
 
     protected string $view = 'filament.resources.photo-resource.pages.upload-photos';
 
+    public function getTitle(): string
+    {
+        return __('admin.photo.page_title_upload_photos');
+    }
+
     public function mount(PhotoGallery $record): void
     {
         $this->photoGallery = $record;

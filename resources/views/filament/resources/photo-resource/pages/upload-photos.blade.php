@@ -3,7 +3,7 @@
         {{ $this->form }}
 
         <x-filament::button type="submit" class="mt-4">
-            Upload Photos
+            {{ __('admin.photo.upload_photos') }}
         </x-filament::button>
     </form>
 

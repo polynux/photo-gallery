@@ -25,6 +25,21 @@ class UniversResource extends Resource
 
     protected static string|BackedEnum|null $navigationIcon = 'heroicon-o-table-cells';
 
+    public static function getNavigationLabel(): string
+    {
+        return __('admin.univers.navigation_label');
+    }
+
+    public static function getModelLabel(): string
+    {
+        return __('admin.univers.model_label');
+    }
+
+    public static function getPluralModelLabel(): string
+    {
+        return __('admin.univers.plural_model_label');
+    }
+
     public static function form(Schema $schema): Schema
     {
         return $schema

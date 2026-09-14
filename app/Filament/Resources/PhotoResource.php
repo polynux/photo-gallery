@@ -34,6 +34,21 @@ class PhotoResource extends Resource
 
     protected static string|BackedEnum|null $navigationIcon = 'heroicon-o-photo';
 
+    public static function getNavigationLabel(): string
+    {
+        return __('admin.photo.navigation_label');
+    }
+
+    public static function getModelLabel(): string
+    {
+        return __('admin.photo.model_label');
+    }
+
+    public static function getPluralModelLabel(): string
+    {
+        return __('admin.photo.plural_model_label');
+    }
+
     public static function form(Schema $schema): Schema
     {
         return $schema
@@ -48,6 +63,7 @@ class PhotoResource extends Resource
                     ->required()
                     ->label('Section'),
                 FileUpload::make('path')
+                    ->label(__('admin.common.path'))
                     ->disk('photo')
                     ->directory(fn (Get $get): ?string => $get('photo_gallery_id'))
                     ->visibility('private')
@@ -98,9 +114,11 @@ class PhotoResource extends Resource
                     ->label(__('admin.common.position'))
                     ->sortable(),
                 TextColumn::make('alt')
+                    ->label(__('admin.common.alt'))
                     ->searchable()
                     ->limit(30),
                 TextColumn::make('created_at')
+                    ->label(__('admin.common.created_at'))
                     ->dateTime()
                     ->sortable()
                     ->toggleable(isToggledHiddenByDefault: true),

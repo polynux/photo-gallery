@@ -36,6 +36,7 @@ class PhotosRelationManager extends RelationManager
                     ->required()
                     ->default(fn () => PhotoSection::where('photo_gallery_id', $this->ownerRecord->id)->where('is_default', true)->first()?->id),
                 FileUpload::make('path')
+                    ->label(__('admin.common.path'))
                     ->disk('photo')
                     ->directory($this->ownerRecord->id)
                     ->visibility('private')
@@ -43,6 +44,7 @@ class PhotosRelationManager extends RelationManager
                     ->image()
                     ->imageEditor(),
                 TextInput::make('alt')
+                    ->label(__('admin.common.alt'))
                     ->maxLength(255),
             ]);
     }
@@ -64,6 +66,7 @@ class PhotosRelationManager extends RelationManager
                     ->badge()
                     ->sortable(),
                 TextColumn::make('alt')
+                    ->label(__('admin.common.alt'))
                     ->limit(30),
             ])
             ->reorderable('position')

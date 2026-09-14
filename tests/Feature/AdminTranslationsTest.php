@@ -1,5 +1,8 @@
 <?php
 
+use App\Filament\Resources\PhotoGalleryResource;
+use App\Filament\Resources\PhotoResource;
+use App\Filament\Resources\UniversResource;
 use App\Models\User;
 
 beforeEach(function () {
@@ -44,6 +47,25 @@ test('admin panel renders translated labels in the application locale', function
     expect(__('admin.gallery.upload_photos'))->toBe('Téléverser des photos');
     expect(__('admin.univers.file'))->toBe('Fichier');
     expect(__('admin.gallery.manage_sections'))->toBe('Gérer les sections');
+});
+
+test('every univers processing status has a translation', function () {
+    app()->setLocale('fr');
+
+    collect(['unprocessed', 'queued', 'processing', 'processed', 'failed', 'partially_processed'])
+        ->each(function (string $status): void {
+            expect(__("admin.univers.status_{$status}"))->not->toBe("admin.univers.status_{$status}");
+        });
+});
+
+test('resources resolve model and navigation labels in french', function () {
+    app()->setLocale('fr');
+
+    expect(PhotoGalleryResource::getNavigationLabel())->toBe('Galeries photo');
+    expect(PhotoGalleryResource::getModelLabel())->toBe('Galerie photo');
+    expect(PhotoResource::getNavigationLabel())->toBe('Photos');
+    expect(UniversResource::getNavigationLabel())->toBe('Univers');
+    expect(__('admin.layout.presets'))->toBe('Modèles prédéfinis');
 });
 
 test('english translations resolve for every french value key', function () {

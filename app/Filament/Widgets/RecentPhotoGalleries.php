@@ -31,13 +31,16 @@ class RecentPhotoGalleries extends BaseWidget
                 ImageColumn::make('coverPhoto.path')
                     ->label(__('admin.gallery.cover'))
                     ->disk('photo'),
-                TextColumn::make('name'),
+                TextColumn::make('name')
+                    ->label(__('admin.common.name')),
                 TextColumn::make('access_code')
+                    ->label(__('admin.gallery.access_code'))
                     ->copyable(),
                 TextColumn::make('photos_count')
                     ->counts('photos')
                     ->label(__('admin.gallery.photos_count')),
                 TextColumn::make('created_at')
+                    ->label(__('admin.common.created_at'))
                     ->dateTime()
                     ->sortable(),
             ])
