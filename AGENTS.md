@@ -291,6 +291,15 @@ Valid types: `feat`, `fix`, `docs`, `style`, `refactor`, `test`, `chore`
 
 Plane project: Pinaton Photos
 
+### Issue Lifecycle Rules
+
+- **Commit before Done**: never move a Plane issue to Done while its code changes
+  are uncommitted. First commit the work (staging files individually per the Git
+  Safety Guidelines), then move the issue to Done and add a closing comment
+  referencing the commit hash.
+- If an issue was marked Done before committing, move it back to In Progress
+  with an explanatory comment, commit, then re-close it with the commit reference.
+
 ===
 
 <laravel-boost-guidelines>
