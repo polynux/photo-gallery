@@ -120,6 +120,14 @@ function initSlideshow(sections) {
     document.getElementById('next-btn').addEventListener('click', nextSlide);
     document.getElementById('prev-btn').addEventListener('click', prevSlide);
 
+    modal.addEventListener('click', (e) => {
+        if (e.target.closest('#slideshow-container') || e.target.closest('button')) {
+            return;
+        }
+
+        closeSlideshow();
+    });
+
     document.querySelectorAll('.js-slideshow-item').forEach(item => {
         item.addEventListener('click', () => {
             openSlideshow(Number(item.dataset.sectionId), Number(item.dataset.photoIndex));

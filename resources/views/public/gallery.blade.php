@@ -240,7 +240,7 @@
 
         <!-- Slideshow Modal -->
         <div id="slideshow-modal"
-            class="slideshow-modal fixed inset-0 bg-black bg-opacity-90 z-50 flex items-center justify-center">
+            class="slideshow-modal fixed inset-0 bg-black/80 z-50 flex items-center justify-center">
             <button id="close-slideshow"
                 class="absolute top-4 right-4 text-white text-4xl cursor-pointer hover:text-gray-300">
                 <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.5"
