@@ -32,6 +32,8 @@ return [
         'modal_submit' => 'Lancer la génération',
         'edit_modal_heading' => 'Générer les miniatures',
         'edit_modal_description' => 'Générer les miniatures manquantes pour la galerie « :name » ?',
+        'force_label' => 'Régénérer toutes les miniatures',
+        'force_helper' => 'Supprime les miniatures et images d\'affichage existantes, puis les régénère toutes (WebP). À utiliser après un changement de taille ou de format.',
     ],
 
     'gallery' => [

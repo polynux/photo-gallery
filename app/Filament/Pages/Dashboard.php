@@ -4,6 +4,7 @@ namespace App\Filament\Pages;
 
 use App\Services\ThumbnailService;
 use Filament\Actions\Action;
+use Filament\Forms\Components\Toggle;
 use Filament\Notifications\Notification;
 use Filament\Pages\Dashboard as BaseDashboard;
 
@@ -15,8 +16,17 @@ class Dashboard extends BaseDashboard
             Action::make('generate_thumbnails')
                 ->label(__('admin.dashboard.generate_thumbnails'))
                 ->color('warning')
-                ->action(function (ThumbnailService $thumbnails) {
-                    $count = $thumbnails->queueMissing();
+                ->form([
+                    Toggle::make('force')
+                        ->label(__('admin.dashboard.force_label'))
+                        ->helperText(__('admin.dashboard.force_helper'))
+                        ->default(false)
+                        ->live(),
+                ])
+                ->action(function (ThumbnailService $thumbnails, array $data) {
+                    $count = $data['force'] ?? false
+                        ? $thumbnails->queueAll()
+                        : $thumbnails->queueMissing();
 
                     Notification::make()
                         ->title(__('admin.dashboard.queued'))

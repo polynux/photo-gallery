@@ -32,6 +32,8 @@ return [
         'modal_submit' => 'Start generation',
         'edit_modal_heading' => 'Generate thumbnails',
         'edit_modal_description' => 'Generate the missing thumbnails for the gallery ":name"?',
+        'force_label' => 'Regenerate all thumbnails',
+        'force_helper' => 'Deletes existing thumbnails and display images, then regenerates them all (WebP). Use after a size or format change.',
     ],
 
     'gallery' => [

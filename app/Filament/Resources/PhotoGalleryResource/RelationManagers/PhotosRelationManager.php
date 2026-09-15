@@ -3,6 +3,7 @@
 namespace App\Filament\Resources\PhotoGalleryResource\RelationManagers;
 
 use App\Filament\Resources\PhotoGalleryResource;
+use App\Models\Photo;
 use App\Models\PhotoSection;
 use App\Services\PhotoPositionService;
 use Filament\Actions\Action;
@@ -59,8 +60,11 @@ class PhotosRelationManager extends RelationManager
                     ->label('#')
                     ->sortable(),
                 ImageColumn::make('path')
-                    ->disk('thumbnails')
-                    ->visibility('private'),
+                    ->state(fn (Photo $record): string => route('thumbnails.show', [
+                        'gallery' => $record->photo_gallery_id,
+                        'photo' => basename($record->path),
+                    ]))
+                    ->checkFileExistence(false),
                 TextColumn::make('photoSection.name')
                     ->label(__('admin.common.section'))
                     ->badge()

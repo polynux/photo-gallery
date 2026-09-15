@@ -104,8 +104,11 @@ class PhotoResource extends Resource
             ->defaultSort('position', 'asc')
             ->columns([
                 ImageColumn::make('path')
-                    ->disk('thumbnails')
-                    ->visibility('private')
+                    ->state(fn (Photo $record): string => route('thumbnails.show', [
+                        'gallery' => $record->photo_gallery_id,
+                        'photo' => basename($record->path),
+                    ]))
+                    ->checkFileExistence(false)
                     ->square(),
                 TextColumn::make('photoSection.name')
                     ->label(__('admin.common.section'))

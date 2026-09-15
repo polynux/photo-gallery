@@ -7,6 +7,7 @@ use App\Filament\Resources\PhotoResource;
 use App\Services\ThumbnailService;
 use Filament\Actions\Action;
 use Filament\Actions\DeleteAction;
+use Filament\Forms\Components\Toggle;
 use Filament\Notifications\Notification;
 use Filament\Resources\Pages\EditRecord;
 
@@ -50,8 +51,17 @@ class EditPhotoGallery extends EditRecord
                 ->label(__('admin.gallery.generate_thumbnails'))
                 ->icon('heroicon-o-photo')
                 ->color('warning')
-                ->action(function (ThumbnailService $thumbnails) {
-                    $count = $thumbnails->queueMissing($this->record->id);
+                ->form([
+                    Toggle::make('force')
+                        ->label(__('admin.dashboard.force_label'))
+                        ->helperText(__('admin.dashboard.force_helper'))
+                        ->default(false)
+                        ->live(),
+                ])
+                ->action(function (ThumbnailService $thumbnails, array $data) {
+                    $count = $data['force'] ?? false
+                        ? $thumbnails->queueAll($this->record->id)
+                        : $thumbnails->queueMissing($this->record->id);
 
                     Notification::make()
                         ->title(__('admin.dashboard.queued'))
@@ -63,7 +73,8 @@ class EditPhotoGallery extends EditRecord
                 })
                 ->requiresConfirmation()
                 ->modalHeading(__('admin.dashboard.edit_modal_heading'))
-                ->modalDescription(fn () => __('admin.dashboard.edit_modal_description', ['name' => $this->record->name])),
+                ->modalDescription(fn () => __('admin.dashboard.edit_modal_description', ['name' => $this->record->name]))
+                ->modalSubmitActionLabel(__('admin.dashboard.modal_submit')),
             DeleteAction::make(),
         ];
     }
