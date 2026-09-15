@@ -5,9 +5,10 @@ use App\Filament\Resources\PhotoGalleryResource;
 use App\Filament\Resources\PhotoResource;
 use App\Filament\Resources\UniversResource;
 use App\Models\User;
+use Filament\Facades\Filament;
 
 beforeEach(function () {
-    Filament\Facades\Filament::setCurrentPanel(Filament\Facades\Filament::getPanel('admin'));
+    Filament::setCurrentPanel(Filament::getPanel('admin'));
     $this->actingAs(User::factory()->create(['email' => 'admin@example.com']));
 });
 
