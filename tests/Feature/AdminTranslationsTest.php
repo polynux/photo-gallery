@@ -41,7 +41,7 @@ test('english and french admin translations have identical key sets', function (
 test('admin panel renders translated labels in the application locale', function () {
     app()->setLocale('fr');
 
-    $response = $this->get('/'.config('admin.path').'/photo-galleries');
+    $response = $this->get('/' . config('admin.path') . '/photo-galleries');
 
     $response->assertSuccessful();
 

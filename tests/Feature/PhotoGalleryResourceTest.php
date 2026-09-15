@@ -48,11 +48,11 @@ test('listing table resolves a cover image url from the photo disk', function ()
         'access_code' => 'COVERURL',
     ]);
     $section = $gallery->sections()->where('is_default', true)->firstOrFail();
-    Storage::disk('photo')->put($gallery->id.'/cover.jpg', 'cover-content');
+    Storage::disk('photo')->put($gallery->id . '/cover.jpg', 'cover-content');
     $photo = Photo::create([
         'photo_gallery_id' => $gallery->id,
         'photo_section_id' => $section->id,
-        'path' => $gallery->id.'/cover.jpg',
+        'path' => $gallery->id . '/cover.jpg',
         'position' => 1,
     ]);
     $gallery->update(['cover_photo_id' => $photo->id]);
@@ -65,7 +65,7 @@ test('listing table resolves a cover image url from the photo disk', function ()
 
     $imageUrl = $column->getImageUrl($gallery->coverPhoto->path);
 
-    expect($imageUrl)->toContain($gallery->id.'/cover.jpg');
+    expect($imageUrl)->toContain($gallery->id . '/cover.jpg');
 });
 
 test('create form is pre-filled with a random 12 character password', function () {

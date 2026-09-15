@@ -16,7 +16,7 @@ test('univers preview url points to the signed source route', function () {
 
     $url = $univers->preview_url;
 
-    expect($url)->toContain('/univers/'.$univers->id.'/source?')
+    expect($url)->toContain('/univers/' . $univers->id . '/source?')
         ->and($url)->toContain('expires=')
         ->and($url)->toContain('signature=');
 });
@@ -38,7 +38,7 @@ test('the univers listing renders image previews from the signed source url', fu
         'path' => 'univers/source.jpg',
     ]));
 
-    $this->get('/'.config('admin.path').'/univers')
+    $this->get('/' . config('admin.path') . '/univers')
         ->assertSuccessful()
-        ->assertSee('/univers/'.$univers->id.'/source?', false);
+        ->assertSee('/univers/' . $univers->id . '/source?', false);
 });

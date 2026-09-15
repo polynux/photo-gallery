@@ -23,16 +23,6 @@ class UniversLayout extends Page
 
     protected static ?int $navigationSort = 2;
 
-    public function getTitle(): string
-    {
-        return __('admin.univers.layout_navigation_label');
-    }
-
-    public static function getNavigationLabel(): string
-    {
-        return __('admin.univers.layout_navigation_label');
-    }
-
     public string $mode = 'generic';
 
     public ?string $preset = null;
@@ -51,6 +41,16 @@ class UniversLayout extends Page
     public float $focalY = 0.5;
 
     protected string $view = 'filament.pages.univers-layout';
+
+    public static function getNavigationLabel(): string
+    {
+        return __('admin.univers.layout_navigation_label');
+    }
+
+    public function getTitle(): string
+    {
+        return __('admin.univers.layout_navigation_label');
+    }
 
     public function mount(UniversLayoutService $layouts): void
     {
@@ -105,7 +105,7 @@ class UniversLayout extends Page
                 return [
                     ...$item,
                     'title' => $image->title ?: __('admin.univers.untitled_image'),
-                    'status' => __('admin.univers.status_'.$image->processing_status),
+                    'status' => __('admin.univers.status_' . $image->processing_status),
                     'source' => URL::temporarySignedRoute('univers.source', now()->addMinutes(10), $image),
                     'focal_x' => (float) ($image->focal_x ?? 0.5),
                     'focal_y' => (float) ($image->focal_y ?? 0.5),

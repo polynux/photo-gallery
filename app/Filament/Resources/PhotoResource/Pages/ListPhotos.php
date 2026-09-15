@@ -13,12 +13,12 @@ class ListPhotos extends ListRecords
 
     public ?string $photo_gallery_id = null;
 
+    public ?string $photo_section_id = null;
+
     public function getTitle(): string
     {
         return __('admin.photo.page_title_index');
     }
-
-    public ?string $photo_section_id = null;
 
     public function mount(): void
     {
