@@ -23,6 +23,27 @@
             break-inside: avoid;
             margin-bottom: 1.5rem;
         }
+        .masonry-item.selected {
+            outline: 3px solid #111827;
+            outline-offset: 2px;
+        }
+        .photo-select-checkbox {
+            opacity: 1;
+            background: radial-gradient(circle, rgba(0, 0, 0, 0.45) 40%, rgba(0, 0, 0, 0) 75%);
+            transition: opacity 0.2s ease, filter 0.2s ease;
+        }
+        .photo-select-checkbox:hover {
+            filter: brightness(1.35);
+        }
+        @media (hover: hover) and (pointer: fine) {
+            .photo-select-checkbox {
+                opacity: 0;
+            }
+            .masonry-item:hover .photo-select-checkbox,
+            .photo-select-checkbox.checked {
+                opacity: 1;
+            }
+        }
         .slideshow-modal {
             opacity: 0;
             pointer-events: none;
@@ -148,6 +169,38 @@
     <!-- Photo Grid -->
     <section class="pb-12 bg-white">
         <div class="container mx-auto px-6">
+            <div id="selection-bar"
+                class="hidden sticky top-20 z-30 mb-6 flex flex-wrap items-center justify-between gap-4 rounded-full bg-gray-900 px-6 py-3 text-white shadow-lg">
+                <span id="selection-counter" class="font-medium">0 photo sélectionnée</span>
+                <div class="flex items-center gap-2">
+                    <button type="button" id="select-all-btn"
+                        class="cursor-pointer rounded-full px-4 py-1.5 text-sm font-medium transition-colors hover:bg-white/10">
+                        Tout sélectionner
+                    </button>
+                    <button type="button" id="deselect-all-btn"
+                        class="cursor-pointer rounded-full px-4 py-1.5 text-sm font-medium transition-colors hover:bg-white/10">
+                        Tout désélectionner
+                    </button>
+                    <form id="selection-download-form"
+                        action="{{ route('public.download-selection', $photoGallery->access_code) }}"
+                        method="POST">
+                        @csrf
+                        <div id="selection-ids-container" class="hidden"></div>
+                        <button type="submit" id="selection-download-btn" disabled
+                            class="ml-2 inline-flex cursor-pointer items-center rounded-full bg-white px-5 py-1.5 text-sm font-medium text-gray-900 transition-all disabled:cursor-not-allowed disabled:opacity-40">
+                            <svg class="w-4 h-4 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3 16.5v2.25A2.25 2.25 0 0 0 5.25 21h13.5A2.25 2.25 0 0 0 21 18.75V16.5M16.5 12 12 16.5m0 0L7.5 12m4.5 4.5V3"/>
+                            </svg>
+                            <span id="selection-download-label">Télécharger la sélection</span>
+                        </button>
+                    </form>
+                </div>
+            </div>
+            @if ($errors->any())
+                <div class="mb-6 rounded-lg border border-red-200 bg-red-50 px-4 py-3 text-red-700">
+                    {{ $errors->first() }}
+                </div>
+            @endif
             @foreach ($photoGallery->sections as $section)
                 <div class="mb-12">
                     @if ($photoGallery->sections->count() > 1)
@@ -157,11 +210,17 @@
                         @foreach ($section->photos as $photo)
                             <div class="masonry-item group relative overflow-hidden rounded-lg shadow-md cursor-pointer hover-lift js-slideshow-item"
                                  data-section-id="{{ $section->id }}"
-                                 data-photo-index="{{ $loop->index }}">
+                                 data-photo-index="{{ $loop->index }}"
+                                 data-photo-id="{{ $photo->id }}">
                                 <img src="{{ Storage::disk('thumbnails')->url($photo->path) }}"
                                     alt="{{ $photo->alt ?? 'Photo #' . $photo->id }}"
                                     loading="lazy"
                                     class="w-full h-auto object-cover">
+                                <label class="photo-select-checkbox absolute right-3 top-3 z-10 flex h-10 w-10 cursor-pointer items-center justify-center rounded-full"
+                                       onclick="event.stopPropagation()">
+                                    <input type="checkbox" data-photo-checkbox value="{{ $photo->id }}"
+                                        class="js-photo-checkbox h-5 w-5 cursor-pointer accent-white">
+                                </label>
                                 <div class="absolute inset-0 bg-gradient-to-t from-black/60 to-transparent opacity-0 group-hover:opacity-100 transition-opacity duration-300 flex items-end">
                                     <div class="p-4 transform translate-y-full group-hover:translate-y-0 transition-transform duration-300">
                                         <p class="text-white font-medium">{{ $photo->alt ?? 'Photo #' . $photo->id }}</p>
@@ -329,6 +388,95 @@
             if (e.key === 'Escape') closeSlideshow();
             if (e.key === 'ArrowRight') nextSlide();
             if (e.key === 'ArrowLeft') prevSlide();
+        });
+
+        // Photo selection
+        const selectionBar = document.getElementById('selection-bar');
+        const selectionCounter = document.getElementById('selection-counter');
+        const selectAllBtn = document.getElementById('select-all-btn');
+        const deselectAllBtn = document.getElementById('deselect-all-btn');
+        const selectionForm = document.getElementById('selection-download-form');
+        const selectionIdsContainer = document.getElementById('selection-ids-container');
+        const selectionDownloadBtn = document.getElementById('selection-download-btn');
+        const selectionDownloadLabel = document.getElementById('selection-download-label');
+        const photoCheckboxes = Array.from(document.querySelectorAll('.js-photo-checkbox'));
+        const photoItemsById = {};
+        document.querySelectorAll('.masonry-item[data-photo-id]').forEach(item => {
+            photoItemsById[Number(item.dataset.photoId)] = item;
+        });
+
+        const selection = new Set();
+
+        function updateSelectionUi() {
+            const count = selection.size;
+
+            selectionBar.classList.toggle('hidden', count === 0);
+
+            if (count === 0) {
+                selectionCounter.textContent = '0 photo sélectionnée';
+            } else if (count === 1) {
+                selectionCounter.textContent = '1 photo sélectionnée';
+            } else {
+                selectionCounter.textContent = `${count} photos sélectionnées`;
+            }
+
+            selectionDownloadBtn.disabled = count === 0;
+            selectionDownloadLabel.textContent = count > 0
+                ? `Télécharger la sélection (${count})`
+                : 'Télécharger la sélection';
+
+            photoCheckboxes.forEach(checkbox => {
+                const checked = selection.has(Number(checkbox.value));
+                checkbox.checked = checked;
+                const item = photoItemsById[Number(checkbox.value)];
+                if (item) {
+                    item.classList.toggle('selected', checked);
+                }
+                checkbox.classList.toggle('checked', checked);
+            });
+        }
+
+        function togglePhoto(photoId, checked) {
+            if (checked) {
+                selection.add(photoId);
+            } else {
+                selection.delete(photoId);
+            }
+            updateSelectionUi();
+        }
+
+        photoCheckboxes.forEach(checkbox => {
+            checkbox.addEventListener('change', () => {
+                togglePhoto(Number(checkbox.value), checkbox.checked);
+            });
+        });
+
+        selectAllBtn.addEventListener('click', () => {
+            photoCheckboxes.forEach(checkbox => selection.add(Number(checkbox.value)));
+            updateSelectionUi();
+        });
+
+        deselectAllBtn.addEventListener('click', () => {
+            selection.clear();
+            updateSelectionUi();
+        });
+
+        selectionForm.addEventListener('submit', () => {
+            if (selection.size === 0) {
+                return false;
+            }
+
+            selectionIdsContainer.innerHTML = '';
+            selection.forEach(photoId => {
+                const input = document.createElement('input');
+                input.type = 'hidden';
+                input.name = 'photo_ids[]';
+                input.value = photoId;
+                selectionIdsContainer.appendChild(input);
+            });
+
+            selectionDownloadBtn.disabled = true;
+            selectionDownloadLabel.textContent = 'Préparation…';
         });
     </script>
 </x-layout>

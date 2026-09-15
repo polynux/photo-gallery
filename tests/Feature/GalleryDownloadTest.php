@@ -122,3 +122,87 @@ test('unauthenticated visitors are redirected away from photo and thumbnail endp
     $this->get(route('thumbnails.show', [$gallery->id, 'secret.jpg']))
         ->assertRedirect(route('public.select'));
 });
+
+test('selection download streams a zip containing only the selected photos', function () {
+    Storage::fake('photo');
+    Storage::fake('thumbnails');
+    config()->set('gallery.generate_thumbnails', false);
+
+    $gallery = PhotoGallery::factory()->create([
+        'name' => 'Galerie Sélection',
+        'access_code' => 'SELECT01',
+    ]);
+
+    $defaultSection = $gallery->sections()->where('is_default', true)->firstOrFail();
+    $extraSection = PhotoSection::factory()->create([
+        'photo_gallery_id' => $gallery->id,
+        'name' => 'Soirée',
+        'position' => 2,
+    ]);
+
+    $first = addPhotoWithJpgBytes($gallery, $defaultSection, 1, $gallery->id . '/first.jpg');
+    addPhotoWithJpgBytes($gallery, $defaultSection, 2, $gallery->id . '/second.jpg');
+    $third = addPhotoWithJpgBytes($gallery, $extraSection, 1, $gallery->id . '/third.jpg');
+
+    $response = $this->withSession([
+        'authenticated_gallery_' . $gallery->id => true,
+    ])->post(route('public.download-selection', $gallery->access_code), [
+        'photo_ids' => [$first->id, $third->id, 999999],
+    ]);
+
+    $response->assertSuccessful();
+
+    $tempResource = tmpfile();
+    $zipPath = stream_get_meta_data($tempResource)['uri'];
+    file_put_contents($zipPath, $response->streamedContent());
+
+    $zip = new ZipArchive;
+    expect($zip->open($zipPath))->toBeTrue();
+
+    $entries = [];
+    for ($index = 0; $index < $zip->numFiles; $index++) {
+        $entries[] = $zip->getNameIndex($index);
+    }
+    $zip->close();
+
+    expect($entries)->toHaveCount(2);
+    expect($entries[0])->toBe('galerie-selection/galerie-selection/01.jpg');
+    expect($entries[1])->toBe('galerie-selection/soiree/01.jpg');
+});
+
+test('selection download redirects back when no photo id matches the gallery', function () {
+    Storage::fake('photo');
+    Storage::fake('thumbnails');
+    config()->set('gallery.generate_thumbnails', false);
+
+    $gallery = PhotoGallery::factory()->create([
+        'access_code' => 'SELECT02',
+    ]);
+
+    $otherGallery = PhotoGallery::factory()->create([
+        'access_code' => 'SELECT03',
+    ]);
+    $otherSection = $otherGallery->sections()->where('is_default', true)->firstOrFail();
+    addPhotoWithJpgBytes($otherGallery, $otherSection, 1, $otherGallery->id . '/elsewhere.jpg');
+
+    $response = $this->withSession([
+        'authenticated_gallery_' . $gallery->id => true,
+    ])->post(route('public.download-selection', $gallery->access_code), [
+        'photo_ids' => [$otherSection->photos->first()->id],
+    ]);
+
+    $response->assertRedirect(route('public.gallery', $gallery->access_code));
+    $response->assertSessionHasErrors(['selection']);
+});
+
+test('selection download requires an authenticated gallery session', function () {
+    $gallery = PhotoGallery::factory()->create([
+        'access_code' => 'SELECT04',
+    ]);
+    $section = $gallery->sections()->where('is_default', true)->firstOrFail();
+    $photo = addPhotoWithJpgBytes($gallery, $section, 1, $gallery->id . '/hidden.jpg');
+
+    $this->post(route('public.download-selection', $gallery->access_code), [
+        'photo_ids' => [$photo->id],
+    ])->assertRedirect(route('public.show', $gallery->access_code));
+});

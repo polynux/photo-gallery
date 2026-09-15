@@ -84,8 +84,9 @@ class PublicController extends Controller
                 'name' => $section->name,
                 'photos' => $section->photos->map(function ($photo) {
                     return [
+                        'id' => $photo->id,
                         'src' => Storage::disk('photo')->url($photo->path),
-                        'alt' => $photo->alt ?? 'Photo #'.$photo->id,
+                        'alt' => $photo->alt ?? 'Photo #' . $photo->id,
                     ];
                 })->values()->toArray(),
             ];
@@ -115,14 +116,47 @@ class PublicController extends Controller
         }, $zipName);
     }
 
+    public function downloadSelection(Request $request, string $accessCode): RedirectResponse|StreamedResponse
+    {
+        $photoGallery = PhotoGallery::query()->where('access_code', Str::upper($accessCode))->firstOrFail();
+
+        if (! $this->canViewGallery($photoGallery)) {
+            return redirect()->route('public.show', $photoGallery->access_code);
+        }
+
+        $validated = $request->validate([
+            'photo_ids' => ['required', 'array'],
+            'photo_ids.*' => ['integer'],
+        ]);
+
+        $validPhotoIds = $photoGallery->photos()
+            ->whereIn('id', $validated['photo_ids'])
+            ->pluck('id');
+
+        if ($validPhotoIds->isEmpty()) {
+            return redirect()
+                ->route('public.gallery', $photoGallery->access_code)
+                ->withErrors(['selection' => 'Aucune photo sélectionnée n\'a pu être trouvée dans cette galerie.']);
+        }
+
+        $zipStream = app(GalleryZipStream::class);
+        $zipName = $zipStream->slugArchiveName($photoGallery);
+
+        return response()->streamDownload(function () use ($zipStream, $photoGallery, $zipName, $validPhotoIds): void {
+            set_time_limit(0);
+            $zipStream->stream($photoGallery, $zipName, $validPhotoIds->all());
+            set_time_limit(30);
+        }, $zipName);
+    }
+
     public function showPhoto(string $gallery, string $photo)
     {
-        $photo = Photo::where('path', $gallery.'/'.$photo)
+        $photo = Photo::where('path', $gallery . '/' . $photo)
             ->where('photo_gallery_id', $gallery)
             ->firstOrFail();
 
         if (! $this->canViewGallery($photo->photoGallery)) {
-            Log::info('User not authenticated for gallery: '.$gallery);
+            Log::info('User not authenticated for gallery: ' . $gallery);
 
             return redirect()->route('public.select');
         }
@@ -134,12 +168,12 @@ class PublicController extends Controller
 
     public function showThumbnail(string $gallery, string $photo)
     {
-        $photo = Photo::where('path', $gallery.'/'.$photo)
+        $photo = Photo::where('path', $gallery . '/' . $photo)
             ->where('photo_gallery_id', $gallery)
             ->firstOrFail();
 
         if (! $this->canViewGallery($photo->photoGallery)) {
-            Log::info('User not authenticated for gallery: '.$gallery);
+            Log::info('User not authenticated for gallery: ' . $gallery);
 
             return redirect()->route('public.select');
         }
@@ -184,6 +218,6 @@ class PublicController extends Controller
 
     private function gallerySessionKey(PhotoGallery $photoGallery): string
     {
-        return 'authenticated_gallery_'.$photoGallery->id;
+        return 'authenticated_gallery_' . $photoGallery->id;
     }
 }

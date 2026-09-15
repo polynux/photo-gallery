@@ -2,6 +2,7 @@
 
 namespace App\Services;
 
+use App\Models\Photo;
 use App\Models\PhotoGallery;
 use Illuminate\Support\Facades\Storage;
 use Illuminate\Support\Str;
@@ -12,10 +13,16 @@ class GalleryZipStream
 {
     /**
      * Stream a gallery as a ZIP archive.
+     *
+     * @param  array<int, int|string>  $photoIds  When non-empty, only photos
+     *                                            with these IDs (scoped to the given
+     *                                            gallery) are included.
      */
-    public function stream(PhotoGallery $photoGallery, string $outputName): void
+    public function stream(PhotoGallery $photoGallery, string $outputName, array $photoIds = []): void
     {
         $photoGallery->load(['sections.photos']);
+
+        $photoIds = collect($photoIds)->map(fn ($id) => (int) $id)->unique()->flip();
 
         $zip = new ZipStream(
             outputName: $outputName,
@@ -37,10 +44,16 @@ class GalleryZipStream
                 ? $galleryFolder . '/' . (Str::slug($section->name) ?: 'section')
                 : $galleryFolder;
 
-            $maxPosition = $section->photos->count();
+            $photos = $section->photos;
+
+            if ($photoIds->isNotEmpty()) {
+                $photos = $photos->filter(fn (Photo $photo) => $photoIds->has($photo->getKey()));
+            }
+
+            $maxPosition = $photos->count();
             $paddingLength = max(2, strlen((string) $maxPosition));
 
-            foreach ($section->photos as $photo) {
+            foreach ($photos as $photo) {
                 if (! $photoDisk->exists($photo->path)) {
                     report(new RuntimeException("Photo file not found on disk: {$photo->path}"));
 
