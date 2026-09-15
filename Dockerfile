@@ -59,9 +59,8 @@ RUN corepack enable
 COPY . /app
 RUN rm -rf /app/node_modules /app/public/build
 # The Tailwind build reads CSS/views from vendor (excluded from the build
-# context), so copy those vendor sources from the dev stage.
-COPY --from=dev /app/vendor/filament /app/vendor/filament
-COPY --from=dev /app/vendor/laravel/framework/src/Illuminate/Pagination /app/vendor/laravel/framework/src/Illuminate/Pagination
+# context), so copy the composer vendor tree from the dev stage.
+COPY --from=dev /app/vendor /app/vendor
 WORKDIR /app
 
 RUN --mount=type=cache,id=pnpm,target=/pnpm/store pnpm install
