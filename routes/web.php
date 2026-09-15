@@ -29,6 +29,8 @@ Route::get('photos/{gallery}/{photo}', [PublicController::class, 'showPhoto'])
     ->name('photos.show');
 Route::get('thumbnails/{gallery}/{photo}', [PublicController::class, 'showThumbnail'])
     ->name('thumbnails.show');
+Route::get('display/{gallery}/{photo}', [PublicController::class, 'showDisplay'])
+    ->name('display.show');
 
 Route::get('univers/{univers}/source', function (Univers $univers) {
     $disk = Storage::disk('photo')->exists($univers->source_path)

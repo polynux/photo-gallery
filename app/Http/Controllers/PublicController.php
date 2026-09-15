@@ -5,6 +5,7 @@ namespace App\Http\Controllers;
 use App\Models\Photo;
 use App\Models\PhotoGallery;
 use App\Services\GalleryZipStream;
+use App\Services\ThumbnailService;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Log;
@@ -85,8 +86,11 @@ class PublicController extends Controller
                 'photos' => $section->photos->map(function ($photo) {
                     return [
                         'id' => $photo->id,
-                        'src' => Storage::disk('photo')->url($photo->path),
-                        'alt' => $photo->alt ?? 'Photo #' . $photo->id,
+                        'src' => route('display.show', [
+                            'gallery' => $photo->photo_gallery_id,
+                            'photo' => basename($photo->path),
+                        ]),
+                        'alt' => $photo->alt ?? 'Photo #'.$photo->id,
                     ];
                 })->values()->toArray(),
             ];
@@ -151,12 +155,12 @@ class PublicController extends Controller
 
     public function showPhoto(string $gallery, string $photo)
     {
-        $photo = Photo::where('path', $gallery . '/' . $photo)
+        $photo = Photo::where('path', $gallery.'/'.$photo)
             ->where('photo_gallery_id', $gallery)
             ->firstOrFail();
 
         if (! $this->canViewGallery($photo->photoGallery)) {
-            Log::info('User not authenticated for gallery: ' . $gallery);
+            Log::info('User not authenticated for gallery: '.$gallery);
 
             return redirect()->route('public.select');
         }
@@ -168,23 +172,62 @@ class PublicController extends Controller
 
     public function showThumbnail(string $gallery, string $photo)
     {
-        $photo = Photo::where('path', $gallery . '/' . $photo)
+        $photo = Photo::where('path', $gallery.'/'.$photo)
             ->where('photo_gallery_id', $gallery)
             ->firstOrFail();
 
         if (! $this->canViewGallery($photo->photoGallery)) {
-            Log::info('User not authenticated for gallery: ' . $gallery);
+            Log::info('User not authenticated for gallery: '.$gallery);
 
             return redirect()->route('public.select');
         }
 
-        if (Storage::disk('thumbnails')->exists($photo->path)) {
-            return Storage::disk('thumbnails')->response($photo->path, headers: [
+        $thumbnails = Storage::disk('thumbnails');
+        $path = app(ThumbnailService::class)->thumbnailPath($photo->path);
+
+        if (! $thumbnails->exists($path)) {
+            return abort(404, 'Thumbnail not found');
+        }
+
+        return $thumbnails->response($path, headers: [
+            'Content-Type' => 'image/webp',
+            'Cache-Control' => 'private, max-age=604800',
+        ]);
+    }
+
+    public function showDisplay(string $gallery, string $photo)
+    {
+        $photo = Photo::where('path', $gallery.'/'.$photo)
+            ->where('photo_gallery_id', $gallery)
+            ->firstOrFail();
+
+        if (! $this->canViewGallery($photo->photoGallery)) {
+            Log::info('User not authenticated for gallery: '.$gallery);
+
+            return redirect()->route('public.select');
+        }
+
+        $thumbnails = Storage::disk('thumbnails');
+        $service = app(ThumbnailService::class);
+        $displayPath = $service->displayPath($photo->path);
+
+        if ($thumbnails->exists($displayPath)) {
+            return $thumbnails->response($displayPath, headers: [
+                'Content-Type' => 'image/webp',
                 'Cache-Control' => 'private, max-age=604800',
             ]);
         }
 
-        return abort(404, 'Thumbnail not found');
+        $thumbnailPath = $service->thumbnailPath($photo->path);
+
+        if ($thumbnails->exists($thumbnailPath)) {
+            return $thumbnails->response($thumbnailPath, headers: [
+                'Content-Type' => 'image/webp',
+                'Cache-Control' => 'private, max-age=604800',
+            ]);
+        }
+
+        return abort(404, 'Display image not found');
     }
 
     private function attemptGalleryAuthentication(
@@ -218,6 +261,6 @@ class PublicController extends Controller
 
     private function gallerySessionKey(PhotoGallery $photoGallery): string
     {
-        return 'authenticated_gallery_' . $photoGallery->id;
+        return 'authenticated_gallery_'.$photoGallery->id;
     }
 }
