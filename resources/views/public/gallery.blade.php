@@ -150,7 +150,7 @@
             <div class="max-w-4xl mx-auto text-center">
                 @if ($photoGallery->coverPhoto)
                     <div class="relative rounded-2xl overflow-hidden mb-8 shadow-2xl mt-16">
-                        <img src="{{ Storage::disk('thumbnails')->url($photoGallery->coverPhoto->path) }}"
+                        <img src="{{ route('display.show', ['gallery' => $photoGallery->coverPhoto->photo_gallery_id, 'photo' => basename($photoGallery->coverPhoto->path)]) }}"
                             alt="Cover for {{ $photoGallery->name }}"
                             class="w-full h-80 md:h-[32rem] object-cover">
                         <div class="absolute inset-0 bg-gradient-to-t from-black/60 to-transparent"></div>
@@ -241,7 +241,7 @@
                                  data-section-id="{{ $section->id }}"
                                  data-photo-index="{{ $loop->index }}"
                                  data-photo-id="{{ $photo->id }}">
-                                <img src="{{ Storage::disk('thumbnails')->url($photo->path) }}"
+                                <img src="{{ route('thumbnails.show', ['gallery' => $photo->photo_gallery_id, 'photo' => basename($photo->path)]) }}"
                                     alt="{{ $photo->alt ?? 'Photo #' . $photo->id }}"
                                     loading="lazy"
                                     class="w-full h-auto object-cover">

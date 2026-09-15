@@ -2,6 +2,7 @@
 
 use App\Models\Photo;
 use App\Models\PhotoGallery;
+use App\Services\ThumbnailService;
 use Illuminate\Support\Facades\Storage;
 
 function createPhotoFromPng(PhotoGallery $gallery, int $width, int $height): Photo
@@ -15,7 +16,7 @@ function createPhotoFromPng(PhotoGallery $gallery, int $width, int $height): Pho
     $imageContents = (string) ob_get_clean();
     imagedestroy($image);
 
-    $path = $gallery->id . '/sample-' . $width . 'x' . $height . '.png';
+    $path = $gallery->id.'/sample-'.$width.'x'.$height.'.png';
     Storage::disk('photo')->put($path, $imageContents);
 
     return Photo::factory()->forGallery($gallery)->create([
@@ -24,25 +25,39 @@ function createPhotoFromPng(PhotoGallery $gallery, int $width, int $height): Pho
     ]);
 }
 
-test('thumbnail is generated as JPEG scaled down to 1920 max dimension', function () {
+test('grid and display derivatives are generated as WebP scaled down to their max dimensions', function () {
     Storage::fake('photo');
     Storage::fake('thumbnails');
 
     $gallery = PhotoGallery::factory()->create();
     $photo = createPhotoFromPng($gallery, 3000, 2400);
+    $service = app(ThumbnailService::class);
 
     $photo->generateThumbnail();
 
-    expect(Storage::disk('thumbnails')->exists($photo->path))->toBeTrue();
+    $gridPath = $service->thumbnailPath($photo->path);
+    $displayPath = $service->displayPath($photo->path);
 
-    $contents = Storage::disk('thumbnails')->get($photo->path);
+    expect(Storage::disk('thumbnails')->exists($gridPath))->toBeTrue();
+    expect(Storage::disk('thumbnails')->exists($displayPath))->toBeTrue();
 
-    expect($contents)->toStartWith("\xFF\xD8");
+    $gridContents = Storage::disk('thumbnails')->get($gridPath);
 
-    [$width, $height] = getimagesizefromstring($contents);
+    expect($gridContents)->toStartWith('RIFF');
 
-    expect($width)->toBe(1920);
-    expect($height)->toBe(1536);
+    [$gridWidth, $gridHeight] = getimagesizefromstring($gridContents);
+
+    expect($gridWidth)->toBe(500);
+    expect($gridHeight)->toBe(400);
+
+    $displayContents = Storage::disk('thumbnails')->get($displayPath);
+
+    expect($displayContents)->toStartWith('RIFF');
+
+    [$displayWidth, $displayHeight] = getimagesizefromstring($displayContents);
+
+    expect($displayWidth)->toBe(2560);
+    expect($displayHeight)->toBe(2048);
 });
 
 test('small photos are not upscaled when generating thumbnails', function () {
@@ -51,12 +66,19 @@ test('small photos are not upscaled when generating thumbnails', function () {
 
     $gallery = PhotoGallery::factory()->create();
     $photo = createPhotoFromPng($gallery, 800, 600);
+    $service = app(ThumbnailService::class);
 
     $photo->generateThumbnail();
 
-    $contents = Storage::disk('thumbnails')->get($photo->path);
+    $contents = Storage::disk('thumbnails')->get($service->thumbnailPath($photo->path));
     [$width, $height] = getimagesizefromstring($contents);
 
-    expect($width)->toBe(800);
-    expect($height)->toBe(600);
+    expect($width)->toBe(500);
+    expect($height)->toBe(375);
+
+    $displayContents = Storage::disk('thumbnails')->get($service->displayPath($photo->path));
+    [$displayWidth, $displayHeight] = getimagesizefromstring($displayContents);
+
+    expect($displayWidth)->toBe(800);
+    expect($displayHeight)->toBe(600);
 });
