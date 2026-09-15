@@ -9,7 +9,7 @@ test('thumbnail command generates missing thumbnails for a gallery', function ()
     config()->set('gallery.generate_thumbnails', false);
 
     $gallery = PhotoGallery::factory()->create();
-    $path = $gallery->id.'/command-test.png';
+    $path = $gallery->id . '/command-test.png';
     $image = imagecreatetruecolor(20, 20);
     $background = imagecolorallocate($image, 255, 255, 255);
     imagefill($image, 0, 0, $background);
@@ -40,7 +40,7 @@ test('force flag deletes and regenerates derivatives including legacy files', fu
     config()->set('gallery.generate_thumbnails', false);
 
     $gallery = PhotoGallery::factory()->create();
-    $path = $gallery->id.'/force-test.png';
+    $path = $gallery->id . '/force-test.png';
     $image = imagecreatetruecolor(2000, 1500);
     $background = imagecolorallocate($image, 255, 255, 255);
     imagefill($image, 0, 0, $background);

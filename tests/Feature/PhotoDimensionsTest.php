@@ -19,7 +19,7 @@ function createDimensionsPhoto(PhotoGallery $gallery, int $width, int $height): 
     $imageContents = (string) ob_get_clean();
     imagedestroy($image);
 
-    $path = $gallery->id.'/dimensions-'.$width.'x'.$height.'.png';
+    $path = $gallery->id . '/dimensions-' . $width . 'x' . $height . '.png';
     Storage::disk('photo')->put($path, $imageContents);
 
     return Photo::factory()->forGallery($gallery)->create([
@@ -73,15 +73,15 @@ test('gallery view renders lazy-load markup with dimensions and keeps native fal
     $unknown = createDimensionsPhoto($gallery, 800, 600);
 
     $response = $this->withSession([
-        'authenticated_gallery_'.$gallery->id => true,
+        'authenticated_gallery_' . $gallery->id => true,
     ])->get(route('public.gallery', $gallery->access_code));
 
     $response->assertOk();
 
     $knownImg = $known->fresh();
     expect($response->getContent())->toContain('data-src=');
-    expect($response->getContent())->toContain('width="'.$knownImg->width.'"');
-    expect($response->getContent())->toContain('height="'.$knownImg->height.'"');
+    expect($response->getContent())->toContain('width="' . $knownImg->width . '"');
+    expect($response->getContent())->toContain('height="' . $knownImg->height . '"');
     expect($response->getContent())->toContain('js-lazy-img');
     expect($response->getContent())->toContain('js-lazy-spinner');
     expect($response->getContent())->toContain('lazyRootMargin');

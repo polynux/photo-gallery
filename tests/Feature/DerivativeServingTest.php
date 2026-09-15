@@ -16,7 +16,7 @@ function createServingPhoto(PhotoGallery $gallery, int $width, int $height): Pho
     $imageContents = (string) ob_get_clean();
     imagedestroy($image);
 
-    $path = $gallery->id.'/serving-'.$width.'x'.$height.'.png';
+    $path = $gallery->id . '/serving-' . $width . 'x' . $height . '.png';
     Storage::disk('photo')->put($path, $imageContents);
 
     return Photo::factory()->forGallery($gallery)->create([
@@ -28,7 +28,7 @@ function createServingPhoto(PhotoGallery $gallery, int $width, int $height): Pho
 function withGallerySession(PhotoGallery $gallery): array
 {
     return [
-        'authenticated_gallery_'.$gallery->id => true,
+        'authenticated_gallery_' . $gallery->id => true,
     ];
 }
 

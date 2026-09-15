@@ -16,7 +16,7 @@ function createPhotoFromPng(PhotoGallery $gallery, int $width, int $height): Pho
     $imageContents = (string) ob_get_clean();
     imagedestroy($image);
 
-    $path = $gallery->id.'/sample-'.$width.'x'.$height.'.png';
+    $path = $gallery->id . '/sample-' . $width . 'x' . $height . '.png';
     Storage::disk('photo')->put($path, $imageContents);
 
     return Photo::factory()->forGallery($gallery)->create([

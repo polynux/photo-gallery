@@ -116,17 +116,6 @@ class ThumbnailService
     }
 
     /**
-     * Persist the grid thumbnail dimensions so the gallery grid can reserve space without layout shift.
-     */
-    private function storeDimensions(Photo $photo, object $grid): void
-    {
-        $photo->forceFill([
-            'width' => $grid->width(),
-            'height' => $grid->height(),
-        ])->saveQuietly();
-    }
-
-    /**
      * Dispatch thumbnail generation for every photo missing one.
      *
      * @return int number of jobs queued
@@ -154,6 +143,17 @@ class ThumbnailService
                 ->whereHas('photoSection'),
             fn (Photo $photo): bool => false
         );
+    }
+
+    /**
+     * Persist the grid thumbnail dimensions so the gallery grid can reserve space without layout shift.
+     */
+    private function storeDimensions(Photo $photo, object $grid): void
+    {
+        $photo->forceFill([
+            'width' => $grid->width(),
+            'height' => $grid->height(),
+        ])->saveQuietly();
     }
 
     private function queuePhotos($query, callable $skip): int
@@ -184,6 +184,6 @@ class ThumbnailService
             $name = substr($photoPath, 0, $extensionPosition);
         }
 
-        return $prefix.$name.self::DERIVATIVE_EXTENSION;
+        return $prefix . $name . self::DERIVATIVE_EXTENSION;
     }
 }

@@ -19,14 +19,6 @@ class Photo extends Model
 
     protected ?int $previousSectionId = null;
 
-    protected function casts(): array
-    {
-        return [
-            'width' => 'integer',
-            'height' => 'integer',
-        ];
-    }
-
     protected static function booted(): void
     {
         static::creating(function (Photo $photo) {
@@ -113,6 +105,14 @@ class Photo extends Model
     public function deleteThumbnail(): void
     {
         app(ThumbnailService::class)->delete($this->path);
+    }
+
+    protected function casts(): array
+    {
+        return [
+            'width' => 'integer',
+            'height' => 'integer',
+        ];
     }
 
     protected function reindexSectionPositions(int $sectionId): void
