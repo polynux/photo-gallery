@@ -16,7 +16,7 @@ beforeEach(function () {
 });
 
 test('admin can open the Univers layout page', function () {
-    $this->get('/administrafion/univers-layout')
+    $this->get('/' . config('admin.path') . '/univers-layout')
         ->assertSuccessful()
         ->assertSee(__('admin.layout.page_heading'))
         ->assertSee(__('admin.layout.custom_grid'));
