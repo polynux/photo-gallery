@@ -37,6 +37,7 @@ function initSlideshow(sections) {
     const currentSlide = document.getElementById('current-slide');
     const slideCounter = document.getElementById('slide-counter');
     const slideAlt = document.getElementById('slide-alt');
+    const slideSpinner = document.getElementById('slide-spinner');
     const totalPhotos = allPhotos.length;
 
     if (! modal || totalPhotos === 0) {
@@ -104,8 +105,22 @@ function initSlideshow(sections) {
         }, 400);
     }
 
+    function showSpinner() {
+        slideSpinner.classList.add('active');
+    }
+
+    function hideSpinner() {
+        slideSpinner.classList.remove('active');
+    }
+
     function updateSlide() {
-        currentSlide.src = allPhotos[currentIndex].src;
+        const src = allPhotos[currentIndex].src;
+
+        if (currentSlide.src !== src) {
+            showSpinner();
+        }
+
+        currentSlide.src = src;
         currentSlide.alt = allPhotos[currentIndex].alt;
         slideCounter.textContent = `${currentIndex + 1} / ${totalPhotos}`;
         slideAlt.textContent = allPhotos[currentIndex].alt;
@@ -119,6 +134,9 @@ function initSlideshow(sections) {
     document.getElementById('close-slideshow').addEventListener('click', closeSlideshow);
     document.getElementById('next-btn').addEventListener('click', nextSlide);
     document.getElementById('prev-btn').addEventListener('click', prevSlide);
+
+    currentSlide.addEventListener('load', hideSpinner);
+    currentSlide.addEventListener('error', hideSpinner);
 
     modal.addEventListener('click', (e) => {
         if (e.target.closest('#slideshow-container') || e.target.closest('button')) {

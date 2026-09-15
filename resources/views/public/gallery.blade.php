@@ -117,6 +117,31 @@
             height: 80vh;
             overflow: hidden;
         }
+        .slide-spinner {
+            position: absolute;
+            inset: 0;
+            z-index: 10;
+            display: none;
+            align-items: center;
+            justify-content: center;
+            pointer-events: none;
+        }
+        .slide-spinner.active {
+            display: flex;
+        }
+        .spinner-ring {
+            width: 3rem;
+            height: 3rem;
+            border: 3px solid rgba(255, 255, 255, 0.25);
+            border-top-color: rgba(255, 255, 255, 0.9);
+            border-radius: 9999px;
+            animation: spinnerSpin 0.8s linear infinite;
+        }
+        @keyframes spinnerSpin {
+            to {
+                transform: rotate(360deg);
+            }
+        }
     </style>
 
     <!-- Gallery Header -->
@@ -264,6 +289,9 @@
             <div id="slideshow-container" class="max-w-5xl w-full p-4 relative">
                 <div class="image-container relative overflow-hidden rounded-lg">
                     <img id="current-slide" class="slide-image current" src="" alt="">
+                    <div id="slide-spinner" class="slide-spinner">
+                        <div class="spinner-ring"></div>
+                    </div>
                 </div>
                 <div class="text-white text-center mt-6">
                     <p id="slide-counter" class="text-sm font-medium tracking-wider"></p>
