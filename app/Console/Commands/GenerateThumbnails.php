@@ -9,13 +9,17 @@ use Illuminate\Console\Command;
 
 class GenerateThumbnails extends Command
 {
-    protected $signature = 'app:generate-thumbnails {--gallery= : The ID of a specific gallery to generate thumbnails for} {--sync : Generate synchronously instead of dispatching queue jobs}';
+    protected $signature = 'app:generate-thumbnails
+        {--gallery= : The ID of a specific gallery to generate thumbnails for}
+        {--sync : Generate synchronously instead of dispatching queue jobs}
+        {--force : Delete and regenerate derivatives even when they already exist}';
 
     protected $description = 'Generate thumbnails for photos that are missing them';
 
     public function handle(ThumbnailService $thumbnails): void
     {
         $galleryId = $this->option('gallery');
+        $force = (bool) $this->option('force');
         $currentGalleryId = null;
         $processedCount = 0;
         $skippedCount = 0;
@@ -34,14 +38,18 @@ class GenerateThumbnails extends Command
             $this->info('Generating thumbnails for all photos...');
         }
 
+        if ($force) {
+            $this->warn('Force mode: existing derivatives will be deleted and regenerated.');
+        }
+
         Photo::query()
             ->when($galleryId, fn ($query) => $query->where('photo_gallery_id', $galleryId))
             ->whereHas('photoSection')
             ->orderBy('photo_gallery_id')
             ->orderBy('id')
-            ->chunkById(100, function ($photos) use ($thumbnails, &$currentGalleryId, &$processedCount, &$skippedCount): void {
+            ->chunkById(100, function ($photos) use ($thumbnails, $force, &$currentGalleryId, &$processedCount, &$skippedCount): void {
                 foreach ($photos as $photo) {
-                    if ($thumbnails->exists($photo->path)) {
+                    if (! $force && $thumbnails->exists($photo->path) && $thumbnails->displayExists($photo->path)) {
                         $skippedCount++;
 
                         continue;
@@ -53,6 +61,10 @@ class GenerateThumbnails extends Command
                     }
 
                     try {
+                        if ($force) {
+                            $thumbnails->deleteFor($photo);
+                        }
+
                         $thumbnails->generate($photo);
                     } catch (Throwable $exception) {
                         report($exception);

@@ -51,7 +51,7 @@ class Photo extends Model
 
                 if ($originalPath) {
                     Storage::disk('photo')->delete($originalPath);
-                    Storage::disk('thumbnails')->delete($originalPath);
+                    app(ThumbnailService::class)->delete($originalPath);
                 }
             }
 
@@ -62,7 +62,7 @@ class Photo extends Model
 
         static::deleting(function (Photo $photo) {
             Storage::disk('photo')->delete($photo->path);
-            Storage::disk('thumbnails')->delete($photo->path);
+            app(ThumbnailService::class)->delete($photo->path);
 
             $sectionId = $photo->photo_section_id;
             if ($sectionId) {
@@ -90,7 +90,7 @@ class Photo extends Model
     }
 
     /**
-     * Generate a JPEG thumbnail for this photo (max 1920px, never upscaled).
+     * Generate the WebP derivatives (grid thumbnail and display image) for this photo.
      *
      * @throws Throwable
      */
@@ -100,7 +100,7 @@ class Photo extends Model
     }
 
     /**
-     * Delete the stored thumbnail for this photo.
+     * Delete the stored derivatives (grid thumbnail, display image and legacy file).
      */
     public function deleteThumbnail(): void
     {

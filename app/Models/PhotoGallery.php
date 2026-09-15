@@ -2,6 +2,7 @@
 
 namespace App\Models;
 
+use App\Services\ThumbnailService;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
@@ -37,7 +38,7 @@ class PhotoGallery extends Model
 
             foreach ($photoGallery->photos as $photo) {
                 Storage::disk('photo')->delete($photo->path);
-                Storage::disk('thumbnails')->delete($photo->path);
+                app(ThumbnailService::class)->delete($photo->path);
             }
         });
     }
