@@ -60,6 +60,32 @@ class ThumbnailService
     }
 
     /**
+     * Read the pixel dimensions of an existing grid thumbnail without decoding the full image.
+     *
+     * @return array{width: int, height: int}|null null when the thumbnail does not exist or cannot be read
+     */
+    public function gridDimensions(string $photoPath): ?array
+    {
+        $disk = Storage::disk('thumbnails');
+        $path = $this->thumbnailPath($photoPath);
+
+        if (! $disk->exists($path)) {
+            return null;
+        }
+
+        $size = @getimagesizefromstring($disk->get($path));
+
+        if ($size === false) {
+            return null;
+        }
+
+        return [
+            'width' => (int) $size[0],
+            'height' => (int) $size[1],
+        ];
+    }
+
+    /**
      * Generate the WebP derivatives (grid thumbnail and display image) for the given photo.
      *
      * @throws Throwable when the source file cannot be read or encoded
@@ -80,12 +106,24 @@ class ThumbnailService
             $this->thumbnailPath($photo->path),
             $grid->encodeUsingFormat(Format::WEBP, quality: $quality)->toString(),
         );
+        $this->storeDimensions($photo, $grid);
 
         $display = (clone $image)->scaleDown(config('gallery.display_max_dimension', 2560));
         Storage::disk('thumbnails')->put(
             $this->displayPath($photo->path),
             $display->encodeUsingFormat(Format::WEBP, quality: $quality)->toString(),
         );
+    }
+
+    /**
+     * Persist the grid thumbnail dimensions so the gallery grid can reserve space without layout shift.
+     */
+    private function storeDimensions(Photo $photo, object $grid): void
+    {
+        $photo->forceFill([
+            'width' => $grid->width(),
+            'height' => $grid->height(),
+        ])->saveQuietly();
     }
 
     /**

@@ -15,9 +15,17 @@ class Photo extends Model
 {
     use HasFactory;
 
-    protected $fillable = ['photo_gallery_id', 'photo_section_id', 'path', 'alt', 'position'];
+    protected $fillable = ['photo_gallery_id', 'photo_section_id', 'path', 'alt', 'position', 'width', 'height'];
 
     protected ?int $previousSectionId = null;
+
+    protected function casts(): array
+    {
+        return [
+            'width' => 'integer',
+            'height' => 'integer',
+        ];
+    }
 
     protected static function booted(): void
     {

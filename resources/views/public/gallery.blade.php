@@ -247,10 +247,23 @@
                                  data-section-id="{{ $section->id }}"
                                  data-photo-index="{{ $loop->index }}"
                                  data-photo-id="{{ $photo->id }}">
-                                <img src="{{ route('thumbnails.show', ['gallery' => $photo->photo_gallery_id, 'photo' => basename($photo->path)]) }}"
-                                    alt="{{ $photo->alt ?? 'Photo #' . $photo->id }}"
-                                    loading="lazy"
-                                    class="w-full h-auto object-cover">
+                                <div class="photo-placeholder relative w-full bg-gray-100 overflow-hidden">
+                                    <img @if ($photo->width && $photo->height)
+                                            src="data:image/gif;base64,R0lGODlhAQABAIAAAAAAAP///yH5BAEAAAAALAAAAAABAAEAAAIBRAA7"
+                                            data-src="{{ route('thumbnails.show', ['gallery' => $photo->photo_gallery_id, 'photo' => basename($photo->path)]) }}"
+                                            width="{{ $photo->width }}"
+                                            height="{{ $photo->height }}"
+                                            class="js-lazy-img w-full h-auto object-cover"
+                                            @else
+                                            src="{{ route('thumbnails.show', ['gallery' => $photo->photo_gallery_id, 'photo' => basename($photo->path)]) }}"
+                                            class="w-full h-auto object-cover"
+                                            @endif
+                                        alt="{{ $photo->alt ?? 'Photo #' . $photo->id }}"
+                                        loading="lazy">
+                                    <div class="js-lazy-spinner absolute inset-0 flex items-center justify-center opacity-0 pointer-events-none transition-opacity duration-200">
+                                        <div class="h-8 w-8 rounded-full border-2 border-gray-300 border-t-gray-600 animate-spin"></div>
+                                    </div>
+                                </div>
                                 <label class="photo-select-checkbox absolute right-3 top-3 z-10 flex h-10 w-10 cursor-pointer items-center justify-center rounded-full"
                                        onclick="event.stopPropagation()">
                                     <input type="checkbox" data-photo-checkbox value="{{ $photo->id }}"

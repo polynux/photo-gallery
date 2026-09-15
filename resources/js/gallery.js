@@ -16,13 +16,56 @@ function readSlideshowState() {
 
 export function initGalleryPage() {
     if (slideshowState) {
+        initLazyLoading(slideshowState);
         initSlideshow(slideshowState);
     }
 
     initPhotoSelection();
 }
 
-function initSlideshow(sections) {
+function initLazyLoading(state) {
+    const lazyImages = Array.from(document.querySelectorAll('img.js-lazy-img[data-src]'));
+
+    if (lazyImages.length === 0 || ! ('IntersectionObserver' in window)) {
+        return;
+    }
+
+    const rootMargin = `${state.lazyRootMargin ?? 800}px`;
+
+    const observer = new IntersectionObserver((entries) => {
+        entries.forEach((entry) => {
+            if (! entry.isIntersecting) {
+                return;
+            }
+
+            loadImage(entry.target);
+            observer.unobserve(entry.target);
+        });
+    }, { rootMargin });
+
+    lazyImages.forEach((img) => {
+        img.addEventListener('load', () => hideSpinner(img), { once: true });
+        img.addEventListener('error', () => hideSpinner(img), { once: true });
+        observer.observe(img);
+    });
+
+    function loadImage(img) {
+        showSpinner(img);
+        img.src = img.dataset.src;
+        delete img.dataset.src;
+    }
+
+    function showSpinner(img) {
+        img.parentElement.querySelector('.js-lazy-spinner')?.classList.add('opacity-100');
+    }
+
+    function hideSpinner(img) {
+        img.parentElement.querySelector('.js-lazy-spinner')?.classList.remove('opacity-100');
+    }
+}
+
+function initSlideshow(state) {
+    const sections = state.sections ?? [];
     const allPhotos = [];
 
     sections.forEach(section => {

@@ -79,22 +79,25 @@ class PublicController extends Controller
             return redirect()->route('public.show', $photoGallery->access_code);
         }
 
-        $slideshowData = $photoGallery->sections->map(function ($section) {
-            return [
-                'id' => $section->id,
-                'name' => $section->name,
-                'photos' => $section->photos->map(function ($photo) {
-                    return [
-                        'id' => $photo->id,
-                        'src' => route('display.show', [
-                            'gallery' => $photo->photo_gallery_id,
-                            'photo' => basename($photo->path),
-                        ]),
-                        'alt' => $photo->alt ?? 'Photo #'.$photo->id,
-                    ];
-                })->values()->toArray(),
-            ];
-        })->values()->toArray();
+        $slideshowData = [
+            'lazyRootMargin' => config('gallery.lazy_root_margin', 800),
+            'sections' => $photoGallery->sections->map(function ($section) {
+                return [
+                    'id' => $section->id,
+                    'name' => $section->name,
+                    'photos' => $section->photos->map(function ($photo) {
+                        return [
+                            'id' => $photo->id,
+                            'src' => route('display.show', [
+                                'gallery' => $photo->photo_gallery_id,
+                                'photo' => basename($photo->path),
+                            ]),
+                            'alt' => $photo->alt ?? 'Photo #'.$photo->id,
+                        ];
+                    })->values()->toArray(),
+                ];
+            })->values()->toArray(),
+        ];
 
         return view('public.gallery', [
             'photoGallery' => $photoGallery,
