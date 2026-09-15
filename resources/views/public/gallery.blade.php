@@ -23,6 +23,12 @@
         @media (min-width: 1024px) {
             .masonry-grid { column-count: 3; }
         }
+        @media (min-width: 1440px) {
+            .masonry-grid { column-count: 4; }
+        }
+        @media (min-width: 1920px) {
+            .masonry-grid { column-count: 5; }
+        }
         .masonry-item {
             break-inside: avoid;
             margin-bottom: 1.5rem;
