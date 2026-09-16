@@ -1,0 +1,56 @@
+# VCS & tooling
+.git
+.gitignore
+.github
+.playwright-mcp/
+
+# Docker files themselves
+Dockerfile
+docker-compose*.yml
+compose*.yml
+Makefile
+.dockerignore
+
+# Docs
+*.md
+
+# Node
+node_modules
+public/build
+
+# Composer / runtime state
+vendor
+
+# Laravel runtime & local artifacts
+.env
+.env.*.backup
+storage/stats
+storage/app/private/*
+storage/logs/*
+storage/framework/cache/data/*
+storage/framework/sessions/*
+storage/framework/testing/*
+storage/framework/views/*
+bootstrap/cache/*.php
+# Keep directories (and their tracked .gitignore placeholders) in the context
+!storage/app/private/**/.gitignore
+!storage/app/.gitignore
+!storage/logs/**/.gitignore
+!storage/framework/.gitignore
+!storage/framework/cache/.gitignore
+!storage/framework/cache/data/**/.gitignore
+!storage/framework/sessions/**/.gitignore
+!storage/framework/testing/.gitignore
+!storage/framework/testing/**/.gitignore
+!storage/framework/views/**/.gitignore
+
+# Test & build outputs
+.phpunit.result.cache
+.phpunit.cache
+.phpactor.json
+
+# Editor / OS noise
+.idea
+.vscode
+*.swp
+.DS_Store
