@@ -21,6 +21,9 @@ public/build
 # Composer / runtime state
 vendor
 
+# Live container data (must never be baked into the image)
+docker-storage
+
 # Laravel runtime & local artifacts
 .env
 .env.*.backup
