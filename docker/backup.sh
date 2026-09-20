@@ -2,7 +2,7 @@
 set -euo pipefail
 
 BACKUP_TMP=/tmp/backup-staging
-DB_PATH="${BACKUP_DB_PATH:-/app/database/database.sqlite}"
+DB_PATH="${BACKUP_DB_PATH:-/app/dbdata/database.sqlite}"
 STORAGE_PATH="${BACKUP_STORAGE_PATH:-/app/storage/app}"
 
 # Retention settings (with defaults)

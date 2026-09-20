@@ -9,7 +9,7 @@ services:
       - "8443:443" # HTTPS
       - "8443:443/udp" # HTTP/3
     volumes:
-      - './test-docker/database.sqlite:/app/database/database.sqlite'
+      - './docker-storage/dbdata:/app/dbdata'
       - './test-docker/public:/app/storage/app/public'
       - './test-docker/private:/app/storage/app/private'
       - './test-docker/caddy_data:/data/caddy'
@@ -22,7 +22,8 @@ services:
       APP_ENV: ${APP_ENV:-production}
       APP_DEBUG: ${APP_DEBUG:-false}
       APP_RUN_MIGRATIONS: "true"
-      BACKUP_DB_PATH: "/app/database/database.sqlite"
+      DB_DATABASE: /app/dbdata/database.sqlite
+      BACKUP_DB_PATH: "/app/dbdata/database.sqlite"
       BACKUP_STORAGE_PATH: "/app/storage/app"
       PUID: ${PUID:-1000}
       PGID: ${PGID:-1000}
@@ -32,7 +33,7 @@ services:
     restart: always
     user: "1000:1000"
     volumes:
-      - './test-docker/database.sqlite:/app/database/database.sqlite'
+      - './docker-storage/dbdata:/app/dbdata'
       - './test-docker/public:/app/storage/app/public'
       - './test-docker/private:/app/storage/app/private'
       - backup-repo:/backup
@@ -41,7 +42,8 @@ services:
       APP_KEY: ${APP_KEY:-}
       APP_ENV: ${APP_ENV:-production}
       APP_DEBUG: ${APP_DEBUG:-false}
-      BACKUP_DB_PATH: "/app/database/database.sqlite"
+      DB_DATABASE: /app/dbdata/database.sqlite
+      BACKUP_DB_PATH: "/app/dbdata/database.sqlite"
       BACKUP_STORAGE_PATH: "/app/storage/app"
       PUID: ${PUID:-1000}
       PGID: ${PGID:-1000}
