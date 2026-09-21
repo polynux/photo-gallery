@@ -1,6 +1,10 @@
-<x-layout>
+<x-layout robots="noindex, nofollow">
     <x-slot name="title">{{ $photoGallery->name }} - Galerie</x-slot>
     <x-slot name="description">Explorez la galerie de photos de {{ $photoGallery->name }}. Découvrez des moments capturés par Pinaton Photographie.</x-slot>
+
+    @vite('resources/js/gallery.js')
+
+    <script type="application/json" data-gallery-state>{!! json_encode($slideshowData, JSON_HEX_TAG | JSON_HEX_AMP | JSON_HEX_APOS | JSON_HEX_QUOT) !!}</script>
 
     <style>
         body {
@@ -19,9 +23,36 @@
         @media (min-width: 1024px) {
             .masonry-grid { column-count: 3; }
         }
+        @media (min-width: 1440px) {
+            .masonry-grid { column-count: 4; }
+        }
+        @media (min-width: 1920px) {
+            .masonry-grid { column-count: 5; }
+        }
         .masonry-item {
             break-inside: avoid;
             margin-bottom: 1.5rem;
+        }
+        .masonry-item.selected {
+            outline: 3px solid #111827;
+            outline-offset: 2px;
+        }
+        .photo-select-checkbox {
+            opacity: 1;
+            background: radial-gradient(circle, rgba(0, 0, 0, 0.45) 40%, rgba(0, 0, 0, 0) 75%);
+            transition: opacity 0.2s ease, filter 0.2s ease;
+        }
+        .photo-select-checkbox:hover {
+            filter: brightness(1.35);
+        }
+        @media (hover: hover) and (pointer: fine) {
+            .photo-select-checkbox {
+                opacity: 0;
+            }
+            .masonry-item:hover .photo-select-checkbox,
+            .photo-select-checkbox.checked {
+                opacity: 1;
+            }
         }
         .slideshow-modal {
             opacity: 0;
@@ -92,6 +123,31 @@
             height: 80vh;
             overflow: hidden;
         }
+        .slide-spinner {
+            position: absolute;
+            inset: 0;
+            z-index: 10;
+            display: none;
+            align-items: center;
+            justify-content: center;
+            pointer-events: none;
+        }
+        .slide-spinner.active {
+            display: flex;
+        }
+        .spinner-ring {
+            width: 3rem;
+            height: 3rem;
+            border: 3px solid rgba(255, 255, 255, 0.25);
+            border-top-color: rgba(255, 255, 255, 0.9);
+            border-radius: 9999px;
+            animation: spinnerSpin 0.8s linear infinite;
+        }
+        @keyframes spinnerSpin {
+            to {
+                transform: rotate(360deg);
+            }
+        }
     </style>
 
     <!-- Gallery Header -->
@@ -100,8 +156,8 @@
             <div class="max-w-4xl mx-auto text-center">
                 @if ($photoGallery->coverPhoto)
                     <div class="relative rounded-2xl overflow-hidden mb-8 shadow-2xl mt-16">
-                        <img src="{{ Storage::disk('thumbnails')->url($photoGallery->coverPhoto->path) }}"
-                            alt="Cover for {{ $photoGallery->name }}" 
+                        <img src="{{ route('display.show', ['gallery' => $photoGallery->coverPhoto->photo_gallery_id, 'photo' => basename($photoGallery->coverPhoto->path)]) }}"
+                            alt="Cover for {{ $photoGallery->name }}"
                             class="w-full h-80 md:h-[32rem] object-cover">
                         <div class="absolute inset-0 bg-gradient-to-t from-black/60 to-transparent"></div>
                         <div class="absolute bottom-0 left-0 right-0 p-8 text-white">
@@ -122,22 +178,22 @@
                 @endif
 
                 <div class="flex flex-wrap justify-center gap-4">
-                    <a href="{{ route('public.download', $photoGallery->access_code) }}" 
+                    <a href="{{ route('public.download', $photoGallery->access_code) }}"
                        class="inline-flex items-center px-6 py-3 bg-gray-900 text-white rounded-full font-medium transition-all hover:shadow-lg hover:scale-105">
                         <svg class="w-5 h-5 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                             <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3 16.5v2.25A2.25 2.25 0 0 0 5.25 21h13.5A2.25 2.25 0 0 0 21 18.75V16.5M16.5 12 12 16.5m0 0L7.5 12m4.5 4.5V3"/>
                         </svg>
                         Télécharger la galerie
                     </a>
-                    <button id="slideshow-btn" 
-                            class="group cursor-pointer inline-flex items-center px-6 py-3 border-2 border-gray-900 text-gray-900 rounded-full font-medium transition-all hover:bg-gray-100 hover:shadow-lg hover:scale-105">
-                        <svg class="w-5 h-5 mr-2 transition-transform group-hover:scale-110" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 12a3 3 0 1 1-6 0 3 3 0 0 1 6 0Z"/>
-                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M2.458 12C3.732 7.943 7.523 5 12 5c4.478 0 8.268 2.943 9.542 7-1.274 4.057-5.064 7-9.542 7-4.477 0-8.268-2.943-9.542-7Z"/>
-                        </svg>
-                        Diaporama
-                    </button>
-                </div>
+                     <button id="slideshow-btn"
+                             class="group cursor-pointer inline-flex items-center px-6 py-3 border-2 border-gray-900 text-gray-900 rounded-full font-medium transition-all hover:bg-gray-100 hover:shadow-lg hover:scale-105">
+                         <svg class="w-5 h-5 mr-2 transition-transform group-hover:scale-110" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                             <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 12a3 3 0 1 1-6 0 3 3 0 0 1 6 0Z"/>
+                             <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M2.458 12C3.732 7.943 7.523 5 12 5c4.478 0 8.268 2.943 9.542 7-1.274 4.057-5.064 7-9.542 7-4.477 0-8.268-2.943-9.542-7Z"/>
+                         </svg>
+                         Diaporama
+                     </button>
+                 </div>
             </div>
         </div>
     </section>
@@ -148,6 +204,38 @@
     <!-- Photo Grid -->
     <section class="pb-12 bg-white">
         <div class="container mx-auto px-6">
+            <div id="selection-bar"
+                class="hidden sticky top-20 z-30 mb-6 flex flex-wrap items-center justify-between gap-4 rounded-full bg-gray-900 px-6 py-3 text-white shadow-lg">
+                <span id="selection-counter" class="font-medium">0 photo sélectionnée</span>
+                <div class="flex items-center gap-2">
+                    <button type="button" id="select-all-btn"
+                        class="cursor-pointer rounded-full px-4 py-1.5 text-sm font-medium transition-colors hover:bg-white/10">
+                        Tout sélectionner
+                    </button>
+                    <button type="button" id="deselect-all-btn"
+                        class="cursor-pointer rounded-full px-4 py-1.5 text-sm font-medium transition-colors hover:bg-white/10">
+                        Tout désélectionner
+                    </button>
+                    <form id="selection-download-form"
+                        action="{{ route('public.download-selection', $photoGallery->access_code) }}"
+                        method="POST">
+                        @csrf
+                        <div id="selection-ids-container" class="hidden"></div>
+                        <button type="submit" id="selection-download-btn" disabled
+                            class="ml-2 inline-flex cursor-pointer items-center rounded-full bg-white px-5 py-1.5 text-sm font-medium text-gray-900 transition-all disabled:cursor-not-allowed disabled:opacity-40">
+                            <svg class="w-4 h-4 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3 16.5v2.25A2.25 2.25 0 0 0 5.25 21h13.5A2.25 2.25 0 0 0 21 18.75V16.5M16.5 12 12 16.5m0 0L7.5 12m4.5 4.5V3"/>
+                            </svg>
+                            <span id="selection-download-label">Télécharger la sélection</span>
+                        </button>
+                    </form>
+                </div>
+            </div>
+            @if ($errors->any())
+                <div class="mb-6 rounded-lg border border-red-200 bg-red-50 px-4 py-3 text-red-700">
+                    {{ $errors->first() }}
+                </div>
+            @endif
             @foreach ($photoGallery->sections as $section)
                 <div class="mb-12">
                     @if ($photoGallery->sections->count() > 1)
@@ -155,11 +243,32 @@
                     @endif
                     <div class="masonry-grid">
                         @foreach ($section->photos as $photo)
-                            <div class="masonry-item group relative overflow-hidden rounded-lg shadow-md cursor-pointer hover-lift"
-                                 onclick="openSlideshow({{ $section->id }}, {{ $loop->index }})">
-                                <img src="{{ Storage::disk('thumbnails')->url($photo->path) }}"
-                                    alt="{{ $photo->alt ?? 'Photo #' . $photo->id }}"
-                                    class="w-full h-auto object-cover">
+                            <div class="masonry-item group relative overflow-hidden rounded-lg shadow-md cursor-pointer hover-lift js-slideshow-item"
+                                 data-section-id="{{ $section->id }}"
+                                 data-photo-index="{{ $loop->index }}"
+                                 data-photo-id="{{ $photo->id }}">
+                                <div class="photo-placeholder relative w-full bg-gray-100 overflow-hidden">
+                                    <img @if ($photo->width && $photo->height)
+                                            src="data:image/gif;base64,R0lGODlhAQABAIAAAAAAAP///yH5BAEAAAAALAAAAAABAAEAAAIBRAA7"
+                                            data-src="{{ route('thumbnails.show', ['gallery' => $photo->photo_gallery_id, 'photo' => basename($photo->path)]) }}"
+                                            width="{{ $photo->width }}"
+                                            height="{{ $photo->height }}"
+                                            class="js-lazy-img w-full h-auto object-cover"
+                                            @else
+                                            src="{{ route('thumbnails.show', ['gallery' => $photo->photo_gallery_id, 'photo' => basename($photo->path)]) }}"
+                                            class="w-full h-auto object-cover"
+                                            @endif
+                                        alt="{{ $photo->alt ?? 'Photo #' . $photo->id }}"
+                                        loading="lazy">
+                                    <div class="js-lazy-spinner absolute inset-0 flex items-center justify-center opacity-0 pointer-events-none transition-opacity duration-200">
+                                        <div class="h-8 w-8 rounded-full border-2 border-gray-300 border-t-gray-600 animate-spin"></div>
+                                    </div>
+                                </div>
+                                <label class="photo-select-checkbox absolute right-3 top-3 z-10 flex h-10 w-10 cursor-pointer items-center justify-center rounded-full"
+                                       onclick="event.stopPropagation()">
+                                    <input type="checkbox" data-photo-checkbox value="{{ $photo->id }}"
+                                        class="js-photo-checkbox h-5 w-5 cursor-pointer accent-white">
+                                </label>
                                 <div class="absolute inset-0 bg-gradient-to-t from-black/60 to-transparent opacity-0 group-hover:opacity-100 transition-opacity duration-300 flex items-end">
                                     <div class="p-4 transform translate-y-full group-hover:translate-y-0 transition-transform duration-300">
                                         <p class="text-white font-medium">{{ $photo->alt ?? 'Photo #' . $photo->id }}</p>
@@ -175,7 +284,7 @@
 
         <!-- Slideshow Modal -->
         <div id="slideshow-modal"
-            class="slideshow-modal fixed inset-0 bg-black bg-opacity-90 z-50 flex items-center justify-center">
+            class="slideshow-modal fixed inset-0 bg-black/80 z-50 flex items-center justify-center">
             <button id="close-slideshow"
                 class="absolute top-4 right-4 text-white text-4xl cursor-pointer hover:text-gray-300">
                 <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.5"
@@ -199,6 +308,9 @@
             <div id="slideshow-container" class="max-w-5xl w-full p-4 relative">
                 <div class="image-container relative overflow-hidden rounded-lg">
                     <img id="current-slide" class="slide-image current" src="" alt="">
+                    <div id="slide-spinner" class="slide-spinner">
+                        <div class="spinner-ring"></div>
+                    </div>
                 </div>
                 <div class="text-white text-center mt-6">
                     <p id="slide-counter" class="text-sm font-medium tracking-wider"></p>
@@ -206,122 +318,4 @@
                 </div>
             </div>
         </div>
-    </section>
-
-    <script>
-        // Slideshow functionality with sections
-        const sections = {!! json_encode($slideshowData) !!};
-
-        // Flatten all photos for global navigation
-        const allPhotos = [];
-        const sectionsById = {};
-        let globalIndex = 0;
-        
-        sections.forEach(section => {
-            sectionsById[section.id] = section;
-            section.photos.forEach(photo => {
-                allPhotos.push(photo);
-                globalIndex++;
-            });
-        });
-
-        let currentIndex = 0;
-        let isAnimating = false;
-        const modal = document.getElementById('slideshow-modal');
-        const currentSlide = document.getElementById('current-slide');
-        const slideCounter = document.getElementById('slide-counter');
-        const slideAlt = document.getElementById('slide-alt');
-        const totalPhotos = allPhotos.length;
-
-        function openSlideshow(sectionId, localIndex) {
-            // Calculate the global index for this section+localIndex
-            let offset = 0;
-            for (const section of sections) {
-                if (section.id === sectionId) {
-                    currentIndex = offset + localIndex;
-                    break;
-                }
-                offset += section.photos.length;
-            }
-            
-            currentSlide.src = allPhotos[currentIndex].src;
-            currentSlide.alt = allPhotos[currentIndex].alt;
-            slideCounter.textContent = `${currentIndex + 1} / ${totalPhotos}`;
-            slideAlt.textContent = allPhotos[currentIndex].alt;
-            currentSlide.className = 'slide-image current';
-            modal.classList.add('active');
-        }
-
-        function closeSlideshow() {
-            modal.classList.remove('active');
-        }
-
-        function nextSlide() {
-            if (totalPhotos <= 1 || isAnimating) return;
-            isAnimating = true;
-            
-            // Slide current image to the left (exiting)
-            currentSlide.classList.remove('current');
-            currentSlide.classList.add('sliding-out-left');
-            
-            setTimeout(() => {
-                currentIndex = (currentIndex + 1) % totalPhotos;
-                updateSlide();
-                // New image enters from the right
-                currentSlide.classList.remove('sliding-out-left');
-                currentSlide.classList.add('sliding-in-right');
-                
-                setTimeout(() => {
-                    currentSlide.classList.remove('sliding-in-right');
-                    currentSlide.classList.add('current');
-                    isAnimating = false;
-                }, 400);
-            }, 400);
-        }
-
-        function prevSlide() {
-            if (totalPhotos <= 1 || isAnimating) return;
-            isAnimating = true;
-            
-            // Slide current image to the right (exiting)
-            currentSlide.classList.remove('current');
-            currentSlide.classList.add('sliding-out-right');
-            
-            setTimeout(() => {
-                currentIndex = (currentIndex - 1 + totalPhotos) % totalPhotos;
-                updateSlide();
-                // New image enters from the left
-                currentSlide.classList.remove('sliding-out-right');
-                currentSlide.classList.add('sliding-in-left');
-                
-                setTimeout(() => {
-                    currentSlide.classList.remove('sliding-in-left');
-                    currentSlide.classList.add('current');
-                    isAnimating = false;
-                }, 400);
-            }, 400);
-        }
-
-        function updateSlide() {
-            currentSlide.src = allPhotos[currentIndex].src;
-            currentSlide.alt = allPhotos[currentIndex].alt;
-            slideCounter.textContent = `${currentIndex + 1} / ${totalPhotos}`;
-            slideAlt.textContent = allPhotos[currentIndex].alt;
-        }
-
-        // Event listeners
-        document.getElementById('slideshow-btn').addEventListener('click', () => openSlideshow(0));
-        document.getElementById('close-slideshow').addEventListener('click', closeSlideshow);
-        document.getElementById('next-btn').addEventListener('click', nextSlide);
-        document.getElementById('prev-btn').addEventListener('click', prevSlide);
-
-        // Keyboard navigation
-        document.addEventListener('keydown', (e) => {
-            if (!modal.classList.contains('active')) return;
-
-            if (e.key === 'Escape') closeSlideshow();
-            if (e.key === 'ArrowRight') nextSlide();
-            if (e.key === 'ArrowLeft') prevSlide();
-        });
-    </script>
 </x-layout>

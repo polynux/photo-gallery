@@ -42,18 +42,25 @@ bootstrap/cache/*.php
 !storage/framework/.gitignore
 !storage/framework/cache/.gitignore
 !storage/framework/cache/data/**/.gitignore
-!storage/framework/sessions/**/.gitignore
+!storage/framework/sessions/.gitignore
 !storage/framework/testing/.gitignore
 !storage/framework/testing/**/.gitignore
-!storage/framework/views/**/.gitignore
+!storage/framework/views/.gitignore
 
 # Test & build outputs
 .phpunit.result.cache
 .phpunit.cache
-.phpactor.json
 
 # Editor / OS noise
 .idea
 .vscode
 *.swp
 .DS_Store
+
+# Agent tooling & local dev mounts
+test-docker
+database/database.sqlite
+.agent*
+.opencode
+boost.json
+opencode.json

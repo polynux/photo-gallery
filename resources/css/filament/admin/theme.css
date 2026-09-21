@@ -1,0 +1,80 @@
+@import '../../../../vendor/filament/filament/resources/css/theme.css';
+
+@source '../../../../app/Filament/**/*';
+@source '../../../../resources/views/filament/**/*';
+@source '../../../../resources/views/components/**/*';
+
+@theme {
+    --font-sans: 'Inter', ui-sans-serif, system-ui, sans-serif;
+}
+
+@utility univers-editor-grid {
+    --univers-grid-line-color: color-mix(in srgb, var(--color-gray-400) 30%, transparent);
+    --univers-grid-line-width: 1px;
+    background-color: color-mix(in srgb, var(--color-gray-100) 75%, transparent);
+    background-image: linear-gradient(to right, var(--univers-grid-line-color) var(--univers-grid-line-width), transparent var(--univers-grid-line-width)), linear-gradient(to bottom, var(--univers-grid-line-color) var(--univers-grid-line-width), transparent var(--univers-grid-line-width));
+    background-size: calc(var(--gs-column-width) + 0px) var(--gs-cell-height);
+    background-position: 0 0;
+}
+
+@variant dark {
+    .univers-editor-grid {
+        background-color: color-mix(in srgb, var(--color-gray-950) 75%, transparent);
+        background-image: linear-gradient(to right, var(--univers-grid-line-color) var(--univers-grid-line-width), transparent var(--univers-grid-line-width)), linear-gradient(to bottom, var(--univers-grid-line-color) var(--univers-grid-line-width), transparent var(--univers-grid-line-width));
+    }
+}
+
+.univers-editor-grid--custom .ui-resizable-se {
+    filter: brightness(1.35);
+}
+
+.univers-layout-grid {
+    width: 100% !important;
+    min-width: 0;
+    max-width: none !important;
+}
+
+.univers-layout-grid.grid-stack {
+    min-height: 64px;
+}
+
+.univers-layout-grid:not(.grid-stack) {
+    display: flex;
+    flex-direction: column;
+    gap: 10px;
+}
+
+.univers-layout-grid--preset,
+.univers-layout-grid--custom {
+    display: grid !important;
+    grid-template-columns: repeat(12, 1fr);
+    grid-auto-rows: 56px;
+    gap: 10px;
+    transform-origin: top left;
+}
+
+.univers-layout-grid--preset {
+    grid-template-columns: repeat(12, 64px);
+    grid-auto-rows: 64px;
+    width: 878px !important;
+}
+
+.univers-generic-item {
+    width: 50%;
+    align-self: center;
+    aspect-ratio: 4 / 3;
+}
+
+.univers-editor-grid--generic {
+    max-height: 36rem;
+    overflow-y: auto;
+    overflow-x: hidden;
+}
+
+.univers-editor-grid--preset {
+    overflow: hidden;
+}
+
+.univers-editor-item-content {
+    height: 100%;
+}

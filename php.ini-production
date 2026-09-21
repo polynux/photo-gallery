@@ -436,8 +436,10 @@ max_input_time = 60
 ;max_multipart_body_parts = 1500
 
 ; Maximum amount of memory a script may consume
+; Raised above the 256M default: GD image processing (thumbnail/derivative
+; generation) needs headroom for uncompressed bitmaps of large photos.
 ; https://php.net/memory-limit
-memory_limit = 256M
+memory_limit = 512M
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ; Error handling and logging ;

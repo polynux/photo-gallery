@@ -21,10 +21,6 @@
     --color-border-light: #f3f4f6;
 }
 
-@plugin "daisyui" {
-    themes: false;
-}
-
 /* Base Styles */
 html {
     scroll-behavior: smooth;
@@ -377,5 +373,43 @@ body {
     body {
         background: white !important;
         color: black !important;
+    }
+}
+
+/* Univers Layout Grid */
+.univers-grid {
+    display: grid;
+    grid-template-columns: repeat(12, minmax(0, 1fr));
+    grid-auto-rows: minmax(32px, 6vw);
+    grid-auto-flow: row;
+    gap: 10px;
+}
+
+.univers-tile {
+    grid-column: span var(--univers-width);
+    grid-row: span var(--univers-height);
+    min-height: 0;
+}
+
+.univers-grid--preset .univers-tile,
+.univers-grid--custom .univers-tile {
+    grid-column: calc(var(--univers-x) + 1) / span var(--univers-width);
+    grid-row: calc(var(--univers-y) + 1) / span var(--univers-height);
+}
+
+.univers-grid__notice {
+    grid-column: 1 / -1;
+}
+
+@media (max-width: 640px) {
+    .univers-grid {
+        grid-template-columns: 1fr;
+        grid-auto-rows: minmax(180px, 55vw);
+    }
+
+    .univers-tile,
+    .univers-grid--custom .univers-tile {
+        grid-column: 1 / -1;
+        grid-row: span 1;
     }
 }

@@ -2,16 +2,20 @@
 
 namespace App\Models;
 
-use Exception;
+use App\Jobs\GeneratePhotoThumbnail;
+use App\Services\PhotoPositionService;
+use App\Services\ThumbnailService;
+use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
 use Illuminate\Support\Facades\Storage;
-use Intervention\Image\Drivers\Gd\Driver;
-use Intervention\Image\ImageManager;
+use Throwable;
 
 class Photo extends Model
 {
-    protected $fillable = ['photo_gallery_id', 'photo_section_id', 'path', 'alt', 'position'];
+    use HasFactory;
+
+    protected $fillable = ['photo_gallery_id', 'photo_section_id', 'path', 'alt', 'position', 'width', 'height'];
 
     protected ?int $previousSectionId = null;
 
@@ -19,25 +23,21 @@ class Photo extends Model
     {
         static::creating(function (Photo $photo) {
             if ($photo->position === null && $photo->photo_section_id) {
-                $photo->position = Photo::where('photo_section_id', $photo->photo_section_id)
-                    ->max('position') + 1 ?? 1;
-            }
-
-            if (env('GENERATE_THUMBNAILS', true)) {
-                \App\Jobs\GeneratePhotoThumbnail::dispatch($photo);
+                $photo->position = app(PhotoPositionService::class)->appendPosition($photo->photo_section_id);
             }
         });
 
         static::updating(function (Photo $photo) {
-            if ($photo->isDirty('photo_section_id')) {
+            if ($photo->isDirty('photo_section_id') && $photo->previousSectionId === null) {
                 $photo->previousSectionId = $photo->getOriginal('photo_section_id');
 
-                $photo->position = Photo::where('photo_section_id', $photo->photo_section_id)
-                    ->max('position') + 1 ?? 1;
+                $photo->position = app(PhotoPositionService::class)->appendPosition($photo->photo_section_id);
             }
+        });
 
-            if (env('GENERATE_THUMBNAILS', true) && $photo->isDirty('path')) {
-                \App\Jobs\GeneratePhotoThumbnail::dispatch($photo);
+        static::created(function (Photo $photo) {
+            if ($photo->shouldGenerateThumbnail()) {
+                GeneratePhotoThumbnail::dispatch($photo)->afterCommit();
             }
         });
 
@@ -45,10 +45,24 @@ class Photo extends Model
             if ($photo->previousSectionId) {
                 $photo->reindexSectionPositions($photo->previousSectionId);
             }
+
+            if ($photo->wasChanged('path')) {
+                $originalPath = $photo->getOriginal('path');
+
+                if ($originalPath) {
+                    Storage::disk('photo')->delete($originalPath);
+                    app(ThumbnailService::class)->delete($originalPath);
+                }
+            }
+
+            if ($photo->wasChanged('path') && $photo->shouldGenerateThumbnail()) {
+                GeneratePhotoThumbnail::dispatch($photo)->afterCommit();
+            }
         });
 
         static::deleting(function (Photo $photo) {
-            $photo->deleteThumbnail();
+            Storage::disk('photo')->delete($photo->path);
+            app(ThumbnailService::class)->delete($photo->path);
 
             $sectionId = $photo->photo_section_id;
             if ($sectionId) {
@@ -76,55 +90,38 @@ class Photo extends Model
     }
 
     /**
-     * @return HasMany<PhotoGallery,Photo>
+     * Generate the WebP derivatives (grid thumbnail and display image) for this photo.
+     *
+     * @throws Throwable
      */
-    public function galleries()
-    {
-        return $this->hasMany(PhotoGallery::class, 'cover_photo_id');
-    }
-
     public function generateThumbnail(): void
     {
-        try {
-            $disk = Storage::disk('private');
-            $thumbnailPath = $disk->path('thumbnails/' . $this->path);
-
-            if (file_exists($thumbnailPath)) {
-                return;
-            }
-
-            $manager = new ImageManager(new Driver);
-            $image = $manager->read(Storage::disk('photo')->path($this->path));
-            $image->scale(1920);
-
-            $image->toJpeg(80);
-
-            if (! file_exists(dirname($thumbnailPath))) {
-                mkdir(dirname($thumbnailPath), 0755, true);
-            }
-            $image->save($thumbnailPath);
-        } catch (Exception $e) {
-            report($e);
-        }
+        app(ThumbnailService::class)->generate($this);
     }
 
+    /**
+     * Delete the stored derivatives (grid thumbnail, display image and legacy file).
+     */
     public function deleteThumbnail(): void
     {
-        if ($this->path && Storage::disk('private')->exists('thumbnails/' . $this->path)) {
-            Storage::disk('private')->delete('thumbnails/' . $this->path);
-        }
+        app(ThumbnailService::class)->delete($this->path);
+    }
+
+    protected function casts(): array
+    {
+        return [
+            'width' => 'integer',
+            'height' => 'integer',
+        ];
     }
 
     protected function reindexSectionPositions(int $sectionId): void
     {
-        $photos = Photo::where('photo_section_id', $sectionId)
-            ->orderBy('position')
-            ->get();
+        app(PhotoPositionService::class)->reindexAllInSection($sectionId);
+    }
 
-        foreach ($photos as $index => $photo) {
-            if ($photo->position !== $index + 1) {
-                $photo->update(['position' => $index + 1]);
-            }
-        }
+    protected function shouldGenerateThumbnail(): bool
+    {
+        return config('gallery.generate_thumbnails');
     }
 }

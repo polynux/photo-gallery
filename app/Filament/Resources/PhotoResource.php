@@ -2,12 +2,29 @@
 
 namespace App\Filament\Resources;
 
-use App\Filament\Resources\PhotoResource\Pages;
+use App\Filament\Resources\PhotoResource\Pages\CreatePhoto;
+use App\Filament\Resources\PhotoResource\Pages\EditPhoto;
+use App\Filament\Resources\PhotoResource\Pages\ListPhotos;
 use App\Models\Photo;
-use Filament\Forms;
-use Filament\Forms\Form;
+use App\Models\PhotoSection;
+use App\Services\PhotoPositionService;
+use BackedEnum;
+use Filament\Actions\Action;
+use Filament\Actions\BulkAction;
+use Filament\Actions\BulkActionGroup;
+use Filament\Actions\DeleteAction;
+use Filament\Actions\DeleteBulkAction;
+use Filament\Actions\EditAction;
+use Filament\Forms\Components\FileUpload;
+use Filament\Forms\Components\Select;
+use Filament\Forms\Components\TextInput;
 use Filament\Resources\Resource;
-use Filament\Tables;
+use Filament\Schemas\Components\Utilities\Get;
+use Filament\Schemas\Components\Utilities\Set;
+use Filament\Schemas\Schema;
+use Filament\Tables\Columns\ImageColumn;
+use Filament\Tables\Columns\TextColumn;
+use Filament\Tables\Filters\SelectFilter;
 use Filament\Tables\Table;
 use Illuminate\Database\Eloquent\Builder;
 
@@ -15,33 +32,70 @@ class PhotoResource extends Resource
 {
     protected static ?string $model = Photo::class;
 
-    protected static ?string $navigationIcon = 'heroicon-o-photo';
+    protected static string|BackedEnum|null $navigationIcon = 'heroicon-o-photo';
 
-    public static function form(Form $form): Form
+    public static function getNavigationLabel(): string
     {
-        return $form
-            ->schema([
-                Forms\Components\Select::make('photo_gallery_id')
+        return __('admin.photo.navigation_label');
+    }
+
+    public static function getModelLabel(): string
+    {
+        return __('admin.photo.model_label');
+    }
+
+    public static function getPluralModelLabel(): string
+    {
+        return __('admin.photo.plural_model_label');
+    }
+
+    public static function form(Schema $schema): Schema
+    {
+        return $schema
+            ->components([
+                Select::make('photo_gallery_id')
                     ->relationship('photoGallery', 'name')
                     ->required()
                     ->live()
-                    ->afterStateUpdated(fn (Forms\Set $set) => $set('photo_section_id', null)),
-                Forms\Components\Select::make('photo_section_id')
-                    ->relationship('photoSection', 'name', fn (Builder $query, Forms\Get $get) => $query->where('photo_gallery_id', $get('photo_gallery_id')))
+                    ->afterStateUpdated(fn (Set $set) => $set('photo_section_id', null)),
+                Select::make('photo_section_id')
+                    ->relationship('photoSection', 'name', fn (Builder $query, Get $get) => $query->where('photo_gallery_id', $get('photo_gallery_id')))
                     ->required()
                     ->label('Section'),
-                Forms\Components\FileUpload::make('path')
+                FileUpload::make('path')
+                    ->label(__('admin.common.path'))
                     ->disk('photo')
-                    ->directory(request()->route('photo_gallery_id'))
+                    ->directory(fn (Get $get): ?string => $get('photo_gallery_id'))
                     ->visibility('private')
                     ->image()
                     ->imageEditor()
                     ->required(),
-                Forms\Components\TextInput::make('alt')
-                    ->label('Alt Text')
-                    ->helperText('Description of the image for accessibility')
+                TextInput::make('alt')
+                    ->label(__('admin.photo.alt_text'))
+                    ->helperText(__('admin.common.helper_alt_description'))
                     ->maxLength(255),
             ]);
+    }
+
+    public static function getEloquentQuery(): Builder
+    {
+        $query = parent::getEloquentQuery()
+            ->orderBy('position')
+            ->with(['photoSection', 'photoGallery']);
+
+        $galleryId = request()->get('photo_gallery_id');
+
+        if ($galleryId) {
+            $query->where('photo_gallery_id', $galleryId);
+        }
+
+        $sectionId = request()->get('photo_section_id');
+
+        if ($sectionId) {
+            $query->where('photo_section_id', $sectionId);
+        }
+
+        return $query;
     }
 
     public static function table(Table $table): Table
@@ -49,54 +103,59 @@ class PhotoResource extends Resource
         return $table
             ->defaultSort('position', 'asc')
             ->columns([
-                Tables\Columns\ImageColumn::make('path')
-                    ->disk('thumbnails')
-                    ->visibility('private')
+                ImageColumn::make('path')
+                    ->state(fn (Photo $record): string => route('thumbnails.show', [
+                        'gallery' => $record->photo_gallery_id,
+                        'photo' => basename($record->path),
+                    ]))
+                    ->checkFileExistence(false)
                     ->square(),
-                Tables\Columns\TextColumn::make('photoSection.name')
-                    ->label('Section')
+                TextColumn::make('photoSection.name')
+                    ->label(__('admin.common.section'))
                     ->sortable(),
-                Tables\Columns\TextColumn::make('position')
-                    ->label('Position')
+                TextColumn::make('position')
+                    ->label(__('admin.common.position'))
                     ->sortable(),
-                Tables\Columns\TextColumn::make('alt')
+                TextColumn::make('alt')
+                    ->label(__('admin.common.alt'))
                     ->searchable()
                     ->limit(30),
-                Tables\Columns\TextColumn::make('created_at')
+                TextColumn::make('created_at')
+                    ->label(__('admin.common.created_at'))
                     ->dateTime()
                     ->sortable()
                     ->toggleable(isToggledHiddenByDefault: true),
             ])
             ->reorderable('position')
             ->filters([
-                Tables\Filters\SelectFilter::make('photo_gallery_id')
+                SelectFilter::make('photo_gallery_id')
                     ->relationship('photoGallery', 'name')
-                    ->label('Photo Gallery')
+                    ->label(__('admin.photo.photo_gallery'))
                     ->preload(),
-                Tables\Filters\SelectFilter::make('photo_section_id')
+                SelectFilter::make('photo_section_id')
                     ->relationship('photoSection', 'name')
-                    ->label('Section')
+                    ->label(__('admin.common.section'))
                     ->preload(),
             ])
-            ->actions([
-                Tables\Actions\EditAction::make(),
-                Tables\Actions\DeleteAction::make(),
-                Tables\Actions\Action::make('set_as_cover')
-                    ->label('Set as Cover')
+            ->recordActions([
+                EditAction::make(),
+                DeleteAction::make(),
+                Action::make('set_as_cover')
+                    ->label(__('admin.photo.set_as_cover'))
                     ->icon('heroicon-o-star')
                     ->action(function (Photo $record) {
                         $record->photoGallery->update(['cover_photo_id' => $record->id]);
                     }),
             ])
-            ->bulkActions([
-                Tables\Actions\BulkActionGroup::make([
-                    Tables\Actions\DeleteBulkAction::make(),
-                    Tables\Actions\BulkAction::make('move_to_section')
-                        ->label('Move to Section')
+            ->toolbarActions([
+                BulkActionGroup::make([
+                    DeleteBulkAction::make(),
+                    BulkAction::make('move_to_section')
+                        ->label(__('admin.photo.move_to_section'))
                         ->icon('heroicon-o-folder')
                         ->form([
-                            Forms\Components\Select::make('photo_section_id')
-                                ->label('Section')
+                            Select::make('photo_section_id')
+                                ->label(__('admin.common.section'))
                                 ->required()
                                 ->options(function () {
                                     $galleryId = request()->get('photo_gallery_id');
@@ -104,13 +163,19 @@ class PhotoResource extends Resource
                                         return [];
                                     }
 
-                                    return \App\Models\PhotoSection::where('photo_gallery_id', $galleryId)
+                                    return PhotoSection::where('photo_gallery_id', $galleryId)
                                         ->pluck('name', 'id');
                                 }),
                         ])
-                        ->action(function (array $data, $records) {
+                        ->action(function (array $data, $records, PhotoPositionService $positionService) {
+                            $targetSection = PhotoSection::query()->findOrFail($data['photo_section_id']);
+
                             foreach ($records as $record) {
-                                $record->update(['photo_section_id' => $data['photo_section_id']]);
+                                if ($record->photo_gallery_id !== $targetSection->photo_gallery_id) {
+                                    continue;
+                                }
+
+                                $positionService->moveToSection($record, $targetSection->id);
                             }
                         }),
                 ]),
@@ -127,9 +192,9 @@ class PhotoResource extends Resource
     public static function getPages(): array
     {
         return [
-            'index' => Pages\ListPhotos::route('/'),
-            'create' => Pages\CreatePhoto::route('/create'),
-            'edit' => Pages\EditPhoto::route('/{record}/edit'),
+            'index' => ListPhotos::route('/'),
+            'create' => CreatePhoto::route('/create'),
+            'edit' => EditPhoto::route('/{record}/edit'),
         ];
     }
 }

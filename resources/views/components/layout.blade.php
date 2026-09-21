@@ -9,7 +9,7 @@
     <meta name="keywords" content="{{ $keywords ?? 'photographie, photographe, portrait, mariage, événementiel' }}">
     <meta name="author" content="Pinaton Photographie">
     <meta name="theme-color" content="#1f2937">
-    <meta name="robots" content="index, follow">
+    <meta name="robots" content="{{ $robots ?? 'index, follow' }}">
     <link rel="icon" href="{{ asset('favicon.ico') }}" type="image/x-icon">
     <meta property="og:title" content="{{ $title ?? 'Pinaton Photographie' }}">
     <meta property="og:description" content="{{ $description ?? 'Pinaton Photographie - Capturez vos moments précieux avec un photographe professionnel.' }}">
@@ -20,14 +20,16 @@
     <meta name="twitter:title" content="{{ $title ?? 'Pinaton Photographie' }}">
     <meta name="twitter:description" content="{{ $description ?? 'Pinaton Photographie - Capturez vos moments précieux avec un photographe professionnel.' }}">
     <meta name="twitter:image" content="{{ asset('img/og-image.webp') }}">
-    
+
     <!-- Google Fonts -->
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
     <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&family=Playfair+Display:wght@400;500;600;700&display=swap" rel="stylesheet">
-    
+
     @vite(['resources/css/app.css', 'resources/js/app.js'])
-    <x-plausible::tracking extensions="outbound-links, file-downloads" />
+    @production
+        <x-plausible::tracking extensions="outbound-links, file-downloads" />
+    @endproduction
 </head>
 
 <body class="bg-white text-gray-900 antialiased">

@@ -6,7 +6,9 @@ namespace App\Filament\Widgets;
 
 use App\Filament\Resources\PhotoGalleryResource;
 use App\Models\PhotoGallery;
-use Filament\Tables;
+use Filament\Actions\Action;
+use Filament\Tables\Columns\ImageColumn;
+use Filament\Tables\Columns\TextColumn;
 use Filament\Tables\Table;
 use Filament\Widgets\TableWidget as BaseWidget;
 
@@ -21,33 +23,35 @@ class RecentPhotoGalleries extends BaseWidget
         return $table
             ->query(
                 PhotoGallery::query()
+                    ->with('coverPhoto')
                     ->latest()
                     ->limit(5)
             )
             ->columns([
-                Tables\Columns\ImageColumn::make('coverPhoto.path')
-                    ->label('Cover')
-                    ->defaultImageUrl(fn ($record) => $record->photos()->first() ?
-                        asset('photos/'.$record->photos()->first()->path) : null)
-                    ->circular(),
-                Tables\Columns\TextColumn::make('name'),
-                Tables\Columns\TextColumn::make('access_code')
+                ImageColumn::make('coverPhoto.path')
+                    ->label(__('admin.gallery.cover'))
+                    ->disk('photo'),
+                TextColumn::make('name')
+                    ->label(__('admin.common.name')),
+                TextColumn::make('access_code')
+                    ->label(__('admin.gallery.access_code'))
                     ->copyable(),
-                Tables\Columns\TextColumn::make('photos_count')
+                TextColumn::make('photos_count')
                     ->counts('photos')
-                    ->label('Photos'),
-                Tables\Columns\TextColumn::make('created_at')
+                    ->label(__('admin.gallery.photos_count')),
+                TextColumn::make('created_at')
+                    ->label(__('admin.common.created_at'))
                     ->dateTime()
                     ->sortable(),
             ])
-            ->actions([
-                Tables\Actions\Action::make('view_gallery')
-                    ->label('View Gallery')
+            ->recordActions([
+                Action::make('view_gallery')
+                    ->label(__('admin.gallery.view_gallery'))
                     ->icon('heroicon-o-eye')
                     ->url(fn (PhotoGallery $record) => route('public.show', $record->access_code))
                     ->openUrlInNewTab(),
-                Tables\Actions\Action::make('manage')
-                    ->label('Manage')
+                Action::make('manage')
+                    ->label(__('admin.gallery.manage'))
                     ->icon('heroicon-o-pencil')
                     ->url(fn (PhotoGallery $record) => PhotoGalleryResource::getUrl('edit', ['record' => $record])),
             ]);

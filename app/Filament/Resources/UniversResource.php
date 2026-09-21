@@ -2,39 +2,63 @@
 
 namespace App\Filament\Resources;
 
-use App\Filament\Resources\UniversResource\Pages;
+use App\Filament\Resources\UniversResource\Pages\CreateUnivers;
+use App\Filament\Resources\UniversResource\Pages\EditUnivers;
+use App\Filament\Resources\UniversResource\Pages\ListUnivers;
 use App\Models\Univers;
-use Filament\Forms;
-use Filament\Forms\Form;
+use BackedEnum;
+use Filament\Actions\BulkActionGroup;
+use Filament\Actions\DeleteBulkAction;
+use Filament\Actions\EditAction;
+use Filament\Forms\Components\FileUpload;
+use Filament\Forms\Components\Textarea;
+use Filament\Forms\Components\TextInput;
 use Filament\Resources\Resource;
-use Filament\Tables;
+use Filament\Schemas\Schema;
+use Filament\Tables\Columns\ImageColumn;
+use Filament\Tables\Columns\TextColumn;
 use Filament\Tables\Table;
 
 class UniversResource extends Resource
 {
     protected static ?string $model = Univers::class;
 
-    protected static ?string $navigationIcon = 'heroicon-o-table-cells';
+    protected static string|BackedEnum|null $navigationIcon = 'heroicon-o-table-cells';
 
-    public static function form(Form $form): Form
+    public static function getNavigationLabel(): string
     {
-        return $form
-            ->schema([
+        return __('admin.univers.navigation_label');
+    }
+
+    public static function getModelLabel(): string
+    {
+        return __('admin.univers.model_label');
+    }
+
+    public static function getPluralModelLabel(): string
+    {
+        return __('admin.univers.plural_model_label');
+    }
+
+    public static function form(Schema $schema): Schema
+    {
+        return $schema
+            ->components([
                 //
-                Forms\Components\FileUpload::make('path')
-                    ->label('Fichier')
+                FileUpload::make('path')
+                    ->label(__('admin.univers.file'))
                     ->required()
-                    ->disk('public')
+                    ->disk('photo')
                     ->directory('univers')
-                    ->acceptedFileTypes(['image/*', 'video/*'])
-                    ->maxSize(2048)
+                    ->acceptedFileTypes(['image/*'])
+                    ->image()
                     ->columnSpanFull(),
-                Forms\Components\TextInput::make('title')
+                TextInput::make('title')
                     ->maxLength(255)
-                    ->label('Titre'),
-                Forms\Components\Textarea::make('description')
+                    ->label(__('admin.univers.title')),
+                Textarea::make('description')
                     ->maxLength(65535)
-                    ->label('Description'),
+                    ->label(__('admin.univers.description')),
             ]);
     }
 
@@ -43,40 +67,37 @@ class UniversResource extends Resource
         return $table
             ->defaultSort('position', 'asc')
             ->columns([
-                Tables\Columns\TextColumn::make('position')
-                    ->label('Position')
+                TextColumn::make('position')
+                    ->label(__('admin.common.position'))
                     ->sortable(),
-                Tables\Columns\TextColumn::make('id')
+                TextColumn::make('id')
                     ->label('ID')
                     ->sortable()
                     ->searchable(),
-                Tables\Columns\ImageColumn::make('path')
-                    ->label('Fichier')
-                    ->disk('public')
-                    ->circular()
-                    ->defaultImageUrl(fn ($record) => $record->path ? asset('storage/univers/'.$record->path) : null)
+                ImageColumn::make('preview_url')
+                    ->label(__('admin.univers.file'))
+                    ->circular(),
+                TextColumn::make('title')
+                    ->label(__('admin.univers.title'))
                     ->searchable(),
-                Tables\Columns\TextColumn::make('title')
-                    ->label('Titre')
-                    ->searchable(),
-                Tables\Columns\TextColumn::make('description')
-                    ->label('Description')
+                TextColumn::make('description')
+                    ->label(__('admin.univers.description'))
                     ->limit(50)
                     ->searchable(),
-                Tables\Columns\TextColumn::make('created_at')
-                    ->label('Créé le')
+                TextColumn::make('created_at')
+                    ->label(__('admin.univers.created_at'))
                     ->dateTime()
                     ->sortable(),
             ])
             ->filters([
                 //
             ])
-            ->actions([
-                Tables\Actions\EditAction::make(),
+            ->recordActions([
+                EditAction::make(),
             ])
-            ->bulkActions([
-                Tables\Actions\BulkActionGroup::make([
-                    Tables\Actions\DeleteBulkAction::make(),
+            ->toolbarActions([
+                BulkActionGroup::make([
+                    DeleteBulkAction::make(),
                 ]),
             ])
             ->reorderable('position');
@@ -92,9 +113,9 @@ class UniversResource extends Resource
     public static function getPages(): array
     {
         return [
-            'index' => Pages\ListUnivers::route('/'),
-            'create' => Pages\CreateUnivers::route('/create'),
-            'edit' => Pages\EditUnivers::route('/{record}/edit'),
+            'index' => ListUnivers::route('/'),
+            'create' => CreateUnivers::route('/create'),
+            'edit' => EditUnivers::route('/{record}/edit'),
         ];
     }
 }

@@ -4,68 +4,70 @@ namespace App\Http\Controllers;
 
 use App\Models\Photo;
 use App\Models\PhotoGallery;
+use App\Services\GalleryZipStream;
+use App\Services\ThumbnailService;
+use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Log;
 use Illuminate\Support\Facades\Storage;
 use Illuminate\Support\Str;
-use ZipStream\ZipStream;
+use Illuminate\View\View;
+use Symfony\Component\HttpFoundation\StreamedResponse;
 
 class PublicController extends Controller
 {
-    public function show($access_code)
+    public function show(string $accessCode): RedirectResponse|View
     {
-        $photoGallery = PhotoGallery::where('access_code', $access_code)->firstOrFail();
-        if (! $photoGallery) {
-            return back()->withErrors(['access_code' => 'Cette galerie n\'existe pas']);
-        }
-        if (session('authenticated_gallery_'.$photoGallery->id)) {
-            return redirect()->route('public.gallery', $access_code);
+        $photoGallery = PhotoGallery::query()->where('access_code', Str::upper($accessCode))->firstOrFail();
+
+        if ($this->canViewGallery($photoGallery)) {
+            return redirect()->route('public.gallery', $photoGallery->access_code);
         }
 
-        return view('public.login', compact('photoGallery'));
+        return view('public.login', ['photoGallery' => $photoGallery]);
     }
 
-    public function showForm()
+    public function showForm(): View
     {
         return view('public.gallery-select');
     }
 
-    public function authenticate(Request $request, $access_code)
+    public function authenticate(Request $request, string $accessCode): RedirectResponse
     {
-        $photoGallery = PhotoGallery::where('access_code', $access_code)->firstOrFail();
-
-        if ($request->password === $photoGallery->password) {
-            session(['authenticated_gallery_'.$photoGallery->id => true]);
-
-            return redirect()->route('public.gallery', $access_code);
-        }
-
-        return back()->withErrors(['password' => 'Mot de passe incorrect']);
-    }
-
-    public function authenticateSelect(Request $request)
-    {
-        $request->validate([
-            'access_code' => 'required|exists:photo_galleries,access_code',
+        $validated = $request->validate([
+            'password' => ['required', 'string', 'max:255'],
+        ], [
+            'password.required' => 'Le mot de passe est obligatoire',
         ]);
 
-        $photoGallery = PhotoGallery::where('access_code', $request->access_code)->firstOrFail();
-        if (! $photoGallery) {
-            return back()->withErrors(['access_code' => 'Cette galerie n\'existe pas']);
-        }
+        $photoGallery = PhotoGallery::query()->where('access_code', Str::upper($accessCode))->firstOrFail();
 
-        if ($request->password === $photoGallery->password) {
-            session(['authenticated_gallery_'.$photoGallery->id => true]);
-
-            return redirect()->route('public.gallery', $request->access_code);
-        }
-
-        return back()->withErrors(['password' => 'Mot de passe incorrect']);
+        return $this->attemptGalleryAuthentication($request, $photoGallery, $validated['password'], $accessCode);
     }
 
-    public function gallery($access_code)
+    public function authenticateSelect(Request $request): RedirectResponse
     {
-        $photoGallery = PhotoGallery::where('access_code', $access_code)
+        $request->merge([
+            'access_code' => Str::upper(trim((string) $request->input('access_code'))),
+        ]);
+
+        $validated = $request->validate([
+            'access_code' => ['required', 'string', 'exists:photo_galleries,access_code'],
+            'password' => ['required', 'string', 'max:255'],
+        ], [
+            'access_code.required' => 'Le code d\'accès est obligatoire',
+            'access_code.exists' => 'Code d\'accès inconnu',
+            'password.required' => 'Le mot de passe est obligatoire',
+        ]);
+
+        $photoGallery = PhotoGallery::query()->where('access_code', $validated['access_code'])->firstOrFail();
+
+        return $this->attemptGalleryAuthentication($request, $photoGallery, $validated['password'], $validated['access_code']);
+    }
+
+    public function gallery(string $accessCode): RedirectResponse|View
+    {
+        $photoGallery = PhotoGallery::query()->where('access_code', Str::upper($accessCode))
             ->with(['sections' => function ($query) {
                 $query->orderBy('position')->with(['photos' => function ($q) {
                     $q->orderBy('position');
@@ -73,114 +75,195 @@ class PublicController extends Controller
             }])
             ->firstOrFail();
 
-        if (! session('authenticated_gallery_'.$photoGallery->id)) {
-            return redirect()->route('public.show', $access_code);
+        if (! $this->canViewGallery($photoGallery)) {
+            return redirect()->route('public.show', $photoGallery->access_code);
         }
 
-        $slideshowData = $photoGallery->sections->map(function ($section) {
-            return [
-                'id' => $section->id,
-                'name' => $section->name,
-                'photos' => $section->photos->map(function ($photo) {
-                    return [
-                        'src' => Storage::disk('photo')->url($photo->path),
-                        'alt' => $photo->alt ?? 'Photo #'.$photo->id,
-                    ];
-                })->values()->toArray(),
-            ];
-        })->values()->toArray();
+        $slideshowData = [
+            'lazyRootMargin' => config('gallery.lazy_root_margin', 800),
+            'sections' => $photoGallery->sections->map(function ($section) {
+                return [
+                    'id' => $section->id,
+                    'name' => $section->name,
+                    'photos' => $section->photos->map(function ($photo) {
+                        return [
+                            'id' => $photo->id,
+                            'src' => route('display.show', [
+                                'gallery' => $photo->photo_gallery_id,
+                                'photo' => basename($photo->path),
+                            ]),
+                            'alt' => $photo->alt ?? 'Photo #' . $photo->id,
+                        ];
+                    })->values()->toArray(),
+                ];
+            })->values()->toArray(),
+        ];
 
-        return view('public.gallery', compact('photoGallery', 'slideshowData'));
+        return view('public.gallery', [
+            'photoGallery' => $photoGallery,
+            'slideshowData' => $slideshowData,
+        ]);
     }
 
-    public function download($access_code)
+    public function download(string $accessCode): RedirectResponse|StreamedResponse
     {
-        $photoGallery = PhotoGallery::where('access_code', $access_code)
-            ->with(['sections' => function ($query) {
-                $query->orderBy('position')->with(['photos' => function ($q) {
-                    $q->orderBy('position');
-                }]);
-            }])
-            ->firstOrFail();
+        $photoGallery = PhotoGallery::query()->where('access_code', Str::upper($accessCode))->firstOrFail();
 
-        if (! session('authenticated_gallery_'.$photoGallery->id)) {
-            return redirect()->route('public.show', $access_code);
+        if (! $this->canViewGallery($photoGallery)) {
+            return redirect()->route('public.show', $photoGallery->access_code);
         }
 
-        $zipName = Str::slug($photoGallery->name).'.zip';
+        $zipStream = app(GalleryZipStream::class);
+        $zipName = $zipStream->slugArchiveName($photoGallery);
 
-        set_time_limit(0);
-
-        $zip = new ZipStream(
-            outputName: $zipName,
-            sendHttpHeaders: true,
-        );
-
-        $galleryFolder = $photoGallery->name;
-        $sections = $photoGallery->sections;
-        $hasMultipleSections = $sections->count() > 1 || $sections->first()?->is_default === false;
-
-        foreach ($sections as $section) {
-            $sectionFolder = $hasMultipleSections
-                ? $galleryFolder.'/'.$section->name
-                : $galleryFolder;
-
-            $maxPosition = $section->photos->count();
-            $paddingLength = max(2, strlen((string) $maxPosition));
-
-            foreach ($section->photos as $photo) {
-                $filePath = storage_path('app/private/photos/'.$photo->path);
-
-                if (! file_exists($filePath)) {
-                    Log::warning("File not found: {$filePath}");
-
-                    continue;
-                }
-
-                $position = str_pad($photo->position, $paddingLength, '0', STR_PAD_LEFT);
-
-                $filename = $hasMultipleSections
-                    ? "{$position} - {$section->name}.jpg"
-                    : "{$position}.jpg";
-
-                $zip->addFileFromPath("{$sectionFolder}/{$filename}", $filePath);
-            }
-        }
-
-        $zip->finish();
-
-        set_time_limit(30);
-        exit;
+        return response()->streamDownload(function () use ($zipStream, $photoGallery, $zipName): void {
+            set_time_limit(0);
+            $zipStream->stream($photoGallery, $zipName);
+            set_time_limit(30);
+        }, $zipName);
     }
 
-    public function showPhoto($gallery, $photo)
+    public function downloadSelection(Request $request, string $accessCode): RedirectResponse|StreamedResponse
     {
-        if (! session('authenticated_gallery_'.$gallery) && ! auth()->check()) {
-            Log::info('User not authenticated for gallery: '.$gallery);
+        $photoGallery = PhotoGallery::query()->where('access_code', Str::upper($accessCode))->firstOrFail();
 
-            return redirect()->route('public.select');
+        if (! $this->canViewGallery($photoGallery)) {
+            return redirect()->route('public.show', $photoGallery->access_code);
         }
-        $photo = Photo::where('path', $gallery.'/'.$photo)
+
+        $validated = $request->validate([
+            'photo_ids' => ['required', 'array'],
+            'photo_ids.*' => ['integer'],
+        ]);
+
+        $validPhotoIds = $photoGallery->photos()
+            ->whereIn('id', $validated['photo_ids'])
+            ->pluck('id');
+
+        if ($validPhotoIds->isEmpty()) {
+            return redirect()
+                ->route('public.gallery', $photoGallery->access_code)
+                ->withErrors(['selection' => 'Aucune photo sélectionnée n\'a pu être trouvée dans cette galerie.']);
+        }
+
+        $zipStream = app(GalleryZipStream::class);
+        $zipName = $zipStream->slugArchiveName($photoGallery);
+
+        return response()->streamDownload(function () use ($zipStream, $photoGallery, $zipName, $validPhotoIds): void {
+            set_time_limit(0);
+            $zipStream->stream($photoGallery, $zipName, $validPhotoIds->all());
+            set_time_limit(30);
+        }, $zipName);
+    }
+
+    public function showPhoto(string $gallery, string $photo)
+    {
+        $photo = Photo::where('path', $gallery . '/' . $photo)
             ->where('photo_gallery_id', $gallery)
             ->firstOrFail();
 
-        return Storage::disk('photo')->response($photo->path);
-    }
-
-    public function showThumbnail($gallery, $photo)
-    {
-        if (! session('authenticated_gallery_'.$gallery) && ! auth()->check()) {
-            Log::info('User not authenticated for gallery: '.$gallery);
+        if (! $this->canViewGallery($photo->photoGallery)) {
+            Log::info('User not authenticated for gallery: ' . $gallery);
 
             return redirect()->route('public.select');
         }
-        $photo = Photo::where('path', $gallery.'/'.$photo)
+
+        return Storage::disk('photo')->response($photo->path, headers: [
+            'Cache-Control' => 'private, max-age=86400',
+        ]);
+    }
+
+    public function showThumbnail(string $gallery, string $photo)
+    {
+        $photo = Photo::where('path', $gallery . '/' . $photo)
             ->where('photo_gallery_id', $gallery)
             ->firstOrFail();
-        if (Storage::disk('thumbnails')->exists($photo->path)) {
-            return Storage::disk('thumbnails')->response($photo->path);
+
+        if (! $this->canViewGallery($photo->photoGallery)) {
+            Log::info('User not authenticated for gallery: ' . $gallery);
+
+            return redirect()->route('public.select');
         }
 
-        return abort(404, 'Thumbnail not found');
+        $thumbnails = Storage::disk('thumbnails');
+        $path = app(ThumbnailService::class)->thumbnailPath($photo->path);
+
+        if (! $thumbnails->exists($path)) {
+            return abort(404, 'Thumbnail not found');
+        }
+
+        return $thumbnails->response($path, headers: [
+            'Content-Type' => 'image/webp',
+            'Cache-Control' => 'private, max-age=604800',
+        ]);
+    }
+
+    public function showDisplay(string $gallery, string $photo)
+    {
+        $photo = Photo::where('path', $gallery . '/' . $photo)
+            ->where('photo_gallery_id', $gallery)
+            ->firstOrFail();
+
+        if (! $this->canViewGallery($photo->photoGallery)) {
+            Log::info('User not authenticated for gallery: ' . $gallery);
+
+            return redirect()->route('public.select');
+        }
+
+        $thumbnails = Storage::disk('thumbnails');
+        $service = app(ThumbnailService::class);
+        $displayPath = $service->displayPath($photo->path);
+
+        if ($thumbnails->exists($displayPath)) {
+            return $thumbnails->response($displayPath, headers: [
+                'Content-Type' => 'image/webp',
+                'Cache-Control' => 'private, max-age=604800',
+            ]);
+        }
+
+        $thumbnailPath = $service->thumbnailPath($photo->path);
+
+        if ($thumbnails->exists($thumbnailPath)) {
+            return $thumbnails->response($thumbnailPath, headers: [
+                'Content-Type' => 'image/webp',
+                'Cache-Control' => 'private, max-age=604800',
+            ]);
+        }
+
+        return abort(404, 'Display image not found');
+    }
+
+    private function attemptGalleryAuthentication(
+        Request $request,
+        PhotoGallery $photoGallery,
+        string $password,
+        string $accessCode,
+    ): RedirectResponse {
+        if (! hash_equals($photoGallery->password, $password)) {
+            return back()
+                ->withErrors(['password' => 'Mot de passe incorrect'])
+                ->onlyInput('access_code');
+        }
+
+        $request->session()->regenerate();
+        $request->session()->put($this->gallerySessionKey($photoGallery), true);
+
+        return redirect()->route('public.gallery', $photoGallery->access_code);
+    }
+
+    /**
+     * Whether the current visitor may view the gallery: either a
+     * password-authenticated customer session, or any authenticated
+     * admin (intentional bypass so the photographer can preview any
+     * gallery from the admin panel without knowing client passwords).
+     */
+    private function canViewGallery(PhotoGallery $photoGallery): bool
+    {
+        return session($this->gallerySessionKey($photoGallery)) || auth()->check();
+    }
+
+    private function gallerySessionKey(PhotoGallery $photoGallery): string
+    {
+        return 'authenticated_gallery_' . $photoGallery->id;
     }
 }

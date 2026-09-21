@@ -4,60 +4,78 @@ namespace App\Filament\Resources\PhotoGalleryResource\Pages;
 
 use App\Filament\Resources\PhotoGalleryResource;
 use App\Filament\Resources\PhotoResource;
-use App\Jobs\GeneratePhotoThumbnail;
-use Filament\Actions;
+use App\Services\ThumbnailService;
+use Filament\Actions\Action;
+use Filament\Actions\DeleteAction;
+use Filament\Forms\Components\Toggle;
 use Filament\Notifications\Notification;
 use Filament\Resources\Pages\EditRecord;
-use Illuminate\Support\Facades\Storage;
 
 class EditPhotoGallery extends EditRecord
 {
     protected static string $resource = PhotoGalleryResource::class;
 
+    public function getTitle(): string
+    {
+        return __('admin.gallery.page_title_edit');
+    }
+
+    /**
+     * @param  array<string, mixed>  $data
+     * @return array<string, mixed>
+     */
+    protected function mutateFormDataBeforeFill(array $data): array
+    {
+        $data['password'] = $this->getRecord()->password;
+
+        return $data;
+    }
+
     protected function getHeaderActions(): array
     {
         return [
-            Actions\Action::make('view_gallery')
-                ->label('View Gallery')
+            Action::make('view_gallery')
+                ->label(__('admin.gallery.view_gallery'))
                 ->icon('heroicon-o-eye')
                 ->url(fn () => route('public.show', $this->record->access_code))
                 ->openUrlInNewTab(),
-            Actions\Action::make('manage_sections')
-                ->label('Manage Sections')
+            Action::make('manage_sections')
+                ->label(__('admin.gallery.manage_sections'))
                 ->icon('heroicon-o-folder')
                 ->url(fn () => PhotoGalleryResource::getUrl('sections', ['record' => $this->record->id])),
-            Actions\Action::make('manage_photos')
-                ->label('Manage Photos')
+            Action::make('manage_photos')
+                ->label(__('admin.gallery.manage_photos'))
                 ->icon('heroicon-o-photo')
                 ->url(fn () => PhotoResource::getUrl('index', ['photo_gallery_id' => $this->record->id])),
-            Actions\Action::make('generate_thumbnails')
-                ->label('Generate Thumbnails')
+            Action::make('generate_thumbnails')
+                ->label(__('admin.gallery.generate_thumbnails'))
                 ->icon('heroicon-o-photo')
                 ->color('warning')
-                ->action(function () {
-                    $count = 0;
-                    foreach ($this->record->sections as $section) {
-                        foreach ($section->photos as $photo) {
-                            $thumbnailPath = Storage::disk('private')->path('thumbnails/' . $photo->path);
-                            if (! file_exists($thumbnailPath)) {
-                                GeneratePhotoThumbnail::dispatch($photo);
-                                $count++;
-                            }
-                        }
-                    }
+                ->form([
+                    Toggle::make('force')
+                        ->label(__('admin.dashboard.force_label'))
+                        ->helperText(__('admin.dashboard.force_helper'))
+                        ->default(false)
+                        ->live(),
+                ])
+                ->action(function (ThumbnailService $thumbnails, array $data) {
+                    $count = $data['force'] ?? false
+                        ? $thumbnails->queueAll($this->record->id)
+                        : $thumbnails->queueMissing($this->record->id);
 
                     Notification::make()
-                        ->title('Miniatures en file d\'attente')
+                        ->title(__('admin.dashboard.queued'))
                         ->body($count > 0
-                            ? "{$count} miniatures ont été mises en file d'attente pour la génération."
-                            : 'Toutes les miniatures existent déjà pour cette galerie.')
+                            ? trans_choice('admin.dashboard.queued_count', $count, ['count' => $count])
+                            : __('admin.dashboard.already_exist_gallery'))
                         ->success()
                         ->send();
                 })
                 ->requiresConfirmation()
-                ->modalHeading('Générer les miniatures')
-                ->modalDescription(fn () => "Générer les miniatures manquantes pour la galerie \"{$this->record->name}\" ?"),
-            Actions\DeleteAction::make(),
+                ->modalHeading(__('admin.dashboard.edit_modal_heading'))
+                ->modalDescription(fn () => __('admin.dashboard.edit_modal_description', ['name' => $this->record->name]))
+                ->modalSubmitActionLabel(__('admin.dashboard.modal_submit')),
+            DeleteAction::make(),
         ];
     }
 }

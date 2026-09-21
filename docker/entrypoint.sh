@@ -8,5 +8,10 @@ if [ "${APP_RUN_MIGRATIONS:-false}" = "true" ]; then
     php artisan migrate --force
 fi
 
+# Warm runtime caches (env-dependent, must NOT be done at build time)
+php artisan config:cache
+php artisan route:cache
+php artisan view:cache
+
 # Execute the main command
 exec "$@"

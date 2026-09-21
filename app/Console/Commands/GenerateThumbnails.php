@@ -4,77 +4,83 @@ namespace App\Console\Commands;
 
 use App\Models\Photo;
 use App\Models\PhotoGallery;
-use Fiber;
+use App\Services\ThumbnailService;
 use Illuminate\Console\Command;
-use Illuminate\Support\Facades\Storage;
 
 class GenerateThumbnails extends Command
 {
-    protected $signature = 'app:generate-thumbnails {--gallery= : The ID of a specific gallery to generate thumbnails for}';
+    protected $signature = 'app:generate-thumbnails
+        {--gallery= : The ID of a specific gallery to generate thumbnails for}
+        {--sync : Generate synchronously instead of dispatching queue jobs}
+        {--force : Delete and regenerate derivatives even when they already exist}';
 
     protected $description = 'Generate thumbnails for photos that are missing them';
 
-    public function handle(): void
+    public function handle(ThumbnailService $thumbnails): void
     {
         $galleryId = $this->option('gallery');
+        $force = (bool) $this->option('force');
+        $currentGalleryId = null;
+        $processedCount = 0;
+        $skippedCount = 0;
 
         if ($galleryId) {
-            $gallery = PhotoGallery::find($galleryId);
+            $gallery = PhotoGallery::query()->find($galleryId);
+
             if (! $gallery) {
                 $this->error("Gallery with ID {$galleryId} not found.");
 
                 return;
             }
+
             $this->info("Generating thumbnails for gallery: {$gallery->name} (ID: {$galleryId})");
-            $photos = Photo::where('photo_gallery_id', $galleryId)->get();
         } else {
             $this->info('Generating thumbnails for all photos...');
-            $photos = Photo::all();
         }
 
-        $fibers = [];
-        $processedCount = 0;
-        $skippedCount = 0;
-        $currentGalleryId = null;
+        if ($force) {
+            $this->warn('Force mode: existing derivatives will be deleted and regenerated.');
+        }
 
-        foreach ($photos as $photo) {
-            $thumbnailPath = Storage::disk('private')->path('thumbnails/' . $photo->path);
+        Photo::query()
+            ->when($galleryId, fn ($query) => $query->where('photo_gallery_id', $galleryId))
+            ->whereHas('photoSection')
+            ->orderBy('photo_gallery_id')
+            ->orderBy('id')
+            ->chunkById(100, function ($photos) use ($thumbnails, $force, &$currentGalleryId, &$processedCount, &$skippedCount): void {
+                foreach ($photos as $photo) {
+                    if (! $force && $thumbnails->exists($photo->path) && $thumbnails->displayExists($photo->path)) {
+                        $skippedCount++;
 
-            if (! file_exists($thumbnailPath)) {
-                if ($photo->photo_gallery_id !== $currentGalleryId) {
-                    $currentGalleryId = $photo->photo_gallery_id;
-                    $this->info("Processing gallery ID: {$currentGalleryId}");
+                        continue;
+                    }
+
+                    if ($photo->photo_gallery_id !== $currentGalleryId) {
+                        $currentGalleryId = $photo->photo_gallery_id;
+                        $this->info("Processing gallery ID: {$currentGalleryId}");
+                    }
+
+                    try {
+                        if ($force) {
+                            $thumbnails->deleteFor($photo);
+                        }
+
+                        $thumbnails->generate($photo);
+                    } catch (Throwable $exception) {
+                        report($exception);
+                        $this->warn("Failed to generate thumbnail for photo ID: {$photo->id}");
+
+                        continue;
+                    }
+
+                    $processedCount++;
                 }
-                $fibers[] = new Fiber(function () use ($photo) {
-                    $photo->generateThumbnail();
-                    $photo->save();
-                });
-                $processedCount++;
-            } else {
-                $skippedCount++;
-            }
-        }
+            });
 
         if ($processedCount === 0) {
             $this->info('All thumbnails already exist. Nothing to generate.');
 
             return;
-        }
-
-        $this->info("Generating {$processedCount} thumbnails...");
-
-        foreach ($fibers as $fiber) {
-            $fiber->start();
-        }
-
-        while ($fibers) {
-            foreach ($fibers as $index => $fiber) {
-                if ($fiber->isTerminated()) {
-                    unset($fibers[$index]);
-                } elseif (! $fiber->isStarted() || $fiber->isSuspended()) {
-                    $fiber->resume();
-                }
-            }
         }
 
         $this->info("Thumbnails generated successfully! ({$processedCount} generated, {$skippedCount} skipped)");

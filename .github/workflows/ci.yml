@@ -1,0 +1,63 @@
+name: CI
+
+on:
+  push:
+    branches: [main, wip]
+  pull_request:
+
+jobs:
+  backend:
+    name: Backend (tests, pint, views)
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Setup PHP
+        uses: shivammathur/setup-php@v2
+        with:
+          php-version: '8.5'
+          extensions: gd, sqlite3, zip, intl
+          coverage: none
+
+      - name: Install composer dependencies
+        run: composer install --prefer-dist --no-interaction --no-progress
+
+      - name: Duster (code style)
+        run: vendor/bin/duster lint
+
+      - name: Run tests
+        run: php artisan test
+
+      - name: Blade syntax check
+        run: php artisan view:cache
+
+  frontend:
+    name: Frontend (build)
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Setup PHP
+        uses: shivammathur/setup-php@v2
+        with:
+          php-version: '8.5'
+          extensions: gd, sqlite3, zip, intl
+          coverage: none
+
+      - name: Install composer dependencies
+        run: composer install --prefer-dist --no-interaction --no-progress
+
+      - name: Setup pnpm
+        uses: pnpm/action-setup@v4
+
+      - name: Setup Node
+        uses: actions/setup-node@v4
+        with:
+          node-version: 24
+          cache: pnpm
+
+      - name: Install pnpm dependencies
+        run: pnpm install --frozen-lockfile
+
+      - name: Build frontend assets
+        run: pnpm run build

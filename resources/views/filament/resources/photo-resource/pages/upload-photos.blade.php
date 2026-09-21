@@ -1,10 +1,10 @@
 <x-filament-panels::page>
-    <x-filament-panels::form wire:submit="submit">
+    <form wire:submit="submit" class="fi-form space-y-6">
         {{ $this->form }}
 
         <x-filament::button type="submit" class="mt-4">
-            Upload Photos
+            {{ __('admin.photo.upload_photos') }}
         </x-filament::button>
-    </x-filament-panels::form>
+    </form>
 
 </x-filament-panels::page>
