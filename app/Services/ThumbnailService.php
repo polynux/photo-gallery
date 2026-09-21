@@ -101,18 +101,23 @@ class ThumbnailService
         $image = $this->images->decodeBinary($photoDisk->get($photo->path));
         $quality = config('gallery.derivative_quality', 80);
 
-        $grid = (clone $image)->scaleDown(config('gallery.thumbnail_max_dimension', 500));
-        Storage::disk('thumbnails')->put(
-            $this->thumbnailPath($photo->path),
-            $grid->encodeUsingFormat(Format::WEBP, quality: $quality)->toString(),
-        );
-        $this->storeDimensions($photo, $grid);
-
-        $display = (clone $image)->scaleDown(config('gallery.display_max_dimension', 2560));
+        // Scale the decoded bitmap in place (never clone it): cloning a full
+        // GD raster doubles peak memory and can exceed the memory_limit on
+        // large photos. The grid thumbnail derives from the display-sized
+        // image, which is dimensionally identical to deriving from the
+        // original.
+        $image->scaleDown(config('gallery.display_max_dimension', 2560));
         Storage::disk('thumbnails')->put(
             $this->displayPath($photo->path),
-            $display->encodeUsingFormat(Format::WEBP, quality: $quality)->toString(),
+            $image->encodeUsingFormat(Format::WEBP, quality: $quality)->toString(),
         );
+
+        $image->scaleDown(config('gallery.thumbnail_max_dimension', 500));
+        Storage::disk('thumbnails')->put(
+            $this->thumbnailPath($photo->path),
+            $image->encodeUsingFormat(Format::WEBP, quality: $quality)->toString(),
+        );
+        $this->storeDimensions($photo, $image);
     }
 
     /**
@@ -184,6 +189,6 @@ class ThumbnailService
             $name = substr($photoPath, 0, $extensionPosition);
         }
 
-        return $prefix . $name . self::DERIVATIVE_EXTENSION;
+        return $prefix.$name.self::DERIVATIVE_EXTENSION;
     }
 }

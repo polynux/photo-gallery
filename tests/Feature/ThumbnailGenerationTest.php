@@ -16,7 +16,7 @@ function createPhotoFromPng(PhotoGallery $gallery, int $width, int $height): Pho
     $imageContents = (string) ob_get_clean();
     imagedestroy($image);
 
-    $path = $gallery->id . '/sample-' . $width . 'x' . $height . '.png';
+    $path = $gallery->id.'/sample-'.$width.'x'.$height.'.png';
     Storage::disk('photo')->put($path, $imageContents);
 
     return Photo::factory()->forGallery($gallery)->create([
@@ -81,4 +81,27 @@ test('small photos are not upscaled when generating thumbnails', function () {
 
     expect($displayWidth)->toBe(800);
     expect($displayHeight)->toBe(600);
+});
+
+test('generating derivatives stays within a tight memory budget on large photos', function () {
+    Storage::fake('photo');
+    Storage::fake('thumbnails');
+
+    $gallery = PhotoGallery::factory()->create();
+    // 4000x3000 truecolor GD raster = ~48 MB uncompressed.
+    $photo = createPhotoFromPng($gallery, 4000, 3000);
+    $service = app(ThumbnailService::class);
+
+    // A decoded raster (~48 MB) plus its clone (~48 MB) plus encode buffers
+    // exceeds this budget; scaling in place (~48 MB + small derivatives) fits.
+    $previousLimit = ini_set('memory_limit', (string) (round(memory_get_peak_usage(true) / 1048576) + 80).'M');
+
+    try {
+        $photo->generateThumbnail();
+    } finally {
+        ini_set('memory_limit', $previousLimit);
+    }
+
+    expect(Storage::disk('thumbnails')->exists($service->thumbnailPath($photo->path)))->toBeTrue();
+    expect(Storage::disk('thumbnails')->exists($service->displayPath($photo->path)))->toBeTrue();
 });
