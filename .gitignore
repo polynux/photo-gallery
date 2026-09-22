@@ -25,3 +25,4 @@ yarn-error.log
 /test-docker
 /.opencode
 /docker-storage/
+.env.before_lerd
