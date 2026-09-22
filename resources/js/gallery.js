@@ -15,12 +15,100 @@ function readSlideshowState() {
 }
 
 export function initGalleryPage() {
+    initMasonryColumns();
+
     if (slideshowState) {
         initLazyLoading(slideshowState);
         initSlideshow(slideshowState);
     }
 
     initPhotoSelection();
+}
+
+const MASONRY_BREAKPOINTS = [
+    [1920, 5],
+    [1440, 4],
+    [1024, 3],
+    [640, 2],
+    [0, 1],
+];
+
+function columnsForWidth(width) {
+    return MASONRY_BREAKPOINTS.find(([min]) => width >= min)[1];
+}
+
+function initMasonryColumns() {
+    const grids = document.querySelectorAll('.masonry-grid');
+
+    if (grids.length === 0) {
+        return;
+    }
+
+    let lastColumnCount = 0;
+
+    const distribute = () => {
+        const columnCount = columnsForWidth(window.innerWidth);
+
+        if (columnCount === lastColumnCount) {
+            return;
+        }
+
+        lastColumnCount = columnCount;
+
+        grids.forEach((grid) => {
+            const items = Array.from(grid.querySelectorAll('.masonry-item'))
+                .sort((a, b) => Number(a.dataset.photoIndex) - Number(b.dataset.photoIndex));
+            const existingColumns = grid.querySelectorAll('.masonry-column');
+
+            if (existingColumns.length === columnCount) {
+                return;
+            }
+
+            existingColumns.forEach((column) => column.remove());
+
+            const columns = Array.from({ length: columnCount }, () => {
+                const column = document.createElement('div');
+                column.className = 'masonry-column';
+                grid.appendChild(column);
+
+                return column;
+            });
+
+            shortestColumnAssignment(items, columns, grid);
+        });
+    };
+
+    distribute();
+    window.addEventListener('resize', distribute);
+}
+
+/**
+ * Assign each item, in photo order, to the currently shortest column.
+ *
+ * Item heights are precomputed from the stored photo dimensions (emitted as
+ * width/height attributes on the img): rendered height is column width x h/w.
+ * Because every item's top equals the minimum column height at placement time
+ * and column heights only grow, tops are monotonically non-decreasing in photo
+ * order — the visual top-to-bottom scan follows the photos' position order.
+ */
+function shortestColumnAssignment(items, columns, grid) {
+    const widths = columns.map((column) => column.getBoundingClientRect().width);
+    const heights = columns.map(() => 0);
+
+    items.forEach((item) => {
+        const target = heights.indexOf(Math.min(...heights));
+        columns[target].appendChild(item);
+
+        const img = item.querySelector('img');
+
+        if (img && img.getAttribute('width') && img.getAttribute('height')) {
+            heights[target] += widths[target] * Number(img.getAttribute('height')) / Number(img.getAttribute('width'));
+        } else {
+            heights[target] += widths[target];
+        }
+
+        heights[target] += 24;
+    });
 }
 
 function initLazyLoading(state) {

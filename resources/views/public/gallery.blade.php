@@ -14,23 +14,17 @@
             font-family: 'Playfair Display', serif;
         }
         .masonry-grid {
-            column-count: 1;
-            column-gap: 1.5rem;
+            display: flex;
+            gap: 1.5rem;
+            align-items: flex-start;
         }
-        @media (min-width: 640px) {
-            .masonry-grid { column-count: 2; }
-        }
-        @media (min-width: 1024px) {
-            .masonry-grid { column-count: 3; }
-        }
-        @media (min-width: 1440px) {
-            .masonry-grid { column-count: 4; }
-        }
-        @media (min-width: 1920px) {
-            .masonry-grid { column-count: 5; }
+        .masonry-column {
+            display: flex;
+            flex-direction: column;
+            flex: 1 1 0;
+            min-width: 0;
         }
         .masonry-item {
-            break-inside: avoid;
             margin-bottom: 1.5rem;
         }
         .masonry-item.selected {
