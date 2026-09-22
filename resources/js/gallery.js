@@ -56,26 +56,51 @@ function initMasonryColumns() {
         lastColumnCount = columnCount;
 
         grids.forEach((grid) => {
-            const items = Array.from(grid.querySelectorAll('.masonry-item'))
-                .sort((a, b) => Number(a.dataset.photoIndex) - Number(b.dataset.photoIndex));
-            const existingColumns = grid.querySelectorAll('.masonry-column');
+            if (grid.getBoundingClientRect().width === 0) {
+                // Layout not settled yet (hidden grid, mid-parse): retry once painted.
+                pendingGrids.add(grid);
+                scheduleFlush();
 
-            if (existingColumns.length === columnCount) {
                 return;
             }
 
-            existingColumns.forEach((column) => column.remove());
-
-            const columns = Array.from({ length: columnCount }, () => {
-                const column = document.createElement('div');
-                column.className = 'masonry-column';
-                grid.appendChild(column);
-
-                return column;
-            });
-
-            shortestColumnAssignment(items, columns, grid);
+            distributeForGrid(grid, columnCount);
         });
+    };
+
+    const pendingGrids = new Set();
+
+    const scheduleFlush = () => {
+        requestAnimationFrame(() => {
+            requestAnimationFrame(() => {
+                pendingGrids.forEach((grid) => {
+                    if (grid.getBoundingClientRect().width > 0) {
+                        distributeForGrid(grid, columnsForWidth(window.innerWidth));
+                    } else {
+                        pendingGrids.add(grid);
+                        scheduleFlush();
+                    }
+                });
+                pendingGrids.clear();
+            });
+        });
+    };
+
+    const distributeForGrid = (grid, columnCount) => {
+        const items = Array.from(grid.querySelectorAll('.masonry-item'))
+            .sort((a, b) => Number(a.dataset.photoIndex) - Number(b.dataset.photoIndex));
+
+        grid.querySelectorAll('.masonry-column').forEach((column) => column.remove());
+
+        const columns = Array.from({ length: columnCount }, () => {
+            const column = document.createElement('div');
+            column.className = 'masonry-column';
+            grid.appendChild(column);
+
+            return column;
+        });
+
+        shortestColumnAssignment(items, columns, grid);
     };
 
     distribute();
@@ -90,9 +115,17 @@ function initMasonryColumns() {
  * Because every item's top equals the minimum column height at placement time
  * and column heights only grow, tops are monotonically non-decreasing in photo
  * order — the visual top-to-bottom scan follows the photos' position order.
+ *
+ * Column width is derived from the grid's own resolved width (not from the
+ * freshly-created column elements): right after appending, the columns may not
+ * have gone through flex layout yet, and measuring them directly can return
+ * stale/zero widths — producing a broken assignment that only fixes itself on
+ * the next resize.
  */
 function shortestColumnAssignment(items, columns, grid) {
-    const widths = columns.map((column) => column.getBoundingClientRect().width);
+    const gridWidth = grid.getBoundingClientRect().width;
+    const gap = 24;
+    const columnWidth = (gridWidth - gap * (columns.length - 1)) / columns.length;
     const heights = columns.map(() => 0);
 
     items.forEach((item) => {
@@ -102,12 +135,12 @@ function shortestColumnAssignment(items, columns, grid) {
         const img = item.querySelector('img');
 
         if (img && img.getAttribute('width') && img.getAttribute('height')) {
-            heights[target] += widths[target] * Number(img.getAttribute('height')) / Number(img.getAttribute('width'));
+            heights[target] += columnWidth * Number(img.getAttribute('height')) / Number(img.getAttribute('width'));
         } else {
-            heights[target] += widths[target];
+            heights[target] += columnWidth;
         }
 
-        heights[target] += 24;
+        heights[target] += gap;
     });
 }
 
