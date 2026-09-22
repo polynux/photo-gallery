@@ -76,6 +76,8 @@ function initSlideshow(state) {
 
     let currentIndex = 0;
     let isAnimating = false;
+    let pendingReveal = null;
+    let slideFailed = false;
     const modal = document.getElementById('slideshow-modal');
     const currentSlide = document.getElementById('current-slide');
     const slideCounter = document.getElementById('slide-counter');
@@ -98,7 +100,8 @@ function initSlideshow(state) {
         }
 
         updateSlide();
-        currentSlide.className = 'slide-image current';
+        currentSlide.classList.remove('sliding-out-left', 'sliding-out-right', 'sliding-in-left', 'sliding-in-right');
+        currentSlide.classList.add('current');
         modal.classList.add('active');
     }
 
@@ -106,46 +109,42 @@ function initSlideshow(state) {
         modal.classList.remove('active');
     }
 
-    function nextSlide() {
+    function navigateTo(nextIndex, outClass, inClass) {
         if (totalPhotos <= 1 || isAnimating) return;
         isAnimating = true;
 
         currentSlide.classList.remove('current');
-        currentSlide.classList.add('sliding-out-left');
+        currentSlide.classList.add(outClass);
 
         setTimeout(() => {
-            currentIndex = (currentIndex + 1) % totalPhotos;
+            currentIndex = nextIndex;
             updateSlide();
-            currentSlide.classList.remove('sliding-out-left');
-            currentSlide.classList.add('sliding-in-right');
 
-            setTimeout(() => {
-                currentSlide.classList.remove('sliding-in-right');
-                currentSlide.classList.add('current');
-                isAnimating = false;
-            }, 400);
+            const finish = () => {
+                currentSlide.classList.remove(outClass, 'slide-loading');
+                currentSlide.classList.add(inClass);
+
+                setTimeout(() => {
+                    currentSlide.classList.remove(inClass);
+                    currentSlide.classList.add('current');
+                    isAnimating = false;
+                }, 400);
+            };
+
+            if (pendingReveal) {
+                pendingReveal.ready.then(finish);
+            } else {
+                finish();
+            }
         }, 400);
     }
 
+    function nextSlide() {
+        navigateTo((currentIndex + 1) % totalPhotos, 'sliding-out-left', 'sliding-in-right');
+    }
+
     function prevSlide() {
-        if (totalPhotos <= 1 || isAnimating) return;
-        isAnimating = true;
-
-        currentSlide.classList.remove('current');
-        currentSlide.classList.add('sliding-out-right');
-
-        setTimeout(() => {
-            currentIndex = (currentIndex - 1 + totalPhotos) % totalPhotos;
-            updateSlide();
-            currentSlide.classList.remove('sliding-out-right');
-            currentSlide.classList.add('sliding-in-left');
-
-            setTimeout(() => {
-                currentSlide.classList.remove('sliding-in-left');
-                currentSlide.classList.add('current');
-                isAnimating = false;
-            }, 400);
-        }, 400);
+        navigateTo((currentIndex - 1 + totalPhotos) % totalPhotos, 'sliding-out-right', 'sliding-in-left');
     }
 
     function showSpinner() {
@@ -156,17 +155,71 @@ function initSlideshow(state) {
         slideSpinner.classList.remove('active');
     }
 
-    function updateSlide() {
-        const src = allPhotos[currentIndex].src;
+    function preload(src) {
+        return new Promise((resolve, reject) => {
+            const img = new Image();
+            img.onload = () => resolve(src);
+            img.onerror = () => reject(new Error(`Failed to load slide: ${src}`));
+            img.src = src;
+        });
+    }
 
-        if (currentSlide.src !== src) {
-            showSpinner();
+    function updateSlide() {
+        const photo = allPhotos[currentIndex];
+        const src = photo.src;
+
+        slideCounter.textContent = `${currentIndex + 1} / ${totalPhotos}`;
+        slideAlt.textContent = photo.alt;
+
+        if (pendingReveal) {
+            pendingReveal.abort();
         }
 
-        currentSlide.src = src;
-        currentSlide.alt = allPhotos[currentIndex].alt;
-        slideCounter.textContent = `${currentIndex + 1} / ${totalPhotos}`;
-        slideAlt.textContent = allPhotos[currentIndex].alt;
+        if (slideFailed || currentSlide.src !== src) {
+            slideFailed = false;
+            showSpinner();
+            currentSlide.classList.add('slide-loading');
+            pendingReveal = revealWhenLoaded(src);
+        } else {
+            pendingReveal = null;
+        }
+    }
+
+    function revealWhenLoaded(src) {
+        let aborted = false;
+        let readyResolve;
+        const ready = new Promise((resolve) => {
+            readyResolve = resolve;
+        });
+
+        preload(src).then(() => {
+            if (aborted || allPhotos[currentIndex].src !== src) {
+                return;
+            }
+
+            currentSlide.src = src;
+            currentSlide.alt = allPhotos[currentIndex].alt;
+            currentSlide.classList.remove('slide-loading');
+            hideSpinner();
+        }).catch(() => {
+            if (aborted) {
+                return;
+            }
+
+            slideFailed = true;
+            currentSlide.classList.remove('slide-loading');
+            hideSpinner();
+        }).finally(() => {
+            readyResolve();
+        });
+
+        return {
+            ready,
+            abort() {
+                aborted = true;
+                readyResolve();
+            },
+        };
     }
 
     document.getElementById('slideshow-btn').addEventListener('click', () => {
@@ -177,9 +230,6 @@ function initSlideshow(state) {
     document.getElementById('close-slideshow').addEventListener('click', closeSlideshow);
     document.getElementById('next-btn').addEventListener('click', nextSlide);
     document.getElementById('prev-btn').addEventListener('click', prevSlide);
-
-    currentSlide.addEventListener('load', hideSpinner);
-    currentSlide.addEventListener('error', hideSpinner);
 
     modal.addEventListener('click', (e) => {
         if (e.target.closest('#slideshow-container') || e.target.closest('button')) {

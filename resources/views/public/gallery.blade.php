@@ -91,6 +91,9 @@
             transform: translateX(100%);
             opacity: 0;
         }
+        .slide-image.slide-loading {
+            opacity: 0;
+        }
         .slide-image.sliding-in-left {
             animation: slideInFromLeft 0.4s ease forwards;
         }
