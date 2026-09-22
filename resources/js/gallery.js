@@ -44,18 +44,30 @@ function initLazyLoading(state) {
     }, { rootMargin });
 
     lazyImages.forEach((img) => {
-        img.addEventListener('load', () => hideSpinner(img), { once: true });
-        img.addEventListener('error', () => hideSpinner(img), { once: true });
+        img.addEventListener('load', () => hideSpinner(img));
+        img.addEventListener('error', () => hideSpinner(img));
         observer.observe(img);
     });
 
     function loadImage(img) {
-        showSpinner(img);
         img.src = img.dataset.src;
         delete img.dataset.src;
+        showSpinner(img);
+
+        if (isLoaded(img)) {
+            hideSpinner(img);
+        }
+    }
+
+    function isLoaded(img) {
+        return img.complete && img.naturalWidth > 0;
     }
 
     function showSpinner(img) {
+        if (isLoaded(img)) {
+            return;
+        }
+
         img.parentElement.querySelector('.js-lazy-spinner')?.classList.add('opacity-100');
     }
 
