@@ -1,5 +1,16 @@
 CONTAINER_NAME := php
 
+# Run the GitHub Actions workflow locally with act, against a pristine clone of
+# HEAD in a temp dir. act bind-mounts its working directory into the job
+# container, so running it in the live workspace leaks host state (gitignored
+# .env, vendor/, compiled views) into CI — the clone keeps the job clean.
+ci-act:
+	@tmp=$$(mktemp -d) && \
+	trap 'rm -rf "$$tmp"' EXIT && \
+	git clone --quiet . "$$tmp/repo" && \
+	cd "$$tmp/repo" && \
+	act push
+
 build:
 	@if [ "$(PUSH)" = "true" ]; then \
 		echo "Building and pushing the image..."; \
