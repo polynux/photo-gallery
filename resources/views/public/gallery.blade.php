@@ -256,6 +256,7 @@
                                             data-src="{{ route('thumbnails.show', ['gallery' => $photo->photo_gallery_id, 'photo' => basename($photo->path)]) }}"
                                             width="{{ $photo->width }}"
                                             height="{{ $photo->height }}"
+                                            style="aspect-ratio: {{ $photo->width }} / {{ $photo->height }};"
                                             class="js-lazy-img w-full h-auto object-cover"
                                             @else
                                             src="{{ route('thumbnails.show', ['gallery' => $photo->photo_gallery_id, 'photo' => basename($photo->path)]) }}"
