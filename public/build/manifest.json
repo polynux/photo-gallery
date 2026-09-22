@@ -1,0 +1,45 @@
+{
+  "resources/css/app.css": {
+    "file": "assets/app-Bb4n-U3j.css",
+    "name": "app",
+    "names": [
+      "app.css"
+    ],
+    "src": "resources/css/app.css",
+    "isEntry": true
+  },
+  "resources/css/filament/admin/theme.css": {
+    "file": "assets/theme-KSIyTegt.css",
+    "name": "theme",
+    "names": [
+      "theme.css"
+    ],
+    "src": "resources/css/filament/admin/theme.css",
+    "isEntry": true
+  },
+  "resources/images/hero-image.webp": {
+    "file": "assets/hero-image-BOqT1IDx.webp",
+    "src": "resources/images/hero-image.webp"
+  },
+  "resources/js/app.js": {
+    "file": "assets/app-BvRk9kiK.js",
+    "name": "app",
+    "src": "resources/js/app.js",
+    "isEntry": true
+  },
+  "resources/js/gallery.js": {
+    "file": "assets/gallery-B_eRJbNx.js",
+    "name": "gallery",
+    "src": "resources/js/gallery.js",
+    "isEntry": true
+  },
+  "resources/js/univers-layout.js": {
+    "file": "assets/univers-layout-CUYlWuTZ.js",
+    "name": "univers-layout",
+    "src": "resources/js/univers-layout.js",
+    "isEntry": true,
+    "css": [
+      "assets/univers-layout-7uZBsdEh.css"
+    ]
+  }
+}
