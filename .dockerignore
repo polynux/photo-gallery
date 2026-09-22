@@ -16,7 +16,10 @@ Makefile
 
 # Node
 node_modules
-public/build
+
+# Vite dev server marker (lerd/vite running): would make @vite serve
+# from http://localhost:5173 inside the container instead of the built bundle
+public/hot
 
 # Composer / runtime state
 vendor
