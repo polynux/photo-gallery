@@ -73,10 +73,17 @@ test('authenticated customers can access their gallery page', function () {
         'access_code' => 'ACCESS78',
     ]);
 
-    $this->withSession([
-        'authenticated_gallery_' . $gallery->id => true,
-    ])->get(route('public.gallery', $gallery->access_code))
-        ->assertSuccessful();
+    $response = $this->withSession([
+        sprintf('authenticated_gallery_%d', $gallery->id) => true,
+    ])->get(route('public.gallery', $gallery->access_code));
+
+    $response->assertSuccessful()
+        ->assertSee('id="selection-bar"', false)
+        ->assertSee('id="select-all-btn"', false)
+        ->assertSee('id="deselect-all-btn"', false)
+        ->assertSee('id="selection-download-form"', false)
+        ->assertSee('id="selection-download-btn"', false)
+        ->assertSee(route('public.download-selection', $gallery->access_code), false);
 });
 
 test('authenticated admin can view any gallery without password', function () {

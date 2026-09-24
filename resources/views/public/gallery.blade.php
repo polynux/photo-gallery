@@ -202,24 +202,25 @@
     <section class="pb-12 bg-white">
         <div class="container mx-auto px-6">
             <div id="selection-bar"
-                class="hidden sticky top-20 z-30 mb-6 flex flex-wrap items-center justify-between gap-4 rounded-full bg-gray-900 px-6 py-3 text-white shadow-lg">
-                <span id="selection-counter" class="font-medium">0 photo sélectionnée</span>
-                <div class="flex items-center gap-2">
+                class="hidden sticky top-20 z-30 mb-6 flex flex-col items-stretch gap-3 rounded-2xl bg-gray-900 px-4 py-3 text-white shadow-lg sm:flex-row sm:flex-wrap sm:items-center sm:justify-between sm:gap-4 sm:rounded-full sm:px-6">
+                <span id="selection-counter" class="w-full text-center font-medium sm:w-auto sm:text-left">0 photo sélectionnée</span>
+                <div class="grid w-full grid-cols-2 gap-2 sm:flex sm:w-auto sm:items-center sm:gap-2">
                     <button type="button" id="select-all-btn"
-                        class="cursor-pointer rounded-full px-4 py-1.5 text-sm font-medium transition-colors hover:bg-white/10">
+                        class="inline-flex min-h-11 w-full items-center justify-center rounded-full px-3 text-center text-sm font-medium leading-tight transition-colors hover:bg-white/10 sm:min-h-0 sm:w-auto sm:px-4">
                         Tout sélectionner
                     </button>
                     <button type="button" id="deselect-all-btn"
-                        class="cursor-pointer rounded-full px-4 py-1.5 text-sm font-medium transition-colors hover:bg-white/10">
+                        class="inline-flex min-h-11 w-full items-center justify-center rounded-full px-3 text-center text-sm font-medium leading-tight transition-colors hover:bg-white/10 sm:min-h-0 sm:w-auto sm:px-4">
                         Tout désélectionner
                     </button>
                     <form id="selection-download-form"
+                        class="col-span-2 w-full sm:col-auto sm:w-auto"
                         action="{{ route('public.download-selection', $photoGallery->access_code) }}"
                         method="POST">
                         @csrf
                         <div id="selection-ids-container" class="hidden"></div>
                         <button type="submit" id="selection-download-btn" disabled
-                            class="ml-2 inline-flex cursor-pointer items-center rounded-full bg-white px-5 py-1.5 text-sm font-medium text-gray-900 transition-all disabled:cursor-not-allowed disabled:opacity-40">
+                            class="ml-0 inline-flex min-h-11 w-full items-center justify-center rounded-full bg-white px-4 text-center text-sm font-medium whitespace-nowrap text-gray-900 transition-all disabled:cursor-not-allowed disabled:opacity-40 sm:ml-2 sm:min-h-0 sm:w-auto sm:px-5">
                             <svg class="w-4 h-4 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                                 <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3 16.5v2.25A2.25 2.25 0 0 0 5.25 21h13.5A2.25 2.25 0 0 0 21 18.75V16.5M16.5 12 12 16.5m0 0L7.5 12m4.5 4.5V3"/>
                             </svg>
