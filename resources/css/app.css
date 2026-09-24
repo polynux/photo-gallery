@@ -408,6 +408,7 @@ body {
     }
 
     .univers-tile,
+    .univers-grid--preset .univers-tile,
     .univers-grid--custom .univers-tile {
         grid-column: 1 / -1;
         grid-row: span 1;
